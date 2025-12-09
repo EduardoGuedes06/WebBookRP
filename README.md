@@ -275,7 +275,7 @@ pm2 restart webbookrp
 
 -----
 
-*Desenvolvido por Ronaldo Pereira* 🚀
+*Desenvolvido por Eduardo Guedes* 🚀
 
 ```
 ```
