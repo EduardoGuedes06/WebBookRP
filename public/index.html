@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ronaldo Pereira - Plataforma do Autor</title>
+
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,600&family=Caveat:wght@600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f172a', secondary: '#334155', accent: '#d97706',
+                        'accent-hover': '#b45309', 'bg-body': '#f8fafc', 'text-main': '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Montserrat', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                        hand: ['Caveat', 'cursive'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        float: { '0%, 100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        body { -webkit-font-smoothing: antialiased; }
+        .glass-header { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .card-interaction:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15); }
+        .polaroid { background: white; padding: 1rem; padding-bottom: 3rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: rotate(-3deg); transition: transform 0.3s; }
+        .polaroid:hover { transform: rotate(0deg) scale(1.02); z-index: 10; }
+        .tape { background-color: rgba(255, 255, 255, 0.4); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: absolute; height: 30px; width: 100px; transform: rotate(-45deg); opacity: 0.7; }
+        .form-input:focus { outline: none; border-color: #d97706; box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1); }
+        /* Admin Dashboard */
+        .dashboard-card { background: white; border-radius: 1rem; padding: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .chart-bar { transition: height 1s ease-out; }
+        /* Pagination */
+        .pagination-btn { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: 600; color: #64748b; background: white; border: 1px solid #e2e8f0; transition: all 0.3s; cursor: pointer; }
+        .pagination-btn.active { background-color: #0f172a; color: white; border-color: #0f172a; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
+        .pagination-btn:hover:not(.active) { background-color: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+        .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body class="bg-bg-body text-text-main font-sans antialiased overflow-x-hidden selection:bg-accent selection:text-white">
+
+    <div id="toast-container" class="fixed top-24 right-5 z-[100] flex flex-col gap-3 pointer-events-none"></div>
+
+    <div id="header-container" class="fixed top-0 w-full z-50 transition-all duration-300"></div>
+
+    <main id="app" class="min-h-screen pt-28 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
+        </main>
+
+    <div id="footer-container"></div>
+
+    <div id="modal-overlay" class="hidden fixed inset-0 bg-primary/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div id="modal-content" class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 relative flex flex-col max-h-[90vh]">
+            <div class="bg-white p-6 flex justify-between items-center border-b border-gray-100 z-10 shrink-0">
+                <h3 id="modal-title" class="text-2xl font-serif font-bold text-primary">Título</h3>
+                <button onclick="window.app.closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"><i class="ph ph-x text-xl"></i></button>
+            </div>
+            <div id="modal-body" class="p-8 overflow-y-auto flex-grow bg-gray-50/50"></div>
+            <div id="modal-footer" class="p-6 border-t border-gray-100 bg-white flex justify-end gap-3 z-10 shrink-0"></div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. TEMPLATES HTML
+        // ==========================================
+        const TEMPLATES = {
+            header: `
+                <header class="w-full py-4 transition-all duration-300">
+                    <div class="container mx-auto px-4 flex justify-between items-center">
+                        <a href="#/" class="text-2xl font-bold text-primary tracking-tighter font-serif group flex items-center gap-2">
+                            <span class="w-8 h-8 bg-primary text-white flex items-center justify-center rounded-lg font-serif italic text-xl group-hover:bg-accent transition shadow-lg">R</span>
+                            <span>RONALDO <span class="text-accent">PEREIRA</span>.</span>
+                        </a>
+
+                        <nav class="hidden md:flex gap-6 items-center font-medium text-sm tracking-wide text-gray-600">
+                            <a href="#/" class="hover:text-accent transition py-2 font-bold uppercase text-xs">Início</a>
+                            <a href="#/livros" class="hover:text-accent transition py-2 font-bold uppercase text-xs">Livros</a>
+                            <a href="#/servicos" class="hover:text-accent transition py-2 font-bold uppercase text-xs">Serviços</a>
+                            <a href="#/comunidade" class="hover:text-accent transition py-2 font-bold uppercase text-xs text-accent">Comunidade</a>
+                            <a href="#/autor" class="hover:text-accent transition py-2 font-bold uppercase text-xs">Sobre</a>
+                            
+                            <div class="h-6 w-px bg-gray-300 mx-2"></div>
+
+                            <a href="#/painel" class="hover:text-primary transition py-2 font-bold uppercase text-xs flex items-center gap-1 text-gray-400 hover:text-gray-900" title="Acesso Restrito">
+                                <i class="ph-fill ph-lock-key text-lg"></i> Painel
+                            </a>
+
+                            <button onclick="window.app.openCart()" class="relative bg-white border border-gray-200 hover:border-accent text-primary w-10 h-10 rounded-full flex items-center justify-center transition ml-2 shadow-sm hover:shadow-md">
+                                <i class="ph ph-shopping-cart text-lg"></i>
+                                <span id="cart-count" class="absolute -top-1 -right-1 bg-accent text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full opacity-0 transition-opacity shadow-sm">0</span>
+                            </button>
+                        </nav>
+
+                        <button id="menu-button" class="md:hidden text-2xl text-primary p-2">
+                            <i class="ph ph-list"></i>
+                        </button>
+                    </div>
+
+                    <div id="mobile-menu" class="hidden md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-gray-100 flex flex-col p-4 z-50 animate-fade-in">
+                        <a href="#/" class="py-3 px-4 hover:bg-gray-50 rounded font-medium">Início</a>
+                        <a href="#/livros" class="py-3 px-4 hover:bg-gray-50 rounded font-medium">Livros</a>
+                        <a href="#/comunidade" class="py-3 px-4 hover:bg-gray-50 rounded font-medium text-accent">Comunidade</a>
+                        <a href="#/autor" class="py-3 px-4 hover:bg-gray-50 rounded font-medium">Sobre</a>
+                        <a href="#/painel" class="py-3 px-4 hover:bg-gray-50 rounded font-medium">Painel Admin</a>
+                        <button onclick="window.app.openCart()" class="flex items-center gap-2 font-bold text-accent py-3 px-4 border-t mt-2">
+                            <i class="ph ph-shopping-cart"></i> Carrinho (<span id="mobile-cart-count">0</span>)
+                        </button>
+                    </div>
+                </header>
+            `,
+            home: `
+                <section class="flex flex-col-reverse md:flex-row items-center gap-16 py-12 md:py-24 mb-20 animate-fade-in">
+                    <div class="flex-1 space-y-8 text-center md:text-left z-10">
+                        <div class="inline-flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-full shadow-sm mb-2">
+                            <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-gray-600">Último Lançamento</span>
+                        </div>
+                        <h1 class="text-5xl md:text-7xl font-black text-primary leading-[1] tracking-tight">
+                            Mundos que <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400 font-serif italic pr-2">colidem.</span>
+                        </h1>
+                        <p class="text-lg md:text-xl text-gray-600 max-w-lg mx-auto md:mx-0 leading-relaxed font-medium">
+                            Ficção especulativa de alto nível. Junte-se a milhares de leitores e explore o impossível.
+                        </p>
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-6">
+                            <a href="#/livros" class="bg-primary text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-slate-800 hover:shadow-2xl hover:scale-105 transition transform text-sm uppercase tracking-wide">
+                                Ler Agora
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 flex justify-center relative w-full">
+                        <div class="absolute inset-0 bg-gradient-to-tr from-accent/20 to-transparent blur-[100px] rounded-full"></div>
+                        <img src="https://placehold.co/400x550/1e293b/FFF?text=Capa+Nova" class="rounded shadow-2xl rotate-3 hover:rotate-0 transition duration-700 w-full max-w-sm border-8 border-white relative z-10 animate-float" alt="Autor">
+                    </div>
+                </section>
+
+                <section class="py-20">
+                    <div class="flex items-end justify-between mb-12">
+                        <div>
+                             <h2 class="text-4xl font-bold text-primary font-serif mb-2">Em Destaque</h2>
+                             <p class="text-gray-500">O que os leitores estão devorando agora.</p>
+                        </div>
+                        <a href="#/livros" class="text-sm font-bold text-accent hover:underline uppercase tracking-widest mb-2">Ver Catálogo -></a>
+                    </div>
+                    
+                    <div id="home-highlights" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div>
+                </section>
+
+                <section class="my-20 bg-primary rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden text-white shadow-2xl">
+                    <div class="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                    <div class="relative z-10 max-w-4xl mx-auto">
+                        <i class="ph-fill ph-quotes text-6xl text-accent mb-6 opacity-50 block mx-auto"></i>
+                        <h3 class="text-3xl md:text-5xl font-serif font-bold leading-tight mb-8">"Escrever é a única forma que encontrei de viver mil vidas em uma só. E convido você a viver elas comigo."</h3>
+                        <p class="text-slate-400 font-medium tracking-widest uppercase text-sm">— Ronaldo Pereira</p>
+                    </div>
+                </section>
+
+                <section class="py-16 grid grid-cols-1 md:grid-cols-2 gap-12 items-center border-t border-gray-200">
+                    <div>
+                        <h3 class="text-3xl font-bold text-primary font-serif mb-4">Clube do Livro VIP</h3>
+                        <p class="text-gray-600 text-lg mb-6">Receba contos gratuitos, capítulos antecipados e descontos exclusivos. Sem spam, apenas histórias.</p>
+                        <form onsubmit="event.preventDefault(); window.app.toast('Inscrição realizada! Verifique seu e-mail.', 'success')" class="flex gap-3">
+                            <input type="email" placeholder="Seu melhor e-mail" class="flex-1 bg-white border border-gray-300 rounded-xl p-4 focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition">
+                            <button class="bg-primary text-white font-bold px-8 rounded-xl hover:bg-accent transition">Entrar</button>
+                        </form>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl h-64 flex items-center justify-center text-gray-400">
+                        <i class="ph ph-envelope-open text-6xl"></i>
+                    </div>
+                </section>
+            `,
+            // === TEMPLATE DE DETALHES DO LIVRO (NOVO) ===
+            book_details: `
+                <div class="animate-fade-in pt-10">
+                    <button onclick="history.back()" class="flex items-center gap-2 text-gray-500 hover:text-primary font-bold mb-8 transition"><i class="ph-bold ph-arrow-left"></i> Voltar</button>
+                    
+                    <div class="bg-white rounded-[2rem] shadow-2xl border border-gray-100 overflow-hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-0">
+                            <div class="md:col-span-5 bg-gray-100 p-10 flex items-center justify-center relative overflow-hidden">
+                                <div class="absolute inset-0 bg-primary/5 opacity-50"></div>
+                                <div class="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                                <img id="detail-img" src="" class="rounded-lg shadow-2xl w-3/4 max-w-sm rotate-1 relative z-10 hover:rotate-0 transition duration-500">
+                            </div>
+                            
+                            <div class="md:col-span-7 p-10 md:p-14 flex flex-col justify-center">
+                                <span id="detail-genre" class="text-accent font-bold tracking-widest text-xs uppercase mb-3 block"></span>
+                                <h1 id="detail-title" class="text-4xl md:text-5xl font-black text-primary mb-6 font-serif leading-tight"></h1>
+                                
+                                <div class="flex items-center gap-6 mb-8 text-sm text-gray-500">
+                                    <span class="flex items-center gap-1"><i class="ph-fill ph-star text-yellow-400 text-lg"></i> 4.9 (120 reviews)</span>
+                                    <span class="w-px h-4 bg-gray-300"></span>
+                                    <span>320 Páginas</span>
+                                    <span class="w-px h-4 bg-gray-300"></span>
+                                    <span>Português</span>
+                                </div>
+
+                                <p class="text-gray-600 text-lg leading-relaxed mb-8 font-light">
+                                    Uma narrativa envolvente que desafia a percepção da realidade. Neste volume, o autor explora os limites da ficção especulativa com personagens profundos e um enredo cheio de reviravoltas. Prepare-se para não conseguir largar.
+                                </p>
+
+                                <div class="flex items-end gap-6 mb-10">
+                                    <div class="text-4xl font-black text-primary" id="detail-price"></div>
+                                    <span class="text-sm text-gray-400 mb-2 line-through">R$ 59,90</span>
+                                </div>
+
+                                <div class="flex gap-4">
+                                    <button id="detail-buy-btn" class="bg-accent hover:bg-accent-hover text-white px-10 py-4 rounded-xl font-bold shadow-xl hover:shadow-2xl transition transform hover:-translate-y-1 flex items-center gap-2 text-lg">
+                                        <i class="ph-bold ph-bag"></i> Adicionar ao Carrinho
+                                    </button>
+                                    <button class="bg-gray-100 hover:bg-gray-200 text-primary px-4 py-4 rounded-xl font-bold transition">
+                                        <i class="ph-fill ph-heart text-xl"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="col-span-2">
+                            <h3 class="text-2xl font-bold text-primary mb-6 font-serif">Sinopse Completa</h3>
+                            <div class="prose text-gray-600 leading-loose">
+                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+                                <p class="mt-4">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-primary mb-6 font-serif">Outros Leitores</h3>
+                            <div class="space-y-4">
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <div class="flex text-yellow-400 text-xs mb-2"><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i></div>
+                                    <p class="text-sm text-gray-600 italic">"Simplesmente fantástico. O final me pegou de surpresa!"</p>
+                                    <p class="text-xs font-bold text-gray-400 mt-2">- @leitora_voraz</p>
+                                </div>
+                                <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                                    <div class="flex text-yellow-400 text-xs mb-2"><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i></div>
+                                    <p class="text-sm text-gray-600 italic">"A construção de mundo é impecável."</p>
+                                    <p class="text-xs font-bold text-gray-400 mt-2">- Marcos D.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            livros: `
+                <div class="animate-fade-in pt-10 pb-20">
+                    <div class="text-center mb-12">
+                        <span class="text-accent font-bold tracking-[0.2em] text-xs uppercase mb-3 block">Biblioteca Oficial</span>
+                        <h2 class="text-4xl md:text-5xl font-black text-primary mb-4 font-serif">Catálogo Completo</h2>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row gap-10 items-start">
+                    <aside class="w-full lg:w-64 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm shrink-0 top-24 lg:sticky">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-primary font-serif text-lg">Filtrar</h3>
+                                <button onclick="window.app.clearFilters()" class="text-xs text-accent font-bold hover:underline">Limpar</button>
+                            </div>
+                            <div class="mb-6 pb-6 border-b border-gray-100">
+                                <label class="flex items-center justify-between cursor-pointer group">
+                                    <span class="text-sm font-bold text-gray-700 group-hover:text-primary transition"><i class="ph-fill ph-heart text-accent mr-1"></i> Só Favoritos</span>
+                                    <div class="relative">
+                                        <input type="checkbox" id="fav-toggle" onchange="window.app.toggleFavoritesFilter()" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+                                    </div>
+                                </label>
+                            </div>
+                            <div class="mb-8">
+                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Gênero</h4>
+                                <div id="filter-genres" class="space-y-3">
+                                    </div>
+                            </div>
+
+                            <div>
+                                <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Preço Máximo</h4>
+                                <div class="flex items-center justify-between text-sm font-bold text-primary mb-2">
+                                    <span>R$ 0</span>
+                                    <span id="price-display">R$ 100</span>
+                                </div>
+                                <input type="range" id="price-range" min="0" max="200" step="10" class="w-full accent-accent h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                            </div>
+                        </aside>
+
+                        <div class="flex-1 w-full">
+                            <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[400px]"></div>
+                            
+                            <div id="empty-state" class="hidden text-center py-20">
+                                <i class="ph ph-magnifying-glass text-4xl text-gray-300 mb-4"></i>
+                                <p class="text-gray-500">Nenhum livro encontrado com esses filtros.</p>
+                            </div>
+
+                            <div id="pagination-controls" class="flex justify-center items-center gap-3 mt-12 pt-8 border-t border-gray-200"></div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            servicos: `
+                <div class="text-center mb-16 animate-fade-in pt-10">
+                    <h2 class="text-5xl font-black text-primary mb-6 font-serif">Mentoria & Serviços</h2>
+                    <p class="text-gray-500 text-lg max-w-2xl mx-auto">
+                        Do rascunho ao best-seller. Vamos trabalhar juntos na sua história.
+                    </p>
+                </div>
+                <div id="services-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto"></div>
+            `,
+            community: `
+                <div class="animate-fade-in">
+                    <div class="bg-primary rounded-[2rem] p-10 md:p-20 text-center text-white mb-16 relative overflow-hidden">
+                        <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                        <div class="relative z-10">
+                            <span class="bg-white/10 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block backdrop-blur-md">O Blog do Autor</span>
+                            <h2 class="text-4xl md:text-6xl font-serif font-bold mb-6">Bastidores & Café</h2>
+                            <p class="text-slate-300 max-w-2xl mx-auto text-lg leading-relaxed">
+                                Atualizações sobre novos lançamentos, dicas de escrita e discussões abertas com os leitores.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                        <div class="lg:col-span-2">
+                            <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg mb-10">
+                                <h3 class="text-2xl font-bold text-primary font-serif mb-2"><i class="ph-fill ph-fire text-accent"></i> Discussão da Semana</h3>
+                                <p class="text-gray-600 mb-6">Teorias sobre o final de "O Código da Eternidade": O que realmente aconteceu no portal?</p>
+                                <div id="comments-section" class="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2"></div>
+                                <div id="comment-input-area" class="border-t border-gray-100 pt-6"></div>
+                            </div>
+                            <h4 class="font-bold text-gray-400 uppercase text-xs tracking-widest mb-6">Artigos Recentes</h4>
+                            <div id="blog-feed" class="space-y-8"></div>
+                        </div>
+                        <div class="space-y-8">
+                            <div class="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
+                                <h4 class="font-bold text-primary mb-6 flex items-center gap-2"><i class="ph-fill ph-chat-circle-text text-accent"></i> Últimos Comentários</h4>
+                                <div class="space-y-6">
+                                    <div class="flex gap-3"><img src="https://placehold.co/40x40/333/FFF?text=L" class="w-10 h-10 rounded-full"><div><p class="text-xs font-bold text-gray-900">Luana M.</p><p class="text-sm text-gray-600 mt-1">"O final do capítulo 12 me destruiu!"</p></div></div>
+                                    <div class="flex gap-3"><img src="https://placehold.co/40x40/555/FFF?text=P" class="w-10 h-10 rounded-full"><div><p class="text-xs font-bold text-gray-900">Pedro H.</p><p class="text-sm text-gray-600 mt-1">"A teoria do multiverso faz sentido."</p></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            about: `
+                <div class="animate-fade-in pb-20">
+                    <div class="text-center mb-16 pt-10">
+                        <h2 class="text-5xl md:text-6xl font-black text-primary mb-4 font-serif">Quem escreve?</h2>
+                        <p class="text-gray-500 text-lg">Um pouco da loucura por trás dos livros.</p>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+                        <div class="relative">
+                            <img src="https://placehold.co/600x800/1e293b/FFF?text=Autor+Pro" class="rounded-2xl shadow-2xl w-full object-cover h-[600px] grayscale hover:grayscale-0 transition duration-700">
+                            <div class="absolute -bottom-10 -right-5 md:-right-10 w-64 polaroid bg-white p-3 pb-12 shadow-2xl rounded transform rotate-3 hover:rotate-0 transition duration-500 z-20">
+                                <div class="tape -top-3 left-1/2 -translate-x-1/2"></div>
+                                <img src="https://placehold.co/300x300/d97706/FFF?text=Família" class="w-full h-48 object-cover rounded-sm mb-2">
+                                <p class="text-center font-hand text-2xl text-gray-700 rotate-1">Meu porto seguro ❤️</p>
+                            </div>
+                        </div>
+                        <div class="space-y-8 pt-10">
+                            <h3 class="text-3xl font-bold text-primary font-serif">De leitor ávido a criador de mundos.</h3>
+                            <div class="prose text-gray-600 leading-loose text-lg">
+                                <p>Olá! Sou o <strong class="text-primary">Ronaldo Pereira</strong>. Minha jornada começou devorando livros na biblioteca. Hoje, dedico minha vida a criar histórias que misturam tecnologia, magia e a complexidade humana.</p>
+                            </div>
+                            <div class="border-l-2 border-gray-200 pl-8 space-y-8 mt-8">
+                                <div class="relative"><div class="absolute -left-[39px] top-1 w-5 h-5 bg-accent rounded-full border-4 border-white"></div><h4 class="font-bold text-primary">2015</h4><p class="text-sm text-gray-500">Primeiro conto online.</p></div>
+                                <div class="relative"><div class="absolute -left-[39px] top-1 w-5 h-5 bg-gray-300 rounded-full border-4 border-white"></div><h4 class="font-bold text-primary">2025</h4><p class="text-sm text-gray-500">Carreira consolidada.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            contact: `
+                <div class="max-w-2xl mx-auto text-center mb-10 pt-10 animate-fade-in">
+                    <h2 class="text-4xl font-bold text-primary font-serif mb-3">Vamos Conversar?</h2>
+                    <p class="text-gray-500 text-lg">Dúvidas sobre livros, parcerias ou serviços.</p>
+                </div>
+                <form class="bg-white border border-gray-200 rounded-2xl p-8 shadow-xl max-w-xl mx-auto space-y-5 animate-fade-in" onsubmit="event.preventDefault(); window.app.toast('Mensagem enviada com sucesso!', 'success')">
+                    <div class="grid grid-cols-2 gap-5">
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Nome</label><input type="text" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-700 form-input transition"></div>
+                        <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2">E-mail</label><input type="email" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-700 form-input transition"></div>
+                    </div>
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Assunto</label><select class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-700 form-input transition"><option>Parceria</option><option>Outros</option></select></div>
+                    <div><label class="block text-xs font-bold text-gray-400 uppercase mb-2">Mensagem</label><textarea rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-gray-700 form-input transition"></textarea></div>
+                    <button class="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-slate-700 transition shadow-lg transform hover:-translate-y-1">Enviar Mensagem</button>
+                </form>
+            `,
+            login: `
+                <div class="flex items-center justify-center min-h-[60vh] animate-fade-in">
+                    <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-accent"></div>
+                        <div class="text-center mb-8">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-primary text-3xl"><i class="ph-fill ph-lock-key"></i></div>
+                            <h2 class="text-2xl font-bold text-primary font-serif">Acesso Restrito</h2>
+                            <p class="text-gray-500 text-sm">Área exclusiva para gestão.</p>
+                        </div>
+                        <form onsubmit="event.preventDefault(); window.app.handleLogin()">
+                            <div class="space-y-4">
+                                <input type="email" id="email" placeholder="E-mail" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input" value="admin@ronaldo.com">
+                                <input type="password" id="password" placeholder="Senha" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input" value="admin">
+                                <button class="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-accent transition shadow-lg">Entrar no Painel</button>
+                            </div>
+                        </form>
+                        <p class="text-center text-xs text-gray-400 mt-6"><i class="ph-fill ph-shield-check"></i> Conexão Segura SSL</p>
+                    </div>
+                </div>
+            `,
+            dashboard: `
+                <div class="animate-fade-in">
+                    <div class="flex justify-between items-center mb-8">
+                        <div>
+                            <h2 class="text-3xl font-bold text-primary font-serif">Painel do Escritor</h2>
+                            <p class="text-gray-500">Bem-vindo de volta, Ronaldo.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="window.app.extractReport()" class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:border-accent hover:text-accent transition shadow-sm font-bold text-sm"><i class="ph ph-file-pdf"></i> Extrair Relatório</button>
+                            <button onclick="window.app.logout()" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm"><i class="ph ph-sign-out"></i> Sair</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                        <div class="dashboard-card border-l-4 border-accent relative overflow-hidden">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Vendas Totais</p>
+                            <h3 class="text-3xl font-black text-primary">R$ 14.502</h3>
+                            <div class="mt-4 flex items-end gap-1 h-10">
+                                <div class="flex-1 bg-accent/20 rounded-t h-full"></div>
+                                <div class="flex-1 bg-accent/40 rounded-t h-3/4"></div>
+                                <div class="flex-1 bg-accent rounded-t h-full animate-pulse"></div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card relative overflow-hidden">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Livros Vendidos</p>
+                            <h3 class="text-3xl font-black text-primary">482</h3>
+                            <div class="w-16 h-16 absolute -right-2 -bottom-2 bg-primary/5 rounded-full flex items-center justify-center text-primary/20"><i class="ph-fill ph-book-open text-4xl"></i></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Visitas no Site</p>
+                            <h3 class="text-3xl font-black text-primary">12.4k</h3>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 mt-4"><div class="bg-green-500 h-1.5 rounded-full w-3/4"></div></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Leads (Email)</p>
+                            <h3 class="text-3xl font-black text-primary">1.205</h3>
+                            <p class="text-xs text-gray-400 mt-2">Novos inscritos hoje: <strong>+24</strong></p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2 dashboard-card">
+                            <div class="flex justify-between items-center mb-6">
+                                <h3 class="font-bold text-lg text-primary">Estoque & Catálogo</h3>
+                                <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition">+ Novo Livro</button>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left text-sm text-gray-600">
+                                    <thead class="bg-gray-50 text-gray-400 uppercase text-xs">
+                                        <tr><th class="p-3">Capa</th><th class="p-3">Título</th><th class="p-3">Preço</th><th class="p-3">Estoque</th><th class="p-3 text-right">Ação</th></tr>
+                                    </thead>
+                                    <tbody id="admin-books-table">
+                                        </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="dashboard-card bg-primary text-white border-none relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                                <h3 class="font-bold text-lg mb-6 relative z-10">Solicitações de Mentoria</h3>
+                                <div class="space-y-4 relative z-10">
+                                    <div class="bg-white/10 p-3 rounded-xl flex items-center justify-between backdrop-blur-sm">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-accent rounded-full flex items-center justify-center font-bold">M</div>
+                                            <div><p class="font-bold text-sm">Maria Silva</p><p class="text-xs text-slate-400">Revisão Textual</p></div>
+                                        </div>
+                                        <button class="text-xs bg-white text-primary px-3 py-1 rounded font-bold hover:bg-gray-200">Ver</button>
+                                    </div>
+                                    <div class="bg-white/10 p-3 rounded-xl flex items-center justify-between backdrop-blur-sm">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center font-bold">J</div>
+                                            <div><p class="font-bold text-sm">João Pedro</p><p class="text-xs text-slate-400">Mentoria</p></div>
+                                        </div>
+                                        <button class="text-xs bg-white text-primary px-3 py-1 rounded font-bold hover:bg-gray-200">Ver</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-card">
+                                <h3 class="font-bold text-lg text-primary mb-4">Atividade Recente</h3>
+                                <ul class="space-y-3">
+                                    <li class="flex gap-3 items-start text-sm">
+                                        <span class="w-2 h-2 mt-1.5 bg-green-500 rounded-full shrink-0"></span>
+                                        <p class="text-gray-600"><strong class="text-gray-900">Venda #1023</strong> confirmada (Pix) - R$ 49,90</p>
+                                    </li>
+                                    <li class="flex gap-3 items-start text-sm">
+                                        <span class="w-2 h-2 mt-1.5 bg-blue-500 rounded-full shrink-0"></span>
+                                        <p class="text-gray-600">Novo comentário de <strong class="text-gray-900">Carlos</strong> no Fórum.</p>
+                                    </li>
+                                    <li class="flex gap-3 items-start text-sm">
+                                        <span class="w-2 h-2 mt-1.5 bg-accent rounded-full shrink-0"></span>
+                                        <p class="text-gray-600">Estoque de <strong class="text-gray-900">Vol. 4</strong> baixo (5 un).</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+        // ==========================================
+        // 2. DADOS & ESTADO
+        // ==========================================
+        const DB = {
+            author: { name: "Ronaldo Pereira", role: "Escritor", avatar: "https://placehold.co/150x150/1e293b/FFF?text=RP" },
+            books: [], // Preenchido dinamicamente
+            services: [
+                { id: 'S1', name: 'Design de Capa', price: 800.00, description: 'Capa impactante focada em vendas. Identidade visual completa.' },
+                { id: 'S2', name: 'Revisão Textual', price: 0.05, unit: 'p/ palavra', description: 'Correção ortográfica, gramatical e de coerência.' },
+                { id: 'S3', name: 'Mentoria Literária', price: 500.00, description: 'Sessões de 1h30 para desbloquear sua escrita e planejar sua carreira.' }
+            ],
+            posts: [
+                { id: 1, title: "Como venci o bloqueio criativo", date: "2 dias atrás", category: "Escrita", image: "https://placehold.co/600x300/1e293b/FFF?text=Bloqueio", likes: 142, comments: 23 },
+                { id: 2, title: "O futuro da Ficção no Brasil", date: "1 sem atrás", category: "Opinião", image: "https://placehold.co/600x300/d97706/FFF?text=SciFi", likes: 89, comments: 45 }
+            ],
+            comments: [
+                { id: 1, user: "Carlos M.", avatar: "https://placehold.co/40x40/333/FFF?text=C", text: "Achei o plot twist final genial!", date: "Há 2 horas" },
+                { id: 2, user: "Ana Clara", avatar: "https://placehold.co/40x40/555/FFF?text=A", text: "Alguém mais notou a referência no cap 4?", date: "Há 5 horas" }
+            ]
+        };
+
+        // Gerador de Livros (Mock Data)
+        function generateBooks() {
+            const covers = ['1e293b', 'd97706', '475569', '0f766e', 'be123c', '4338ca'];
+            for(let i=1; i<=12; i++) {
+                DB.books.push({
+                    id: i.toString(),
+                    title: i === 1 ? 'O Código da Eternidade' : `Livro Volume ${i}`,
+                    genre: i % 2 === 0 ? 'Fantasia Urbana' : 'Ficção Científica',
+                    price: 29.90 + (i * 2),
+                    cover: `https://placehold.co/300x450/${covers[i % covers.length]}/FFF?text=Vol.${i}`,
+                    stock: Math.floor(Math.random() * 100)
+                });
+            }
+        }
+        generateBooks();
+
+        // --- SEÇÃO ESTADO GLOBAL ---
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        // NOVO: Persistência de Favoritos
+        let favorites = JSON.parse(localStorage.getItem('user_favorites')) || []; 
+        // NOVO: Estado dos Filtros
+        let activeFilters = { 
+            genres: [], 
+            maxPrice: 200, 
+            favoritesOnly: false // <--- ADICIONE ISSO
+        };
+
+        let user = JSON.parse(localStorage.getItem('user')) || null;
+        let isAdmin = localStorage.getItem('isAdmin') === 'true';
+        let currentPage = 1;
+        const itemsPerPage = 6;
+
+        // ==========================================
+        // 3. LÓGICA DO APP (ROUTER & CONTROLLERS)
+        // ==========================================
+        
+        function router() {
+            const hash = window.location.hash || '#/';
+            const app = document.getElementById('app');
+            let pageKey = 'home';
+
+            // Roteamento Avançado
+            if(hash === '#/') pageKey = 'home';
+            else if(hash.startsWith('#/livro/')) pageKey = 'book_details'; // Rota Dinâmica
+            else if(hash.includes('livros')) pageKey = 'livros';
+            else if(hash.includes('servicos')) pageKey = 'servicos';
+            else if(hash.includes('autor')) pageKey = 'about';
+            else if(hash.includes('contato')) pageKey = 'contact';
+            else if(hash.includes('comunidade')) pageKey = 'community';
+            else if(hash.includes('painel')) pageKey = isAdmin ? 'dashboard' : 'login';
+
+            app.innerHTML = TEMPLATES[pageKey];
+            window.scrollTo(0, 0);
+            
+            // Inicializa componentes específicos
+            if(pageKey === 'home') initHome();
+            if(pageKey === 'livros') { currentPage = 1; initLivros(); }
+            if(pageKey === 'book_details') { const id = hash.split('/')[2]; initBookDetails(id); }
+            if(pageKey === 'servicos') initServicos();
+            if(pageKey === 'about') initAbout();
+            if(pageKey === 'community') initCommunity();
+            if(pageKey === 'dashboard') initDashboard();
+            
+            const menu = document.getElementById('mobile-menu');
+            if(menu) menu.classList.add('hidden');
+        }
+
+        function updateCartUI() {
+            localStorage.setItem('cart', JSON.stringify(cart));
+            const count = cart.reduce((acc, item) => acc + item.qty, 0);
+            const badges = document.querySelectorAll('#cart-count, #mobile-cart-count');
+            badges.forEach(b => {
+                if(b) { b.textContent = count; b.classList.toggle('opacity-0', count === 0); }
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const color = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+            const icon = type === 'success' ? 'ph-check-circle' : 'ph-warning-circle';
+            
+            toast.className = `${color} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform translate-x-full transition-all duration-500 pointer-events-auto min-w-[300px]`;
+            toast.innerHTML = `<i class="ph-fill ${icon} text-xl"></i> <span class="font-bold text-sm">${message}</span>`;
+            
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-x-full'));
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        // --- CONTROLLERS ---
+
+        function initBookDetails(id) {
+            const book = DB.books.find(b => b.id === id);
+            if(!book) { window.location.hash = '#/livros'; return; }
+            
+            document.getElementById('detail-img').src = book.cover;
+            document.getElementById('detail-title').innerText = book.title;
+            document.getElementById('detail-genre').innerText = book.genre;
+            document.getElementById('detail-price').innerText = `R$ ${book.price.toFixed(2)}`;
+            
+            document.getElementById('detail-buy-btn').onclick = () => window.app.addToCart(book.id);
+
+            // Lógica do botão de favorito
+            // Nota: Como o botão no seu template não tinha ID, vamos selecioná-lo pelo ícone ou classe
+            const favBtn = document.querySelector('.ph-heart').parentElement; 
+            const favIcon = favBtn.querySelector('i');
+
+            const updateState = () => {
+                if(favorites.includes(book.id)) {
+                    favIcon.className = "ph-fill ph-heart text-xl text-red-500";
+                    favBtn.classList.add('bg-red-50');
+                } else {
+                    favIcon.className = "ph-fill ph-heart text-xl text-primary"; // ou text-gray-400
+                    favBtn.classList.remove('bg-red-50');
+                }
+            };
+            
+            favBtn.onclick = () => {
+                window.app.toggleFavorite(book.id);
+                updateState();
+            };
+            updateState();
+        }
+
+        function initDashboard() {
+            const tbody = document.getElementById('admin-books-table');
+            if(!tbody) return;
+            tbody.innerHTML = DB.books.map(b => `
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition group">
+                    <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm group-hover:scale-110 transition"></td>
+                    <td class="p-3 font-bold text-primary">${b.title}</td>
+                    <td class="p-3">R$ ${b.price.toFixed(2)}</td>
+                    <td class="p-3"><span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-bold">${b.stock} un</span></td>
+                    <td class="p-3 text-right">
+                        <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:text-blue-700 mr-3 p-2 hover:bg-blue-50 rounded-full transition" title="Editar"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
+                        <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded-full transition" title="Excluir"><i class="ph-bold ph-trash text-lg"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Funções de Inicialização Padrão
+        function initHome() {
+            const container = document.getElementById('home-highlights');
+            if(!container) return;
+            const bestSeller = DB.books[0];
+            const service = DB.services[2];
+            container.innerHTML = `
+                <div class="card-interaction bg-white p-8 rounded-3xl shadow-lg border border-gray-100 flex flex-col md:flex-row gap-8 items-center relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-accent/5 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                    <div class="relative flex-shrink-0 animate-float"><img src="${bestSeller.cover}" class="w-36 rounded shadow-xl rotate-3 border-4 border-white group-hover:rotate-0 transition duration-500"></div>
+                    <div class="text-center md:text-left z-10">
+                        <div class="text-xs font-bold text-accent uppercase tracking-widest mb-2">Sucesso</div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-2 font-serif">${bestSeller.title}</h3>
+                        <p class="text-sm text-gray-500 mb-5 max-w-xs mx-auto md:mx-0">Uma jornada épica que está conquistando o Brasil. Disponível agora.</p>
+                        <button onclick="window.app.addToCart('${bestSeller.id}')" class="bg-primary hover:bg-slate-700 text-white py-3 px-8 rounded-full font-bold text-sm transition shadow-lg">Comprar - R$ ${bestSeller.price.toFixed(2)}</button>
+                    </div>
+                </div>
+                <div class="card-interaction bg-primary p-10 rounded-3xl shadow-xl text-white flex flex-col justify-center relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-4 mb-6"><div class="bg-white/10 p-4 rounded-2xl backdrop-blur-md"><i class="ph ph-student text-3xl text-accent"></i></div><div><h3 class="text-xl font-bold leading-none">Mentoria</h3><p class="text-xs text-slate-400 uppercase tracking-wide mt-1">Exclusiva</p></div></div>
+                        <p class="text-slate-300 text-sm mb-8 leading-relaxed">Você tem uma história incrível, mas travou? Eu posso te ajudar.</p>
+                        <button onclick="window.app.openServiceModal('${service.id}')" class="w-full bg-white text-primary py-3 px-8 rounded-full font-bold text-sm transition hover:bg-accent hover:text-white">Conhecer Mentoria</button>
+                    </div>
+                </div>`;
+        }
+
+        function initCommunity() {
+            const feed = document.getElementById('blog-feed');
+            const commentsSection = document.getElementById('comments-section');
+            const inputArea = document.getElementById('comment-input-area');
+            if(!feed) return;
+            feed.innerHTML = DB.posts.map(post => `
+                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition duration-300 group">
+                    <div class="h-48 overflow-hidden relative"><img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700"><span class="absolute top-4 left-4 bg-white/90 backdrop-blur text-primary text-xs font-bold px-3 py-1 rounded-full uppercase">${post.category}</span></div>
+                    <div class="p-8"><div class="flex items-center gap-2 text-xs text-gray-400 mb-3"><i class="ph ph-calendar"></i> ${post.date}</div><h3 class="text-2xl font-bold text-primary mb-3 font-serif group-hover:text-accent transition">${post.title}</h3><p class="text-gray-600 mb-6 leading-relaxed">Lorem ipsum dolor sit amet...</p><div class="flex items-center justify-between border-t border-gray-100 pt-4"><button class="text-accent font-bold text-sm hover:underline">Ler Artigo</button><div class="flex gap-4 text-gray-400 text-sm"><span class="flex items-center gap-1"><i class="ph-fill ph-heart"></i> ${post.likes}</span><span class="flex items-center gap-1"><i class="ph-fill ph-chat-circle"></i> ${post.comments}</span></div></div></div>
+                </div>`).join('');
+            
+            const renderComments = () => {
+                commentsSection.innerHTML = DB.comments.map(c => `<div class="flex gap-4 animate-fade-in"><img src="${c.avatar}" class="w-10 h-10 rounded-full border border-gray-200"><div class="bg-gray-50 p-4 rounded-xl rounded-tl-none flex-1"><div class="flex justify-between items-center mb-1"><span class="font-bold text-sm text-primary">${c.user}</span><span class="text-xs text-gray-400">${c.date}</span></div><p class="text-gray-600 text-sm">${c.text}</p></div></div>`).join('');
+            };
+            renderComments();
+
+            if(user) {
+                inputArea.innerHTML = `<div class="flex gap-4 items-start"><img src="${user.avatar}" class="w-10 h-10 rounded-full border-2 border-accent"><div class="flex-1"><textarea id="new-comment" rows="2" placeholder="Participe da discussão..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-accent transition resize-none"></textarea><button onclick="window.app.postComment()" class="mt-2 bg-accent text-white px-6 py-2 rounded-lg text-xs font-bold hover:bg-accent-hover transition">Enviar</button></div></div>`;
+            } else {
+                inputArea.innerHTML = `<div class="text-center bg-gray-50 p-6 rounded-xl border border-gray-200 border-dashed"><p class="text-gray-500 text-sm mb-4">Faça login para participar da discussão.</p><button onclick="window.app.connectGoogle()" class="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-gray-50 transition flex items-center justify-center gap-2 mx-auto"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> Conectar com Google</button></div>`;
+            }
+        }
+
+        function initLivros() {
+            const grid = document.getElementById('books-grid');
+            const controls = document.getElementById('pagination-controls');
+            const filterContainer = document.getElementById('filter-genres');
+            const priceRange = document.getElementById('price-range');
+            const emptyState = document.getElementById('empty-state');
+            
+            const favToggle = document.getElementById('fav-toggle');
+                if(favToggle) favToggle.checked = activeFilters.favoritesOnly;
+
+            if(!grid) return;
+
+            // 1. Renderizar Checkboxes de Gênero
+            const allGenres = [...new Set(DB.books.map(b => b.genre))];
+            filterContainer.innerHTML = allGenres.map(g => `
+                <label class="flex items-center gap-3 cursor-pointer group">
+                    <div class="relative flex items-center">
+                        <input type="checkbox" value="${g}" onchange="window.app.toggleGenre('${g}')" 
+                            ${activeFilters.genres.includes(g) ? 'checked' : ''}
+                            class="peer appearance-none w-5 h-5 border-2 border-gray-300 rounded checked:bg-accent checked:border-accent transition">
+                        <i class="ph-bold ph-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-xs opacity-0 peer-checked:opacity-100 pointer-events-none"></i>
+                    </div>
+                    <span class="text-sm text-gray-600 group-hover:text-primary transition">${g}</span>
+                </label>
+            `).join('');
+
+
+            
+            // 2. Configurar Slider de Preço
+            priceRange.value = activeFilters.maxPrice;
+            document.getElementById('price-display').innerText = `R$ ${activeFilters.maxPrice}`;
+            priceRange.oninput = (e) => {
+                activeFilters.maxPrice = Number(e.target.value);
+                document.getElementById('price-display').innerText = `R$ ${activeFilters.maxPrice}`;
+                currentPage = 1; // Reseta página
+                initLivros(); // Re-renderiza
+            };
+
+            // 3. Lógica de Filtragem (Intersection de Gênero E Preço)
+            const filteredBooks = DB.books.filter(b => {
+                    const matchGenre = activeFilters.genres.length === 0 || activeFilters.genres.includes(b.genre);
+                    const matchPrice = b.price <= activeFilters.maxPrice;
+                    
+                    // NOVO: Checa se deve mostrar apenas favoritos
+                    const matchFav = !activeFilters.favoritesOnly || favorites.includes(b.id);
+
+                    return matchGenre && matchPrice && matchFav;
+            });
+
+            // 4. Tratamento de Lista Vazia
+            if(filteredBooks.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                controls.innerHTML = '';
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            // 5. Paginação e Renderização dos Cards
+            const start = (currentPage - 1) * itemsPerPage;
+            const booksToShow = filteredBooks.slice(start, start + itemsPerPage);
+            const totalPages = Math.ceil(filteredBooks.length / itemsPerPage);
+
+            grid.innerHTML = booksToShow.map(b => {
+                const isFav = favorites.includes(b.id);
+                const heartClass = isFav ? 'ph-fill text-red-500' : 'ph-bold text-gray-400';
+                
+                return `
+                <div class="card-interaction bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col h-full group hover:shadow-xl transition-all duration-300">
+                    <div class="relative mb-4 overflow-hidden rounded-xl bg-gray-100 aspect-[2/3]">
+                        <img src="${b.cover}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110 cursor-pointer" onclick="window.location.hash='#/livro/${b.id}'">
+                        <button onclick="window.app.toggleFavorite('${b.id}')" class="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-20">
+                            <i class="${heartClass} ph-heart text-xl transition-colors"></i>
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="text-[10px] font-bold text-accent uppercase tracking-wider mb-1">${b.genre}</p>
+                            <h3 class="text-lg font-bold text-gray-900 leading-tight font-serif cursor-pointer hover:text-accent transition" onclick="window.location.hash='#/livro/${b.id}'">${b.title}</h3>
+                        </div>
+                    </div>
+                    <div class="mt-auto pt-4 flex items-center justify-between border-t border-gray-50">
+                        <span class="text-xl font-black text-slate-800">R$ ${b.price.toFixed(2)}</span>
+                        <button onclick="window.app.addToCart('${b.id}')" class="bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold text-xs px-4 py-2 rounded-lg transition border border-gray-200 hover:border-primary">Comprar</button>
+                    </div>
+                </div>`;
+            }).join('');
+
+            let paginationHTML = ``;
+            if(totalPages > 1) {
+                paginationHTML += `<button onclick="window.app.changePage(${currentPage - 1})" class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''}><i class="ph ph-caret-left"></i></button>`;
+                for(let i = 1; i <= totalPages; i++) { paginationHTML += `<button onclick="window.app.changePage(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}">${i}</button>`; }
+                paginationHTML += `<button onclick="window.app.changePage(${currentPage + 1})" class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''}><i class="ph ph-caret-right"></i></button>`;
+            }
+            controls.innerHTML = paginationHTML;
+        }
+
+        function initServicos() { const grid = document.getElementById('services-grid'); if(!grid) return; grid.innerHTML = DB.services.map((s, index) => `<div class="card-interaction bg-white p-10 rounded-[2rem] shadow-xl border border-gray-100 flex flex-col h-full relative overflow-hidden group"><div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-accent"></div><div class="text-8xl text-gray-50 absolute -bottom-10 -right-10 font-black z-0 group-hover:text-gray-100 transition">0${index+1}</div><div class="relative z-10"><h3 class="text-2xl font-bold text-gray-900 mb-3 font-serif">${s.name}</h3><div class="text-4xl font-black text-slate-800 mb-6 flex items-baseline gap-2">R$ ${s.price} <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">${s.unit || ''}</span></div><p class="text-gray-600 mb-10 text-base leading-relaxed">${s.description}</p><button onclick="window.app.openServiceModal('${s.id}')" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-sm transition hover:bg-accent hover:shadow-xl hover:-translate-y-1">Solicitar Orçamento</button></div></div>`).join(''); }
+        function initAbout() { const els = { name: document.getElementById('author-name-title'), role: document.getElementById('author-role'), bio: document.getElementById('author-bio'), img: document.getElementById('author-avatar') }; if(els.name) els.name.innerText = DB.author.name; if(els.role) els.role.innerText = DB.author.role; if(els.bio) els.bio.innerText = DB.author.bio; if(els.img) els.img.src = DB.author.avatar; }
+        function initHeaderLogic() { const btn = document.getElementById('menu-button'); const menu = document.getElementById('mobile-menu'); if(btn && menu) { btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); }; document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add('hidden'); }); } const header = document.getElementById('header-container'); window.addEventListener('scroll', () => { if(window.scrollY > 10) { header.classList.add('glass-header'); header.classList.remove('py-4'); header.classList.add('py-2'); } else { header.classList.remove('glass-header'); header.classList.remove('py-2'); header.classList.add('py-4'); } }); updateCartUI(); }
+
+        // ==========================================
+        // 4. API PÚBLICA (ADMIN, AUTH & WORKFLOWS)
+        // ==========================================
+        window.app = {
+            toast: (msg, type) => showToast(msg, type),
+            addToCart: (id) => { const book = DB.books.find(b => b.id === id); const item = cart.find(i => i.id === id); if (item) item.qty++; else cart.push({ ...book, qty: 1 }); updateCartUI(); window.app.toast('Adicionado ao carrinho!', 'success'); },
+            removeFromCart: (id) => { cart = cart.filter(i => i.id !== id); updateCartUI(); window.app.openCart(); },
+            changePage: (n) => { currentPage = n; initLivros(); document.getElementById('books-grid').scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+            
+        // --- NOVAS FUNÇÕES (FAVORITOS E FILTROS) ---
+            toggleFavorite: (id) => {
+                if (favorites.includes(id)) {
+                    favorites = favorites.filter(favId => favId !== id);
+                    window.app.toast('Removido dos favoritos', 'success');
+                } else {
+                    favorites.push(id);
+                    window.app.toast('Adicionado aos favoritos!', 'success');
+                }
+                localStorage.setItem('user_favorites', JSON.stringify(favorites));
+                // Se estiver na tela de livros, re-renderiza para atualizar ícone
+                if (window.location.hash.includes('livros')) initLivros();
+            },
+
+            toggleGenre: (genre) => {
+                if(activeFilters.genres.includes(genre)) {
+                    activeFilters.genres = activeFilters.genres.filter(g => g !== genre);
+                } else {
+                    activeFilters.genres.push(genre);
+                }
+                currentPage = 1;
+                initLivros();
+            },
+
+            toggleFavoritesFilter: () => {
+                activeFilters.favoritesOnly = !activeFilters.favoritesOnly;
+                currentPage = 1;
+                initLivros();
+            },
+
+            clearFilters: () => {
+                // Agora reseta favoritos também
+                activeFilters = { genres: [], maxPrice: 200, favoritesOnly: false };
+                currentPage = 1;
+                initLivros();
+            },
+            // ... Mantenha o restante (addToCart, etc) abaixo ...
+
+            // ADMIN CRUD
+            openBookModal: (id = null) => {
+                const book = id ? DB.books.find(b => b.id === id) : { id: '', title: '', price: '', stock: '', cover: '' };
+                const isEdit = !!id;
+                const body = `
+                    <div class="space-y-4">
+                        <input type="hidden" id="book-id" value="${book.id || ''}">
+                        <div><label class="text-xs font-bold text-gray-500 uppercase">Título</label><input type="text" id="book-title" value="${book.title}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Preço</label><input type="number" id="book-price" value="${book.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Estoque</label><input type="number" id="book-stock" value="${book.stock}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
+                        </div>
+                        <div><label class="text-xs font-bold text-gray-500 uppercase">URL Capa</label><input type="text" id="book-cover" value="${book.cover}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
+                    </div>`;
+                const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.saveBook(${isEdit})" class="bg-primary text-white px-6 py-2 rounded-lg font-bold shadow-lg">${isEdit ? 'Atualizar' : 'Criar'}</button>`;
+                window.app.openModalGeneric(isEdit ? "Editar Livro" : "Novo Livro", body, footer);
+            },
+            saveBook: (isEdit) => {
+                const id = document.getElementById('book-id').value;
+                const title = document.getElementById('book-title').value;
+                const price = parseFloat(document.getElementById('book-price').value);
+                const stock = parseInt(document.getElementById('book-stock').value);
+                const cover = document.getElementById('book-cover').value || 'https://placehold.co/300x450/333/FFF?text=Capa';
+
+                if(!title || !price) return window.app.toast('Preencha os campos obrigatórios', 'error');
+
+                if(isEdit) {
+                    const book = DB.books.find(b => b.id === id);
+                    book.title = title; book.price = price; book.stock = stock; book.cover = cover;
+                    window.app.toast('Livro atualizado!', 'success');
+                } else {
+                    DB.books.unshift({ id: Date.now().toString(), title, price, stock, cover, genre: 'Novo Lançamento' });
+                    window.app.toast('Livro criado!', 'success');
+                }
+                initDashboard();
+                window.app.closeModal();
+            },
+            deleteBook: (id) => {
+                if(confirm('Tem certeza que deseja excluir este livro?')) {
+                    DB.books = DB.books.filter(b => b.id !== id);
+                    initDashboard();
+                    window.app.toast('Livro excluído.', 'success');
+                }
+            },
+
+            // AUTH & COMMUNITY
+            connectGoogle: () => { user = { name: "Visitante", avatar: "https://placehold.co/40x40/d97706/FFF?text=Eu" }; localStorage.setItem('user', JSON.stringify(user)); initCommunity(); window.app.toast('Conectado como Visitante', 'success'); },
+            postComment: () => { const text = document.getElementById('new-comment').value; if(text.trim()) { DB.comments.unshift({ id: Date.now(), user: user.name, avatar: user.avatar, text: text, date: "Agora mesmo" }); initCommunity(); window.app.toast('Comentário publicado!', 'success'); } },
+            handleLogin: () => { const e = document.getElementById('email').value; const p = document.getElementById('password').value; if(e === 'admin@ronaldo.com' && p === 'admin') { isAdmin = true; localStorage.setItem('isAdmin', 'true'); window.location.hash = '#/painel'; router(); window.app.toast('Bem-vindo, Chefe!', 'success'); } else { window.app.toast('Credenciais inválidas', 'error'); } },
+            logout: () => { isAdmin = false; localStorage.removeItem('isAdmin'); window.location.hash = '#/'; router(); },
+            extractReport: () => { window.app.toast('Gerando relatório PDF...', 'success'); setTimeout(() => window.app.toast('Download iniciado!', 'success'), 2000); },
+
+            // MODAIS & CHECKOUT
+            openModalGeneric: (title, bodyHTML, footerHTML) => { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = bodyHTML; document.getElementById('modal-footer').innerHTML = footerHTML; const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('opacity-0', 'scale-95'); }, 10); },
+            closeModal: () => { const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.add('opacity-0'); content.classList.add('opacity-0', 'scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); },
+            openCart: () => {
+                const total = cart.reduce((a,c) => a + c.price * c.qty, 0);
+                let body = '', footer = '';
+                if(cart.length === 0) {
+                    body = '<div class="text-center py-20 animate-fade-in"><i class="ph ph-basket text-6xl text-gray-200 mb-4 block mx-auto"></i><p class="text-gray-400 font-medium">Seu carrinho está vazio.</p></div>';
+                    footer = `<button onclick="window.app.closeModal()" class="text-gray-500 font-bold text-sm">Fechar</button>`;
+                } else {
+                    body = cart.map(item => `<div class="flex justify-between items-center border-b border-gray-100 py-4 last:border-0 animate-fade-in"><div class="flex items-center gap-4"><div class="bg-gray-100 p-3 rounded-lg text-2xl text-gray-500"><i class="ph ph-book"></i></div><div><p class="font-bold text-gray-800 text-sm mb-1">${item.title}</p><p class="text-xs text-accent font-bold uppercase tracking-wide">${item.qty}x R$ ${item.price.toFixed(2)}</p></div></div><button onclick="window.app.removeFromCart('${item.id}')" class="text-gray-300 hover:text-red-500 p-2 transition"><i class="ph ph-trash text-xl"></i></button></div>`).join('') + `<div class="mt-6 flex justify-between items-center text-xl font-bold text-primary border-t-2 border-gray-100 pt-6"><span>Total</span><span>R$ ${total.toFixed(2)}</span></div>`;
+                    footer = `<button onclick="window.app.closeModal()" class="px-5 py-2 text-gray-500 hover:text-gray-800 font-bold text-sm">Voltar</button><button onclick="window.app.startCheckout()" class="bg-accent hover:bg-accent-hover text-white px-8 py-2 rounded-full font-bold shadow-lg transition transform hover:-translate-y-1 text-sm">Finalizar Compra</button>`;
+                }
+                window.app.openModalGeneric("Seu Carrinho", body, footer);
+            },
+            startCheckout: () => {
+                const body = `<div class="space-y-6 animate-fade-in"><div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-700 flex gap-3 items-start"><i class="ph-fill ph-shield-check text-lg"></i><p>Ambiente seguro. Seus dados estão protegidos.</p></div><div class="grid grid-cols-2 gap-4"><input type="text" placeholder="Nome Completo" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><input type="text" placeholder="CPF" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"></div><div class="space-y-2"><p class="text-sm font-bold text-gray-700 uppercase tracking-wide">Método de Pagamento</p><div class="grid grid-cols-2 gap-4"><label class="cursor-pointer border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-2 hover:border-accent transition has-[:checked]:border-accent has-[:checked]:bg-orange-50/50"><input type="radio" name="payment" value="card" class="hidden" checked onchange="document.getElementById('card-form').classList.remove('hidden')"><i class="ph ph-credit-card text-2xl text-gray-600"></i><span class="text-sm font-bold">Cartão</span></label><label class="cursor-pointer border border-gray-200 rounded-xl p-4 flex flex-col items-center gap-2 hover:border-accent transition has-[:checked]:border-accent has-[:checked]:bg-orange-50/50"><input type="radio" name="payment" value="pix" class="hidden" onchange="document.getElementById('card-form').classList.add('hidden')"><i class="ph ph-qr-code text-2xl text-gray-600"></i><span class="text-sm font-bold">Pix</span></label></div></div><div id="card-form" class="space-y-4"><input type="text" placeholder="Número do Cartão" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><div class="grid grid-cols-2 gap-4"><input type="text" placeholder="MM/AA" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><input type="text" placeholder="CVV" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"></div></div></div>`;
+                const footer = `<button onclick="window.app.openCart()" class="px-5 py-2 text-gray-500 font-bold text-sm">Voltar</button><button onclick="window.app.processPayment()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-2 rounded-full font-bold shadow-lg transition flex items-center gap-2"><i class="ph-bold ph-lock-key"></i> Pagar Agora</button>`;
+                window.app.openModalGeneric("Pagamento Seguro", body, footer);
+            },
+            processPayment: () => {
+                const isPix = document.querySelector('input[name="payment"]:checked')?.value === 'pix';
+                if(isPix) {
+                    const body = `<div class="py-10 text-center flex flex-col items-center justify-center animate-fade-in"><h4 class="text-xl font-bold text-gray-800 mb-4">Escaneie o QR Code</h4><div class="bg-white p-4 rounded-xl border-2 border-accent mb-4 shadow-sm"><img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=PagamentoSimuladoRonaldoPereira" alt="QR Code"></div><p class="text-sm text-gray-500 mb-2">Aguardando pagamento...</p><div class="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-200"><div class="bg-accent h-1.5 rounded-full animate-pulse w-2/3 mx-auto"></div></div></div>`;
+                    window.app.openModalGeneric("Pagamento via Pix", body, "");
+                    setTimeout(() => window.app.finishOrder(), 4000);
+                } else {
+                    const body = `<div class="py-20 text-center flex flex-col items-center justify-center animate-fade-in"><div class="w-12 h-12 border-4 border-gray-200 border-t-accent rounded-full animate-spin mb-6"></div><h4 class="text-xl font-bold text-gray-800 mb-2">Processando...</h4><p class="text-gray-500">Não feche esta janela.</p></div>`;
+                    window.app.openModalGeneric("Aguarde...", body, "");
+                    setTimeout(() => window.app.finishOrder(), 2000);
+                }
+            },
+            finishOrder: () => {
+                cart = []; updateCartUI();
+                const successBody = `<div class="py-10 text-center flex flex-col items-center justify-center animate-fade-in"><div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600 shadow-inner"><i class="ph-fill ph-check text-4xl"></i></div><h4 class="text-2xl font-bold text-gray-800 mb-2">Pedido Confirmado!</h4><p class="text-gray-500 max-w-xs mx-auto">Sua compra foi aprovada. Verifique seu e-mail.</p></div>`;
+                const footer = `<button onclick="window.app.closeModal()" class="w-full bg-primary text-white py-3 rounded-lg font-bold">Fechar</button>`;
+                window.app.openModalGeneric("Sucesso", successBody, footer);
+                window.app.toast('Compra realizada com sucesso!', 'success');
+            },
+            openServiceModal: (id) => {
+                const s = DB.services.find(x => x.id === id);
+                const body = `<div class="space-y-6 animate-fade-in"><div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden"><div class="absolute right-0 top-0 w-20 h-20 bg-accent/5 rounded-full -mr-5 -mt-5"></div><h4 class="text-lg font-bold text-gray-900 mb-2">${s.name}</h4><p class="text-gray-600 text-sm leading-relaxed mb-4">${s.description}</p><div class="flex items-end justify-between border-t border-gray-100 pt-4"><div><p class="text-xs text-gray-400 uppercase font-bold">Investimento</p><p class="text-2xl font-black text-primary">R$ ${s.price.toFixed(2)}</p></div><span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">${s.unit || 'Preço Fixo'}</span></div></div><div class="space-y-3"><p class="text-sm font-bold text-gray-700 uppercase tracking-wide">Seus Dados</p><input type="text" placeholder="Nome Completo" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><input type="email" placeholder="E-mail Profissional" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><textarea placeholder="Conte um pouco sobre seu projeto..." rows="3" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"></textarea></div></div>`;
+                const footer = `<button onclick="window.app.closeModal()" class="px-5 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.closeModal(); window.app.toast('Solicitação enviada!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-2 rounded-full font-bold shadow-lg transition">Enviar Proposta</button>`;
+                window.app.openModalGeneric("Solicitar Orçamento", body, footer);
+            }
+        };
+
+        window.addEventListener('hashchange', router);
+        window.addEventListener('load', () => {
+            document.getElementById('header-container').innerHTML = TEMPLATES.header;
+            initHeaderLogic();
+            document.getElementById('footer-container').innerHTML = `<footer class="bg-primary text-white py-16 border-t-4 border-accent text-center"><h4 class="font-serif text-3xl font-bold mb-6">RONALDO <span class="text-accent">PEREIRA</span>.</h4><div class="flex justify-center gap-6 mb-8 text-2xl text-slate-400"><i class="ph-fill ph-instagram hover:text-white cursor-pointer transition"></i><i class="ph-fill ph-twitter-logo hover:text-white cursor-pointer transition"></i><i class="ph-fill ph-envelope-simple hover:text-white cursor-pointer transition"></i></div><p class="text-slate-500 text-sm">&copy; 2025 Todos os direitos reservados.</p></footer>`;
+            router();
+        });
+    </script>
+</body>
+</html>
