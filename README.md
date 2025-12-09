@@ -1,166 +1,281 @@
-# WebBookRP - Guia de Desenvolvimento e Deploy Node.js
+Aqui está o conteúdo completo e formatado em **Markdown**.
 
-Este guia descreve passo a passo como desenvolver, versionar e fazer deploy do projeto Node.js **WebBookRP** usando Git e PM2, do ambiente local (Windows) para o servidor Ubuntu.
+Você deve copiar o código abaixo (clicando no botão "Copiar" no canto superior direito do bloco) e salvar em um arquivo chamado **`README.md`** na raiz do seu projeto.
+
+````markdown
+# 📚 WebBookRP - Plataforma do Autor
+
+![NodeJS](https://img.shields.io/badge/Node.js-20.x-green?style=flat&logo=node.js) ![PM2](https://img.shields.io/badge/PM2-Runtime-blue?style=flat&logo=pm2) ![Server](https://img.shields.io/badge/Server-Ubuntu-orange?style=flat&logo=ubuntu) ![Status](https://img.shields.io/badge/Status-Em_Desenvolvimento-yellow)
+
+Bem-vindo à documentação oficial do **WebBookRP**. Este guia serve como a "bíblia" do projeto, cobrindo desde a configuração do ambiente Windows local até o deploy em produção no Ubuntu com proxy reverso.
 
 ---
 
-## 1️⃣ Estrutura do Projeto (Windows)
+## 📑 Índice Interativo
 
-```
+1. [🏠 Ambiente Local & Estrutura](#1-ambiente-local--estrutura)
+2. [⚙️ Configuração do Git & Versionamento](#2-configuração-do-git--versionamento)
+3. [🔄 Fluxo de Desenvolvimento (Branches)](#3-fluxo-de-desenvolvimento-workflow)
+4. [☁️ Preparando o Servidor (Ubuntu)](#4-preparando-o-servidor-ubuntu)
+5. [🔑 Autenticação SSH (GitHub)](#5-autenticação-ssh-github--servidor)
+6. [🚀 Deploy & PM2](#6-deploy--execução-com-pm2)
+7. [🌐 Proxy Reverso (Nginx)](#7-proxy-reverso-nginx-opcional)
+8. [🔄 Atualização Contínua](#8-atualização-do-projeto-deploy-rápido)
+9. [✨ Boas Práticas](#9-dicas-e-boas-práticas)
+
+---
+
+## 1. 🏠 Ambiente Local & Estrutura
+
+Antes de codar, garanta que seu ambiente Windows tenha a estrutura correta.
+
+### 📂 Árvore de Arquivos
+```text
 /WebBookRP
-  |-- node_modules/       # Ignorado no Git
-  |-- src/                # Código-fonte
-  |-- package.json
-  |-- package-lock.json
-  |-- .gitignore          # node_modules, logs, .env
-```
+│
+├── node_modules/       # 🚫 Ignorado pelo Git (dependências)
+├── public/             # 🎨 Frontend (HTML, CSS, JS do cliente)
+│   ├── index.html
+│   └── css/
+├── src/                # 🧠 Lógica do Backend (se houver separação)
+├── .env                # 🔒 Variáveis de ambiente (Ignorado)
+├── .gitignore          # 📄 Arquivo de exclusão do Git
+├── package.json        # 📦 Manifest do projeto
+├── package-lock.json   # 📌 Versões exatas das dependências
+└── server.js           # 🚀 Ponto de entrada (Servidor Express)
+````
 
-**.gitignore sugerido:**
-```
+### 📄 .gitignore (Essencial)
+
+Crie um arquivo `.gitignore` na raiz para não sujar o repositório:
+
+```text
 node_modules/
-*.log
+dist/
 .env
+*.log
+.DS_Store
+coverage/
 ```
 
----
+-----
 
-## 2️⃣ Inicializando o Git
+## 2\. ⚙️ Configuração do Git & Versionamento
+
+Se é a primeira vez rodando o projeto, inicialize o repositório:
 
 ```bash
+# 1. Iniciar o Git
 git init
-git remote add origin https://github.com/EduardoGuedes06/WebBookRP.git
+
+# 2. Adicionar o repositório remoto
+git remote add origin [https://github.com/EduardoGuedes06/WebBookRP.git](https://github.com/EduardoGuedes06/WebBookRP.git)
+
+# 3. Primeiro Commit
 git add .
-git commit -m "Commit inicial do projeto"
+git commit -m "🎉 Initial commit: Estrutura do WebBookRP"
+
+# 4. Enviar para a main e definir upstream
 git push -u origin main
 ```
 
----
+-----
 
-## 3️⃣ Fluxo de Desenvolvimento Local
+## 3\. 🔄 Fluxo de Desenvolvimento (Workflow)
 
-1. **Criar branches para novas features:**
+Para manter a organização, usamos um **padrão de Timestamp** para branches. Nunca trabalhe direto na `main`.
+
+### 📅 Padrão de Branch: `feature/nome-DDMMYYHHMM`
+
+1.  **Criar a Branch (Ex: login, dia 09/12/25 às 14:30):**
+
+    ```bash
+    git checkout -b feature/login-0912251430
+    ```
+
+2.  **Desenvolver e Testar:**
+    Faça suas alterações no código e teste localmente (`node server.js`).
+
+3.  **Salvar Alterações:**
+
+    ```bash
+    git add .
+    git commit -m "feat: adiciona sistema de login básico"
+    ```
+
+4.  **Enviar para GitHub:**
+
+    ```bash
+    git push origin feature/login-0912251430
+    ```
+
+5.  **Merge para Main (Após validar):**
+
+    ```bash
+    git checkout main
+    git pull origin main             # Garante que a main local está atualizada
+    git merge feature/login-0912251430
+    git push origin main             # Atualiza a main no GitHub
+    ```
+
+-----
+
+## 4\. ☁️ Preparando o Servidor (Ubuntu)
+
+Acesse seu servidor via terminal (`ssh usuario@ip-do-servidor`) e prepare o terreno.
+
+### 🛠️ Instalação das Ferramentas
+
 ```bash
-git checkout -b feature/nome-da-feature
-```
-2. **Desenvolver e testar localmente**
-3. **Commit e push da branch:**
-```bash
-git add .
-git commit -m "Implementa nova feature"
-git push origin feature/nome-da-feature
-```
-4. **Merge para main:**
-```bash
-git checkout main
-git pull origin main
-git merge feature/nome-da-feature
-git push origin main
-```
-
-> Sempre mantenha a `main` estável.
-
----
-
-## 4️⃣ Configuração do Servidor (Ubuntu)
-
-1. **Atualizar pacotes e instalar Git:**
-```bash
+# 1. Atualizar o sistema
 sudo apt update && sudo apt upgrade -y
-sudo apt install git -y
-```
-2. **Instalar Node e NPM** (caso não esteja):
-```bash
-node -v
-npm -v
-```
-3. **Instalar PM2:**
-```bash
-sudo env "PATH=$PATH" npm install -g pm2
-```
-4. **Criar pasta para projetos:**
-```bash
+
+# 2. Instalar Git e Curl
+sudo apt install git curl -y
+
+# 3. Instalar Node.js (Versão 20 LTS)
+curl -fsSL [https://deb.nodesource.com/setup_20.x](https://deb.nodesource.com/setup_20.x) | sudo -E bash -
+sudo apt install -y nodejs
+
+# 4. Instalar Gerenciador de Processos (PM2)
+sudo npm install -g pm2
+
+# 5. Criar pasta de organização
 mkdir -p ~/apps
-cd ~/apps
 ```
 
----
+-----
 
-## 5️⃣ Clonar Projeto no Servidor
+## 5\. 🔑 Autenticação SSH (GitHub & Servidor)
+
+Para que o servidor consiga clonar repositórios privados ou fazer pulls sem pedir senha toda hora:
+
+1.  **No Servidor Ubuntu**, gere a chave:
+
+    ```bash
+    ssh-keygen -t ed25519 -C "seu-email@exemplo.com"
+    # Dê Enter para todas as perguntas (padrão)
+    ```
+
+2.  **Ler a chave pública:**
+
+    ```bash
+    cat ~/.ssh/id_ed25519.pub
+    ```
+
+    *Copie o código que começa com `ssh-ed25519...`*
+
+3.  **No GitHub:**
+
+      - Vá em *Settings* \> *SSH and GPG keys* \> *New SSH key*.
+      - Cole o conteúdo que você copiou.
+
+-----
+
+## 6\. 🚀 Deploy & Execução com PM2
+
+Agora vamos colocar o site no ar.
+
+1.  **Clonar o Repositório (usando SSH):**
+
+    ```bash
+    cd ~/apps
+    # Use a URL SSH agora, não HTTPS
+    git clone git@github.com:EduardoGuedes06/WebBookRP.git
+    cd WebBookRP
+    ```
+
+2.  **Instalar Dependências:**
+
+    ```bash
+    npm install --production
+    ```
+
+3.  **Iniciar com PM2 (O Segredo do 24/7):**
+
+    ```bash
+    # Inicia o app com o nome "webbookrp"
+    pm2 start server.js --name webbookrp
+
+    # Congela a lista de processos para reiniciar se o servidor cair
+    pm2 save
+
+    # Gera o script de inicialização (copie o comando que o terminal der e rode)
+    pm2 startup
+    ```
+
+-----
+
+## 7\. 🌐 Proxy Reverso Nginx (Opcional)
+
+Para acessar via `http://seudominio.com` (Porta 80) em vez de `http://ip:3000`.
+
+1.  **Instalar e Configurar:**
+
+    ```bash
+    sudo apt install nginx -y
+    sudo nano /etc/nginx/sites-available/webbookrp
+    ```
+
+2.  **Cole a Configuração:**
+    *(Altere `server_name` para seu IP ou Domínio)*
+
+    ```nginx
+    server {
+        listen 80;
+        server_name SEU_DOMINIO_OU_IP;
+
+        location / {
+            proxy_pass http://localhost:3000;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+    }
+    ```
+
+3.  **Ativar:**
+
+    ```bash
+    sudo ln -s /etc/nginx/sites-available/webbookrp /etc/nginx/sites-enabled/
+    sudo nginx -t
+    sudo systemctl restart nginx
+    ```
+
+-----
+
+## 8\. 🔄 Atualização do Projeto (Deploy Rápido)
+
+Sempre que você der push na `main`, rode isso no servidor:
 
 ```bash
-cd ~/apps
-git clone https://github.com/EduardoGuedes06/WebBookRP.git
-cd WebBookRP
-npm install
-```
-
-> `node_modules` não é versionado; o servidor instala via `npm install`.
-
----
-
-## 6️⃣ Rodar o Projeto com PM2
-
-```bash
-pm2 start server.js --name webbookrp   # substitua server.js pelo arquivo principal
-pm2 save
-pm2 startup
-```
-
-- O app agora roda em background e reinicia automaticamente após reboot.
-
----
-
-## 7️⃣ Atualizando o Projeto no Servidor
-
-Quando houver alterações no GitHub:
-
-```bash
+# 1. Atualizar Código
 cd ~/apps/WebBookRP
 git pull origin main
-npm install          # só se houver novas dependências
+
+# 2. Atualizar Dependências (se necessário)
+npm install
+
+# 3. Reiniciar Aplicação (Sem downtime perceptível)
 pm2 restart webbookrp
 ```
 
-> Isso mantém o servidor sempre com a versão mais recente.
+-----
 
----
+## 9\. ✨ Dicas e Boas Práticas
 
-## 8️⃣ (Opcional) Configurar Nginx como Proxy Reverso
+| Prática | Descrição |
+| :--- | :--- |
+| **Commits Atômicos** | Faça commits pequenos focados em uma única tarefa. Evite "comitar tudo" de uma vez. |
+| **Use .env** | Nunca suba senhas ou chaves de API para o GitHub. Use o arquivo `.env` e carregue com `dotenv`. |
+| **Logs do PM2** | Deu erro? Use `pm2 logs webbookrp` para ver o que aconteceu em tempo real. |
+| **Monitoramento** | Use `pm2 monit` para ver uso de CPU e Memória do seu servidor. |
 
-```bash
-sudo apt install nginx -y
-sudo nano /etc/nginx/sites-available/webbookrp
+-----
+
+*Desenvolvido por Ronaldo Pereira* 🚀
+
 ```
-
-**Exemplo de configuração:**
 ```
-server {
-    listen 80;
-    server_name SEU_DOMINIO_OU_IP;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-```bash
-sudo ln -s /etc/nginx/sites-available/webbookrp /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-> Agora você pode acessar seu app pelo domínio ou IP sem precisar da porta 3000.
-
----
-
-**Este fluxo garante:**
-- Desenvolvimento seguro no Windows
-- Versionamento correto com Git
-- Deploy confiável no servidor Ubuntu
-- Processo contínuo com PM2 para manter o Node rodando
