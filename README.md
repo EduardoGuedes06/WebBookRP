@@ -275,6 +275,71 @@ pm2 restart webbookrp
 
 -----
 
+## 10\. 🛠️ Deploy Automático com `deploy.sh`
+
+Para facilitar a atualização do projeto no servidor, criamos um **script Bash** que:
+
+1. Para o container antigo (se existir)
+2. Remove o container antigo
+3. Builda a nova imagem Docker
+4. Roda o container atualizado
+
+### 📄 Conteúdo do `deploy.sh`
+
+```bash
+#!/bin/bash
+
+# Nome do container e da imagem
+CONTAINER_NAME="webbookrp"
+IMAGE_NAME="webbookrp"
+
+# Caminho do projeto
+PROJECT_DIR="$HOME/apps/WebBookRP"
+
+echo "Deploy iniciado..."
+
+# 1. Ir para a pasta do projeto
+cd $PROJECT_DIR || exit
+
+# 2. Puxar alterações do Git
+echo "Atualizando repositório..."
+git pull origin main
+
+# 3. Build da nova imagem Docker
+echo "Construindo nova imagem Docker..."
+docker build -t $IMAGE_NAME .
+
+# 4. Parar e remover container antigo (se existir)
+if [ "$(docker ps -q -f name=$CONTAINER_NAME)" ]; then
+    echo "Parando container antigo..."
+    docker stop $CONTAINER_NAME
+    docker rm $CONTAINER_NAME
+fi
+
+# 5. Rodar o novo container
+echo "Rodando novo container..."
+docker run -d -p 3000:3000 --name $CONTAINER_NAME $IMAGE_NAME
+
+echo "Deploy concluído com sucesso!"
+```
+
+### ⚡ Como usar
+
+1. Conceda permissão de execução ao script:
+
+```bash
+chmod +x deploy.sh
+```
+
+2. Execute sempre que quiser atualizar o servidor:
+
+```bash
+./deploy.sh
+```
+
+> Isso garante que o container sempre será atualizado com as últimas alterações do Git, sem precisar rodar cada comando manualmente.
+
+
 *Desenvolvido por Eduardo Guedes* 🚀
 
 ```
