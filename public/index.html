@@ -384,27 +384,104 @@
             dashboard: `
                 <div class="animate-fade-in">
                     <div class="flex justify-between items-center mb-8">
-                        <div><h2 class="text-3xl font-bold text-primary font-serif">Painel do Escritor</h2></div>
-                        <button onclick="window.app.logout()" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm"><i class="ph ph-sign-out"></i> Sair</button>
+                        <div>
+                            <h2 class="text-3xl font-bold text-primary font-serif">Painel do Escritor</h2>
+                            <p class="text-gray-500">Bem-vindo de volta, Ronaldo.</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="window.app.extractReport()" class="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:border-accent hover:text-accent transition shadow-sm font-bold text-sm"><i class="ph ph-file-pdf"></i> Extrair Relatório</button>
+                            <button onclick="window.app.logout()" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm"><i class="ph ph-sign-out"></i> Sair</button>
+                        </div>
                     </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                        <div class="dashboard-card border-l-4 border-accent relative overflow-hidden">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Vendas Totais</p>
+                            <h3 class="text-3xl font-black text-primary">R$ 14.502</h3>
+                            <div class="mt-4 flex items-end gap-1 h-10">
+                                <div class="flex-1 bg-accent/20 rounded-t h-full"></div>
+                                <div class="flex-1 bg-accent/40 rounded-t h-3/4"></div>
+                                <div class="flex-1 bg-accent rounded-t h-full animate-pulse"></div>
+                            </div>
+                        </div>
+                        <div class="dashboard-card relative overflow-hidden">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Livros Vendidos</p>
+                            <h3 class="text-3xl font-black text-primary">482</h3>
+                            <div class="w-16 h-16 absolute -right-2 -bottom-2 bg-primary/5 rounded-full flex items-center justify-center text-primary/20"><i class="ph-fill ph-book-open text-4xl"></i></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Visitas no Site</p>
+                            <h3 class="text-3xl font-black text-primary">12.4k</h3>
+                            <div class="w-full bg-gray-100 rounded-full h-1.5 mt-4"><div class="bg-green-500 h-1.5 rounded-full w-3/4"></div></div>
+                        </div>
+                        <div class="dashboard-card">
+                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Leads (Email)</p>
+                            <h3 class="text-3xl font-black text-primary">1.205</h3>
+                            <p class="text-xs text-gray-400 mt-2">Novos inscritos hoje: <strong>+24</strong></p>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-3 dashboard-card">
+                        <div class="lg:col-span-2 dashboard-card">
                             <div class="flex justify-between items-center mb-6">
-                                <h3 class="font-bold text-lg text-primary">Catálogo de Livros</h3>
+                                <h3 class="font-bold text-lg text-primary">Estoque & Catálogo</h3>
                                 <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition">+ Novo Livro</button>
                             </div>
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left text-sm text-gray-600">
                                     <thead class="bg-gray-50 text-gray-400 uppercase text-xs">
-                                        <tr><th class="p-3">Capa</th><th class="p-3">Título</th><th class="p-3">Links Externos</th><th class="p-3 text-right">Ação</th></tr>
+                                        <tr><th class="p-3">Capa</th><th class="p-3">Título</th><th class="p-3">Preço</th><th class="p-3">Estoque</th><th class="p-3 text-right">Ação</th></tr>
                                     </thead>
-                                    <tbody id="admin-books-table"></tbody>
+                                    <tbody id="admin-books-table">
+                                        </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="dashboard-card bg-primary text-white border-none relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full blur-3xl -mr-10 -mt-10"></div>
+                                <h3 class="font-bold text-lg mb-6 relative z-10">Solicitações de Mentoria</h3>
+                                <div class="space-y-4 relative z-10">
+                                    <div class="bg-white/10 p-3 rounded-xl flex items-center justify-between backdrop-blur-sm">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-accent rounded-full flex items-center justify-center font-bold">M</div>
+                                            <div><p class="font-bold text-sm">Maria Silva</p><p class="text-xs text-slate-400">Revisão Textual</p></div>
+                                        </div>
+                                        <button class="text-xs bg-white text-primary px-3 py-1 rounded font-bold hover:bg-gray-200">Ver</button>
+                                    </div>
+                                    <div class="bg-white/10 p-3 rounded-xl flex items-center justify-between backdrop-blur-sm">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center font-bold">J</div>
+                                            <div><p class="font-bold text-sm">João Pedro</p><p class="text-xs text-slate-400">Mentoria</p></div>
+                                        </div>
+                                        <button class="text-xs bg-white text-primary px-3 py-1 rounded font-bold hover:bg-gray-200">Ver</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="dashboard-card">
+                                <h3 class="font-bold text-lg text-primary mb-4">Atividade Recente</h3>
+                                <ul class="space-y-3">
+                                    <li class="flex gap-3 items-start text-sm">
+                                        <span class="w-2 h-2 mt-1.5 bg-green-500 rounded-full shrink-0"></span>
+                                        <p class="text-gray-600"><strong class="text-gray-900">Venda #1023</strong> confirmada (Pix) - R$ 49,90</p>
+                                    </li>
+                                    <li class="flex gap-3 items-start text-sm">
+                                        <span class="w-2 h-2 mt-1.5 bg-blue-500 rounded-full shrink-0"></span>
+                                        <p class="text-gray-600">Novo comentário de <strong class="text-gray-900">Carlos</strong> no Fórum.</p>
+                                    </li>
+                                    <li class="flex gap-3 items-start text-sm">
+                                        <span class="w-2 h-2 mt-1.5 bg-accent rounded-full shrink-0"></span>
+                                        <p class="text-gray-600">Estoque de <strong class="text-gray-900">Vol. 4</strong> baixo (5 un).</p>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             `
+        
         };
 
         // ==========================================
