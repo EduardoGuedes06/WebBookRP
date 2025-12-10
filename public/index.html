@@ -505,21 +505,24 @@
             ]
         };
 
-        // Gerador de Livros Mock
+        // Gerador de Livros Mock   
         function generateBooks() {
             const covers = ['1e293b', 'd97706', '475569', '0f766e', 'be123c', '4338ca'];
-            // Gerando poucos livros para simular o cenário real de "3 livros"
+            const genres = ['Ficção Científica', 'Fantasia', 'Thriller', 'Terror', 'Drama'];
+            
             for(let i=1; i<=6; i++) {
+                const price = 29.90 + (i * 2);
                 DB.books.push({
                     id: i.toString(),
                     title: i === 1 ? 'O Código da Eternidade' : `Livro Volume ${i}`,
-                    genre: 'Ficção',
-                    price: 29.90 + (i * 2),
+                    genre: genres[i % genres.length],
+                    price: price,
+                    // Lógica Mock: Se for promoção, cria um preço menor
+                    isPromotion: i % 2 === 0, 
+                    promoPrice: i % 2 === 0 ? (price * 0.7) : null, // 30% off
                     cover: `https://placehold.co/300x450/${covers[i % covers.length]}/FFF?text=Vol.${i}`,
-                    // Links externos simulados
-                    linkAmazon: 'https://amazon.com.br',
-                    linkML: 'https://mercadolivre.com.br',
-                    linkShopee: 'https://shopee.com.br'
+                    synopsis: "Sinopse padrão gerada pelo sistema...",
+                    linkAmazon: '#', linkML: '#', linkShopee: '#'
                 });
             }
         }
@@ -578,24 +581,55 @@
 
         // --- CONTROLLERS ---
 
+        // Substitua a função initBookDetails atual por esta:
         function initBookDetails(id) {
             const book = DB.books.find(b => b.id === id);
             if(!book) { window.location.hash = '#/livros'; return; }
             
+            // Dados Básicos
             document.getElementById('detail-img').src = book.cover;
             document.getElementById('detail-title').innerText = book.title;
             document.getElementById('detail-genre').innerText = book.genre;
-            document.getElementById('detail-price').innerText = `R$ ${book.price.toFixed(2)}`;
             
-            // Configurar links externos
+            // Sinopse
+            const synopsisContainer = document.querySelector('.prose');
+            if(synopsisContainer) {
+                synopsisContainer.innerHTML = (book.synopsis || '').split('\n').map(p => `<p>${p}</p>`).join('');
+            }
+
+            // Lógica de Preço e Promoção
+            const promoBadge = document.querySelector('.absolute.top-5.right-5');
+            const promoBanner = document.querySelector('.bg-gradient-to-r.from-orange-100');
+            const priceContainer = document.getElementById('detail-price').parentNode;
+
+            if (book.isPromotion && book.promoPrice) {
+                if(promoBadge) promoBadge.classList.remove('hidden');
+                if(promoBanner) promoBanner.classList.remove('hidden');
+                
+                // Exibe Preço Promocional Grande e o Original riscado
+                const discount = Math.round(((book.price - book.promoPrice) / book.price) * 100);
+                priceContainer.innerHTML = `
+                    <div class="text-4xl font-black text-primary" id="detail-price">R$ ${book.promoPrice.toFixed(2)}</div>
+                    <p class="text-sm text-gray-400 pb-2 decoration-slice line-through decoration-red-500 decoration-2">De R$ ${book.price.toFixed(2)}</p>
+                    <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded mb-2">${discount}% OFF</span>
+                `;
+            } else {
+                if(promoBadge) promoBadge.classList.add('hidden');
+                if(promoBanner) promoBanner.classList.add('hidden');
+                
+                // Exibe apenas preço normal
+                priceContainer.innerHTML = `
+                    <div class="text-4xl font-black text-primary" id="detail-price">R$ ${book.price.toFixed(2)}</div>
+                `;
+            }
+            
+            // Links e Favoritos (Mantido igual)
             document.getElementById('link-amazon').href = book.linkAmazon || '#';
             document.getElementById('link-ml').href = book.linkML || '#';
             document.getElementById('link-shopee').href = book.linkShopee || '#';
 
-            // Favoritos
             const favBtn = document.getElementById('detail-fav-btn'); 
             const favIcon = document.getElementById('detail-fav-icon');
-
             const updateState = () => {
                 if(favorites.includes(book.id)) {
                     favIcon.className = "ph-fill ph-heart text-xl text-red-500";
@@ -604,7 +638,6 @@
                     favIcon.className = "ph-fill ph-heart text-xl text-gray-300";
                 }
             };
-            
             favBtn.onclick = () => { window.app.toggleFavorite(book.id); updateState(); };
             updateState();
         }
@@ -744,17 +777,191 @@
 
             // ADMIN CRUD
             openBookModal: (id = null) => {
-                const book = id ? DB.books.find(b => b.id === id) : { id: '', title: '', price: '', cover: '' };
+                const book = id ? DB.books.find(b => b.id === id) : { 
+                    id: '', title: '', genre: 'Ficção', price: '', promoPrice: '', cover: '', 
+                    synopsis: '', isPromotion: false, 
+                    linkAmazon: '', linkML: '', linkShopee: '' 
+                };
+                
                 const isEdit = !!id;
+
+                // Script inline para mostrar/esconder o campo de preço promocional
+                const toggleScript = `
+                    if(this.checked) {
+                        document.getElementById('promo-input-container').classList.remove('hidden');
+                        document.getElementById('book-promo-price').focus();
+                    } else {
+                        document.getElementById('promo-input-container').classList.add('hidden');
+                        document.getElementById('book-promo-price').value = '';
+                    }
+                `;
+
                 const body = `
-                    <div class="space-y-4">
+                    <div class="space-y-4 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                         <input type="hidden" id="book-id" value="${book.id || ''}">
-                        <div><label class="text-xs font-bold text-gray-500 uppercase">Título</label><input type="text" id="book-title" value="${book.title}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
-                        <div><label class="text-xs font-bold text-gray-500 uppercase">Preço</label><input type="number" id="book-price" value="${book.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
-                        <div><label class="text-xs font-bold text-gray-500 uppercase">URL Capa</label><input type="text" id="book-cover" value="${book.cover}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
-                        </div>`;
-                const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.saveBook(${isEdit})" class="bg-primary text-white px-6 py-2 rounded-lg font-bold shadow-lg">${isEdit ? 'Atualizar' : 'Criar'}</button>`;
-                window.app.openModalGeneric(isEdit ? "Editar Livro" : "Novo Livro", body, footer);
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="col-span-2">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Título da Obra</label>
+                                <input type="text" id="book-title" value="${book.title}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Gênero</label>
+                                <select id="book-genre" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                                    <option value="Ficção" ${book.genre === 'Ficção' ? 'selected' : ''}>Ficção</option>
+                                    <option value="Fantasia" ${book.genre === 'Fantasia' ? 'selected' : ''}>Fantasia</option>
+                                    <option value="Terror" ${book.genre === 'Terror' ? 'selected' : ''}>Terror</option>
+                                    <option value="Romance" ${book.genre === 'Romance' ? 'selected' : ''}>Romance</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Preço Original (R$)</label>
+                                <input type="number" step="0.01" id="book-price" value="${book.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                            </div>
+                        </div>
+
+                        <div class="bg-orange-50 p-4 rounded-xl border border-orange-100 transition-all">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <h4 class="font-bold text-orange-800 text-sm">Modo Promoção</h4>
+                                    <p class="text-xs text-orange-600">Ativa oferta especial na página.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="book-promo" class="sr-only peer" onchange="${toggleScript}" ${book.isPromotion ? 'checked' : ''}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+                                </label>
+                            </div>
+
+                            <div id="promo-input-container" class="${book.isPromotion ? '' : 'hidden'} animate-fade-in mt-3 border-t border-orange-200 pt-3">
+                                <label class="text-xs font-bold text-orange-700 uppercase">Preço Promocional (R$)</label>
+                                <input type="number" step="0.01" id="book-promo-price" value="${book.promoPrice || ''}" placeholder="Ex: 19.90" class="w-full bg-white border border-orange-200 rounded-lg p-2 form-input text-orange-900 font-bold">
+                                <p class="text-[10px] text-orange-500 mt-1">* Deve ser menor que o preço original.</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">URL da Capa</label>
+                            <input type="text" id="book-cover" value="${book.cover}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input text-xs">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Sinopse Completa</label>
+                            <textarea id="book-synopsis" rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm leading-relaxed">${book.synopsis || ''}</textarea>
+                        </div>
+
+                        <div class="border-t border-gray-100 pt-4">
+                            <h4 class="font-bold text-gray-700 mb-3 text-sm">Links de Venda</h4>
+                            <div class="grid grid-cols-1 gap-2">
+                                <input type="text" id="link-amazon" value="${book.linkAmazon}" placeholder="Link Amazon" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
+                                <input type="text" id="link-ml" value="${book.linkML}" placeholder="Link Mercado Livre" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
+                                <input type="text" id="link-shopee" value="${book.linkShopee}" placeholder="Link Shopee" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
+                            </div>
+                        </div>
+                    </div>`;
+
+                const footer = `
+                    <button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold text-sm hover:text-gray-800 transition">Cancelar</button>
+                    <button onclick="window.app.saveBook(${isEdit})" class="bg-primary hover:bg-slate-800 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
+                        <i class="ph-bold ph-floppy-disk"></i> Salvar
+                    </button>`;
+                
+                window.app.openModalGeneric(isEdit ? "Editar Livro" : "Cadastrar Novo Livro", body, footer);
+            },
+
+            saveBook: (isEdit) => {
+                const id = document.getElementById('book-id').value;
+                const title = document.getElementById('book-title').value;
+                const genre = document.getElementById('book-genre').value;
+                const price = parseFloat(document.getElementById('book-price').value);
+                const cover = document.getElementById('book-cover').value || 'https://placehold.co/300x450/333/FFF?text=Capa';
+                const synopsis = document.getElementById('book-synopsis').value;
+                
+                // Promoção Lógica e Validação
+                const isPromotion = document.getElementById('book-promo').checked;
+                let promoPrice = null;
+
+                const linkAmazon = document.getElementById('link-amazon').value;
+                const linkML = document.getElementById('link-ml').value;
+                const linkShopee = document.getElementById('link-shopee').value;
+
+                // 1. Validação Básica
+                if(!title || isNaN(price) || price <= 0) {
+                    return window.app.toast('Título e Preço Original válidos são obrigatórios', 'error');
+                }
+
+                // 2. Validação da Promoção
+                if (isPromotion) {
+                    const promoInput = document.getElementById('book-promo-price').value;
+                    promoPrice = parseFloat(promoInput);
+
+                    if (isNaN(promoPrice) || promoPrice <= 0) {
+                        return window.app.toast('Digite um valor promocional válido.', 'error');
+                    }
+                    
+                    if (promoPrice >= price) {
+                        return window.app.toast('ERRO: O valor promocional deve ser MENOR que o original.', 'error');
+                    }
+                }
+
+                const bookData = {
+                    id: isEdit ? id : Date.now().toString(),
+                    title, genre, price, cover, synopsis, 
+                    isPromotion, promoPrice,
+                    linkAmazon, linkML, linkShopee
+                };
+
+                if(isEdit) {
+                    const index = DB.books.findIndex(b => b.id === id);
+                    if (index !== -1) {
+                        DB.books[index] = bookData;
+                        window.app.toast('Livro atualizado com sucesso!', 'success');
+                    }
+                } else {
+                    DB.books.unshift(bookData);
+                    window.app.toast('Novo livro cadastrado!', 'success');
+                }
+
+                initDashboard();
+                window.app.closeModal();
+            },
+
+            saveBook: (isEdit) => {
+                // Captura todos os valores
+                const id = document.getElementById('book-id').value;
+                const title = document.getElementById('book-title').value;
+                const genre = document.getElementById('book-genre').value;
+                const price = parseFloat(document.getElementById('book-price').value);
+                const cover = document.getElementById('book-cover').value || 'https://placehold.co/300x450/333/FFF?text=Capa';
+                const synopsis = document.getElementById('book-synopsis').value;
+                const isPromotion = document.getElementById('book-promo').checked;
+                const linkAmazon = document.getElementById('link-amazon').value;
+                const linkML = document.getElementById('link-ml').value;
+                const linkShopee = document.getElementById('link-shopee').value;
+
+                // Validação simples
+                if(!title || !price) return window.app.toast('Título e Preço são obrigatórios', 'error');
+
+                const bookData = {
+                    id: isEdit ? id : Date.now().toString(),
+                    title, genre, price, cover, synopsis, isPromotion,
+                    linkAmazon, linkML, linkShopee
+                };
+
+                if(isEdit) {
+                    // Atualiza no Array
+                    const index = DB.books.findIndex(b => b.id === id);
+                    if (index !== -1) {
+                        DB.books[index] = bookData;
+                        window.app.toast('Livro atualizado com sucesso!', 'success');
+                    }
+                } else {
+                    // Adiciona novo
+                    DB.books.unshift(bookData);
+                    window.app.toast('Novo livro cadastrado!', 'success');
+                }
+
+                // Atualiza a tabela do dashboard
+                initDashboard();
+                window.app.closeModal();
             },
             saveBook: (isEdit) => {
                 const id = document.getElementById('book-id').value;
