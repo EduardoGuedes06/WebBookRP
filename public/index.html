@@ -339,30 +339,35 @@
                 <div class="animate-fade-in pb-20">
                     <div class="text-center mb-16 pt-10">
                         <h2 class="text-5xl md:text-6xl font-black text-primary mb-4 font-serif">Quem escreve?</h2>
-                        <p class="text-gray-500 text-lg">Um pouco da loucura por trás dos livros.</p>
+                        <p id="author-role-display" class="text-gray-500 text-lg">Um pouco da loucura por trás dos livros.</p>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-                        <div class="relative">
-                            <img src="https://placehold.co/600x800/1e293b/FFF?text=Autor+Pro" class="rounded-2xl shadow-2xl w-full object-cover h-[600px] grayscale hover:grayscale-0 transition duration-700">
-                            <div class="absolute -bottom-10 -right-5 md:-right-10 w-64 polaroid bg-white p-3 pb-12 shadow-2xl rounded transform rotate-3 hover:rotate-0 transition duration-500 z-20">
+                        
+                        <div class="relative group cursor-pointer">
+                            <img id="about-main-img" src="" class="rounded-2xl shadow-2xl w-full object-cover h-[600px] grayscale group-hover:grayscale-0 transition duration-700">
+                            
+                            <div class="absolute -bottom-10 -right-5 md:-right-10 w-64 polaroid bg-white p-3 pb-12 shadow-2xl rounded transform rotate-3 group-hover:rotate-6 transition duration-500 z-20">
                                 <div class="tape -top-3 left-1/2 -translate-x-1/2"></div>
-                                <img src="https://placehold.co/300x300/d97706/FFF?text=Família" class="w-full h-48 object-cover rounded-sm mb-2">
-                                <p class="text-center font-hand text-2xl text-gray-700 rotate-1">Meu porto seguro ❤️</p>
+                                <img id="about-sec-img" src="" class="w-full h-48 object-cover rounded-sm mb-2 shadow-inner">
+                                <p id="about-sec-caption" class="text-center font-hand text-2xl text-gray-700 -rotate-1 text-shadow-sm"></p>
                             </div>
                         </div>
-                        <div class="space-y-8 pt-10">
-                            <h3 class="text-3xl font-bold text-primary font-serif">De leitor ávido a criador de mundos.</h3>
-                            <div class="prose text-gray-600 leading-loose text-lg">
-                                <p>Olá! Sou o <strong class="text-primary">Ronaldo Pereira</strong>. Minha jornada começou devorando livros na biblioteca. Hoje, dedico minha vida a criar histórias que misturam tecnologia, magia e a complexidade humana.</p>
+
+                        <div class="space-y-10 pt-10">
+                            <div>
+                                <h3 id="about-name-display" class="text-3xl font-bold text-primary font-serif mb-6"></h3>
+                                <div id="about-bio-display" class="prose text-gray-600 leading-loose text-lg text-justify"></div>
                             </div>
-                            <div class="border-l-2 border-gray-200 pl-8 space-y-8 mt-8">
-                                <div class="relative"><div class="absolute -left-[39px] top-1 w-5 h-5 bg-accent rounded-full border-4 border-white"></div><h4 class="font-bold text-primary">2015</h4><p class="text-sm text-gray-500">Primeiro conto online.</p></div>
-                                <div class="relative"><div class="absolute -left-[39px] top-1 w-5 h-5 bg-gray-300 rounded-full border-4 border-white"></div><h4 class="font-bold text-primary">2025</h4><p class="text-sm text-gray-500">Carreira consolidada.</p></div>
+
+                            <div>
+                                <h4 class="font-bold text-accent uppercase tracking-widest text-xs mb-6">Minha Jornada</h4>
+                                <div id="about-timeline-list" class="border-l-2 border-gray-200 pl-8 space-y-10 mt-4 relative">
+                                    </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            `,     
+            `,
             login: `
                 <div class="flex items-center justify-center min-h-[60vh] animate-fade-in">
                     <div class="bg-white p-10 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 relative overflow-hidden">
@@ -380,8 +385,7 @@
                         </form>
                     </div>
                 </div>
-            `,
-      
+            `,    
             dashboard: `
                 <div class="animate-fade-in">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
@@ -390,6 +394,9 @@
                             <p class="text-gray-500">Gestão completa de Produtos e Serviços.</p>
                         </div>
                         <div class="flex gap-3 w-full md:w-auto">
+                            <button onclick="window.app.openAboutConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-primary px-5 py-2.5 rounded-lg hover:border-accent hover:text-accent transition font-bold text-sm shadow-sm">
+                                <i class="ph-bold ph-user-gear"></i> Editar Bio
+                            </button>
                             <button onclick="window.app.openHomeConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-slate-800 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition font-bold text-sm">
                                 <i class="ph-bold ph-house-line"></i> Personalizar Home
                             </button>
@@ -510,15 +517,27 @@
         // ==========================================
         const DB = {
             homeConfig: {
-                heroBookId: '1',
-                showLaunchBadge: true, // NOVA CONFIG
-                highlights: ['1', 'S3'],
-                quote: {
-                    text: "Escrever é a única forma que encontrei de viver mil vidas em uma só. E convido você a viver elas comigo.",
-                    author: "Ronaldo Pereira"
-                }
+                    heroBookId: '1',
+                    showLaunchBadge: true,
+                    highlights: ['1', 'S3'],
+                    quote: {
+                        text: "Escrever é a única forma que encontrei de viver mil vidas em uma só. E convido você a viver elas comigo.",
+                        author: "Ronaldo Pereira"
+                    }
+                },
+            author: { 
+                name: "Ronaldo Pereira", 
+                role: "Escritor de Ficção Especulativa", 
+                avatar: "https://placehold.co/600x800/1e293b/FFF?text=Autor+Pro",
+                bio: "Olá! Sou o Ronaldo. Minha jornada começou devorando livros na biblioteca. Hoje, dedico minha vida a criar histórias que misturam tecnologia, magia e a complexidade humana.",
+                secondaryImage: "https://placehold.co/300x300/d97706/FFF?text=Família",
+                secondaryCaption: "Meu porto seguro ❤️",
+                timeline: [
+                    { year: "2015", title: "O Início", desc: "Publiquei meu primeiro conto em um blog gratuito." },
+                    { year: "2018", title: "Primeiro Prêmio", desc: "Vencedor do concurso nacional de Novos Talentos." },
+                    { year: "2025", title: "Carreira Sólida", desc: "Mais de 10 mil cópias vendidas digitalmente." }
+                ]
             },
-            author: { name: "Ronaldo Pereira", role: "Escritor", avatar: "https://placehold.co/150x150/1e293b/FFF?text=RP" },
             books: [], 
             services: [
                 { 
@@ -1052,17 +1071,50 @@
             }).join(''); 
         }
         
-        function initAbout() { const els = { name: document.getElementById('author-name-title'), role: document.getElementById('author-role'), bio: document.getElementById('author-bio'), img: document.getElementById('author-avatar') }; if(els.name) els.name.innerText = DB.author.name; if(els.role) els.role.innerText = DB.author.role; if(els.bio) els.bio.innerText = DB.author.bio; if(els.img) els.img.src = DB.author.avatar; }
+        function initAbout() {
+            // Dados básicos e imagens
+            const els = {
+                name: document.getElementById('about-name-display'),
+                role: document.getElementById('author-role-display'),
+                bio: document.getElementById('about-bio-display'),
+                imgMain: document.getElementById('about-main-img'),
+                imgSec: document.getElementById('about-sec-img'),
+                caption: document.getElementById('about-sec-caption')
+            };
+
+            if(els.name) els.name.innerHTML = `Olá! Sou o <strong class="text-primary">${DB.author.name}</strong>.`;
+            if(els.role) els.role.innerText = DB.author.role;
+            if(els.bio) els.bio.innerText = DB.author.bio;
+            if(els.imgMain) els.imgMain.src = DB.author.avatar;
+            if(els.imgSec) els.imgSec.src = DB.author.secondaryImage;
+            if(els.caption) els.caption.innerText = DB.author.secondaryCaption;
+
+            // Renderizar Timeline
+            const timelineContainer = document.getElementById('about-timeline-list');
+            if(timelineContainer && DB.author.timeline) {
+                timelineContainer.innerHTML = DB.author.timeline.map((item, index) => `
+                    <div class="relative group">
+                        <div class="absolute -left-[41px] top-1 w-5 h-5 bg-gray-300 rounded-full border-4 border-white transition group-hover:bg-accent group-hover:scale-125 shadow-sm"></div>
+                        <h4 class="font-bold text-primary text-xl">${item.year}</h4>
+                        <p class="font-bold text-gray-700 text-sm mb-1">${item.title}</p>
+                        <p class="text-sm text-gray-500 leading-relaxed">${item.desc}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
         function initHeaderLogic() { const btn = document.getElementById('menu-button'); const menu = document.getElementById('mobile-menu'); if(btn && menu) { btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); }; document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add('hidden'); }); } const header = document.getElementById('header-container'); window.addEventListener('scroll', () => { if(window.scrollY > 10) { header.classList.add('glass-header'); header.classList.remove('py-4'); header.classList.add('py-2'); } else { header.classList.remove('glass-header'); header.classList.remove('py-2'); header.classList.add('py-4'); } }); }
 
         // ==========================================
         // 4. API PÚBLICA
-        // ==========================================
+        // ===========================1===============
         window.app = {
             toast: (msg, type) => showToast(msg, type),
             _pendingConfirmAction: null,
 
-            // Navegação
+            // ==========================================
+            // NAVEGAÇÃO & GERAL
+            // ==========================================
             changePage: (n) => { currentPage = n; initLivros(); document.getElementById('books-grid').scrollIntoView({ behavior: 'smooth', block: 'start' }); },
             setAdminFilter: (context, key, value) => { adminState[context][key] = value; adminState[context].page = 1; initDashboard(); },
             changeAdminPage: (context, direction) => { adminState[context].page += direction; initDashboard(); },
@@ -1079,55 +1131,21 @@
                 if (window.location.hash.includes('livro/')) initBookDetails(id);
             },
 
-            // --- HELPER: Dropdown Customizado Home ---
+            // ==========================================
+            // CMS: HOME & PERSONALIZAÇÃO
+            // ==========================================
+            
+            // --- Helpers Dropdown Home ---
             toggleDropdown: (id) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); },
             selectHeroBook: (bookId, bookTitle) => { document.getElementById('config-hero-input').value = bookId; document.getElementById('config-hero-btn-text').innerText = bookTitle; document.getElementById('custom-dropdown-list').classList.add('hidden'); },
 
-            // --- HELPERS: UI de Serviços (Ícone e Cor) ---
-            
-            // Filtro da Grade de Ícones
-            filterIconGrid: (term) => {
-                const items = document.querySelectorAll('.icon-grid-item');
-                items.forEach(item => {
-                    const iconName = item.dataset.icon;
-                    if(iconName.includes(term.toLowerCase())) { item.classList.remove('hidden'); } else { item.classList.add('hidden'); }
-                });
-            },
-
-            // Selecionar Ícone
-            selectServiceIcon: (iconName) => {
-                document.getElementById('service-icon-input').value = iconName;
-                document.getElementById('icon-preview-display').className = `ph-fill ${iconName} text-2xl text-primary`;
-                document.getElementById('icon-picker-modal').classList.add('hidden'); // Fecha "modal" interno
-            },
-
-            // Selecionar Tema (Cor)
-            selectServiceTheme: (themeName) => {
-                document.getElementById('service-theme-input').value = themeName;
-                // Atualiza visualmente a seleção (bordas)
-                document.querySelectorAll('.theme-dot').forEach(el => {
-                    if(el.dataset.theme === themeName) {
-                        el.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400', 'scale-110');
-                    } else {
-                        el.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400', 'scale-110');
-                    }
-                });
-            },
-
-            toggleIconPicker: () => {
-                const picker = document.getElementById('icon-picker-modal');
-                picker.classList.toggle('hidden');
-                if(!picker.classList.contains('hidden')) {
-                    document.getElementById('icon-search-input').focus();
-                }
-            },
-
-            // --- CMS HOME ---
+            // --- Modal Config Home ---
             openHomeConfigModal: () => {
                 const currentHeroBook = DB.books.find(b => b.id === DB.homeConfig.heroBookId) || DB.books[0];
                 const dropdownItems = DB.books.map(b => `<div onclick="window.app.selectHeroBook('${b.id}', '${b.title}')" class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 flex items-center gap-3 transition"><img src="${b.cover}" class="w-8 h-10 object-cover rounded shadow-sm"><span class="text-sm font-bold text-gray-700">${b.title}</span></div>`).join('');
                 const isChecked = (id) => DB.homeConfig.highlights.includes(id) ? 'checked' : '';
                 const highlightsList = [...DB.books.map(b => ({id: b.id, type: 'Livro', name: b.title})), ...DB.services.map(s => ({id: s.id, type: 'Serviço', name: s.name}))].map(item => `<label class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition"><input type="checkbox" name="home-highlights" value="${item.id}" ${isChecked(item.id)} class="w-5 h-5 text-accent rounded focus:ring-accent"><div><span class="text-xs font-bold uppercase text-gray-400 block">${item.type}</span><span class="text-sm font-bold text-gray-700">${item.name}</span></div></label>`).join('');
+                
                 const body = `<div class="space-y-8 animate-fade-in custom-scrollbar max-h-[60vh] overflow-y-auto pr-2 pb-10"><div class="bg-gray-50 p-6 rounded-2xl border border-gray-200"><div class="flex items-center gap-3 mb-2"><div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">1</div><h4 class="font-bold text-primary">Destaque Principal (Hero)</h4></div><p class="text-xs text-gray-500 mb-6 ml-11">Este livro aparecerá com destaque máximo no topo.</p><div class="relative ml-11 mb-6"><input type="hidden" id="config-hero-input" value="${currentHeroBook.id}"><button onclick="window.app.toggleDropdown('custom-dropdown-list')" class="w-full bg-white border border-gray-300 rounded-xl p-4 flex items-center justify-between shadow-sm hover:border-accent transition group"><span id="config-hero-btn-text" class="font-bold text-gray-700">${currentHeroBook.title}</span><i class="ph-bold ph-caret-down text-gray-400 group-hover:text-accent"></i></button><div id="custom-dropdown-list" class="hidden absolute top-full left-0 w-full bg-white border border-gray-200 rounded-xl shadow-xl mt-2 z-50 max-h-48 overflow-y-auto custom-scrollbar">${dropdownItems}</div></div><div class="ml-11 flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200"><div><span class="font-bold text-gray-800 text-sm block">Selo "Último Lançamento"</span><span class="text-xs text-gray-400">Exibir badge pulsante acima do título?</span></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="config-launch-badge" class="sr-only peer" ${DB.homeConfig.showLaunchBadge ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label></div></div><div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm"><div class="flex items-center gap-3 mb-4"><div class="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold text-xs">2</div><h4 class="font-bold text-primary">Em Destaque (Highlights)</h4></div><div class="grid grid-cols-1 md:grid-cols-2 gap-3 ml-11">${highlightsList}</div></div><div class="bg-blue-50 p-6 rounded-2xl border border-blue-100"><div class="flex items-center gap-3 mb-4"><div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs">3</div><h4 class="font-bold text-primary">Frase de Efeito</h4></div><div class="space-y-3 ml-11"><textarea id="config-quote-text" rows="2" class="w-full bg-white border border-blue-200 rounded-lg p-3 text-sm font-serif italic text-gray-700">${DB.homeConfig.quote.text}</textarea><input type="text" id="config-quote-author" value="${DB.homeConfig.quote.author}" class="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm font-bold text-gray-700"></div></div></div>`;
                 const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.saveHomeConfig()" class="bg-primary text-white px-6 py-2 rounded-lg font-bold shadow-lg">Salvar</button>`;
                 window.app.openModalGeneric("Personalizar Home", body, footer);
@@ -1145,7 +1163,126 @@
                 window.app.toast('Home atualizada!', 'success'); window.app.closeModal();
             },
 
-            // --- SISTEMA DE CONFIRMAÇÃO ---
+            // ==========================================
+            // CMS: SOBRE (NOVA IMPLEMENTAÇÃO)
+            // ==========================================
+            openAboutConfigModal: () => {
+                // Renderizador da Timeline Atual para dentro do Modal
+                const renderTimelineInputs = () => {
+                    return (DB.author.timeline || []).map((t, idx) => `
+                        <div class="flex gap-3 items-start bg-gray-50 p-3 rounded-lg border border-gray-200 group hover:border-accent transition">
+                            <div class="w-20 pt-2">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Ano</label>
+                                <input type="text" value="${t.year}" class="w-full bg-white border border-gray-200 rounded p-1 text-sm font-bold text-center">
+                            </div>
+                            <div class="flex-1">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase">Evento</label>
+                                <input type="text" value="${t.title}" class="w-full bg-white border border-gray-200 rounded p-1 text-sm font-bold mb-1">
+                                <textarea rows="2" class="w-full bg-white border border-gray-200 rounded p-1 text-xs text-gray-600 resize-none">${t.desc}</textarea>
+                            </div>
+                            <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded mt-4"><i class="ph-bold ph-trash"></i></button>
+                        </div>
+                    `).join('');
+                };
+            
+                const body = `
+                    <div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
+                            <h4 class="font-bold text-primary mb-4 flex items-center gap-2"><i class="ph-fill ph-identification-card text-accent"></i> Perfil do Autor</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div><label class="text-xs font-bold text-gray-500 uppercase">Nome de Exibição</label><input type="text" id="cfg-author-name" value="${DB.author.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold"></div>
+                                <div><label class="text-xs font-bold text-gray-500 uppercase">Cargo / Tagline</label><input type="text" id="cfg-author-role" value="${DB.author.role}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
+                            </div>
+                            <div class="mb-4"><label class="text-xs font-bold text-gray-500 uppercase">Biografia Principal</label><textarea id="cfg-author-bio" rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm leading-relaxed">${DB.author.bio}</textarea></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">URL Foto Principal</label><input type="text" id="cfg-author-avatar" value="${DB.author.avatar}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs"></div>
+                        </div>
+                        <div class="bg-orange-50 p-5 rounded-xl border border-orange-100">
+                            <h4 class="font-bold text-orange-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-image text-orange-600"></i> Foto "Polaroid" (Secundária)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="text-xs font-bold text-orange-700 uppercase">URL da Imagem</label><input type="text" id="cfg-sec-img" value="${DB.author.secondaryImage}" class="w-full bg-white border border-orange-200 rounded-lg p-2 form-input text-xs"></div>
+                                <div><label class="text-xs font-bold text-orange-700 uppercase">Legenda (Manuscrita)</label><input type="text" id="cfg-sec-caption" value="${DB.author.secondaryCaption}" class="w-full bg-white border border-orange-200 rounded-lg p-2 form-input font-hand text-xl text-gray-600"></div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="font-bold text-primary flex items-center gap-2"><i class="ph-fill ph-path text-accent"></i> Linha do Tempo</h4>
+                                <button onclick="window.app.addTimelineItem()" class="text-xs bg-primary text-white px-3 py-1 rounded hover:bg-slate-700 transition font-bold">+ Adicionar Evento</button>
+                            </div>
+                            <div id="config-timeline-list" class="space-y-3">${renderTimelineInputs()}</div>
+                        </div>
+                    </div>
+                `;
+            
+                const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.saveAboutConfig()" class="bg-primary text-white px-6 py-2 rounded-lg font-bold shadow-lg flex items-center gap-2"><i class="ph-bold ph-floppy-disk"></i> Salvar</button>`;
+                window.app.openModalGeneric("Editor de Narrativa", body, footer);
+            },
+            
+            saveAboutConfig: () => {
+                DB.author.name = document.getElementById('cfg-author-name').value;
+                DB.author.role = document.getElementById('cfg-author-role').value;
+                DB.author.bio = document.getElementById('cfg-author-bio').value;
+                DB.author.avatar = document.getElementById('cfg-author-avatar').value;
+                DB.author.secondaryImage = document.getElementById('cfg-sec-img').value;
+                DB.author.secondaryCaption = document.getElementById('cfg-sec-caption').value;
+            
+                const newTimeline = [];
+                const container = document.getElementById('config-timeline-list');
+                if(container) {
+                    for(let block of container.children) {
+                        const inputs = block.querySelectorAll('input, textarea');
+                        if(inputs.length >= 3) {
+                            newTimeline.push({ year: inputs[0].value, title: inputs[1].value, desc: inputs[2].value });
+                        }
+                    }
+                }
+                newTimeline.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+                DB.author.timeline = newTimeline;
+            
+                window.app.toast('Biografia atualizada!', 'success');
+                initAbout(); // Atualiza a tela se estiver nela
+                window.app.closeModal();
+            },
+            
+            addTimelineItem: () => {
+                const container = document.getElementById('config-timeline-list');
+                const div = document.createElement('div');
+                div.className = "flex gap-3 items-start bg-white p-3 rounded-lg border-2 border-accent/20 animate-fade-in";
+                div.innerHTML = `<div class="w-20 pt-2"><label class="text-[10px] font-bold text-accent uppercase">Ano</label><input type="text" value="${new Date().getFullYear()}" class="w-full bg-gray-50 border border-gray-200 rounded p-1 text-sm font-bold text-center text-accent"></div><div class="flex-1"><label class="text-[10px] font-bold text-accent uppercase">Novo Evento</label><input type="text" placeholder="Título..." class="w-full bg-gray-50 border border-gray-200 rounded p-1 text-sm font-bold mb-1 focus:border-accent outline-none"><textarea rows="2" placeholder="Descrição..." class="w-full bg-gray-50 border border-gray-200 rounded p-1 text-xs text-gray-600 resize-none focus:border-accent outline-none"></textarea></div><button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2 hover:bg-red-50 rounded mt-4"><i class="ph-bold ph-trash"></i></button>`;
+                container.appendChild(div);
+                div.scrollIntoView({ behavior: 'smooth' });
+            },
+
+            // ==========================================
+            // HELPERS: UI DE SERVIÇOS (ÍCONE E COR)
+            // ==========================================
+            filterIconGrid: (term) => {
+                const items = document.querySelectorAll('.icon-grid-item');
+                items.forEach(item => {
+                    const iconName = item.dataset.icon;
+                    if(iconName.includes(term.toLowerCase())) { item.classList.remove('hidden'); } else { item.classList.add('hidden'); }
+                });
+            },
+            selectServiceIcon: (iconName) => {
+                document.getElementById('service-icon-input').value = iconName;
+                document.getElementById('icon-preview-display').className = `ph-fill ${iconName} text-2xl text-primary`;
+                document.getElementById('icon-picker-modal').classList.add('hidden');
+            },
+            selectServiceTheme: (themeName) => {
+                document.getElementById('service-theme-input').value = themeName;
+                document.querySelectorAll('.theme-dot').forEach(el => {
+                    if(el.dataset.theme === themeName) { el.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400', 'scale-110'); } 
+                    else { el.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400', 'scale-110'); }
+                });
+            },
+            toggleIconPicker: () => {
+                const picker = document.getElementById('icon-picker-modal');
+                picker.classList.toggle('hidden');
+                if(!picker.classList.contains('hidden')) { document.getElementById('icon-search-input').focus(); }
+            },
+
+            // ==========================================
+            // SISTEMA DE CONFIRMAÇÃO & MODAL GENÉRICO
+            // ==========================================
             openConfirmModal: (title, message, iconType, confirmText, callback) => {
                 window.app._pendingConfirmAction = callback;
                 const isDanger = iconType === 'danger';
@@ -1157,8 +1294,12 @@
                 window.app.openModalGeneric(" ", body, footer);
             },
             executeConfirm: () => { if (window.app._pendingConfirmAction) { window.app._pendingConfirmAction(); window.app._pendingConfirmAction = null; } window.app.closeModal(); },
+            openModalGeneric: (title, bodyHTML, footerHTML) => { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = bodyHTML; document.getElementById('modal-footer').innerHTML = footerHTML; const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('opacity-0', 'scale-95'); }, 10); },
+            closeModal: () => { const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.add('opacity-0'); content.classList.add('opacity-0', 'scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); },
 
-            // --- CRUD LIVROS ---
+            // ==========================================
+            // CRUD: LIVROS
+            // ==========================================
             deleteBook: (id) => { window.app.openConfirmModal('Excluir Livro?', 'Você tem certeza? Essa ação removerá a obra da sua biblioteca permanentemente.', 'danger', 'Sim, Excluir', () => { DB.books = DB.books.filter(b => b.id !== id); if(DB.books.length % adminState.itemsPerPage === 0 && adminState.books.page > 1) { adminState.books.page--; } initDashboard(); window.app.toast('Livro excluído com sucesso.', 'success'); }); },
             openBookModal: (id = null) => {
                  const book = id ? DB.books.find(b => b.id === id) : { id: '', title: '', genre: 'Ficção', price: '', promoPrice: '', cover: '', synopsis: '', coverSynopsis: '', isPromotion: false, active: true, linkAmazon: '', linkML: '', linkShopee: '' };
@@ -1178,183 +1319,40 @@
                 initDashboard(); window.app.closeModal();
             },
 
-            // --- CRUD SERVIÇOS (PERSONALIZAÇÃO COM MODAL DE ÍCONES E CORES) ---
+            // ==========================================
+            // CRUD: SERVIÇOS
+            // ==========================================
             deleteService: (id) => { window.app.openConfirmModal('Remover Serviço?', 'Este serviço não estará mais visível para contratação. Deseja continuar?', 'danger', 'Remover', () => { DB.services = DB.services.filter(s => s.id !== id); if(DB.services.length % adminState.itemsPerPage === 0 && adminState.services.page > 1) { adminState.services.page--; } initDashboard(); window.app.toast('Serviço removido.', 'success'); }); },
-            
             openServiceEditModal: (id = null) => {
-                // Lógica de Randomização para novos itens (Mantida para agilidade)
-                let randomTheme = 'default';
-                let randomIcon = 'ph-star-four';
-                
-                if (!id) {
-                    const themes = Object.keys(THEMES);
-                    const icons = ICON_LIBRARY;
-                    randomTheme = themes[Math.floor(Math.random() * themes.length)];
-                    randomIcon = icons[Math.floor(Math.random() * icons.length)];
-                }
-
-                const s = id ? DB.services.find(x => x.id === id) : { 
-                    id: '', name: '', price: '', unit: '', description: '', 
-                    active: true, isPromotion: false, promoPrice: '',
-                    icon: randomIcon, theme: randomTheme 
-                };
+                let randomTheme = 'default'; let randomIcon = 'ph-star-four';
+                if (!id) { const themes = Object.keys(THEMES); const icons = ICON_LIBRARY; randomTheme = themes[Math.floor(Math.random() * themes.length)]; randomIcon = icons[Math.floor(Math.random() * icons.length)]; }
+                const s = id ? DB.services.find(x => x.id === id) : { id: '', name: '', price: '', unit: '', description: '', active: true, isPromotion: false, promoPrice: '', icon: randomIcon, theme: randomTheme };
                 const isEdit = !!id;
-                
                 const promoToggle = `if(this.checked){document.getElementById('serv-promo-container').classList.remove('hidden');}else{document.getElementById('serv-promo-container').classList.add('hidden');document.getElementById('serv-promo-price').value='';}`;
-
-                // GERA A GRADE DE ÍCONES
-                const iconGridHTML = ICON_LIBRARY.map(ic => 
-                    `<div onclick="window.app.selectServiceIcon('${ic}')" class="icon-grid-item p-3 rounded-lg hover:bg-gray-100 cursor-pointer flex items-center justify-center transition" data-icon="${ic}" title="${ic}">
-                        <i class="ph-fill ${ic} text-2xl text-gray-600 hover:text-primary"></i>
-                    </div>`
-                ).join('');
-
-                // GERA O SELETOR DE CORES
-                const colorDotsHTML = Object.entries(THEMES).map(([key, val]) => `
-                    <div onclick="window.app.selectServiceTheme('${key}')" data-theme="${key}" class="theme-dot w-8 h-8 rounded-full cursor-pointer transition-all hover:scale-110 ${val.dot} ${s.theme === key ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}" title="${val.name}"></div>
-                `).join('');
-
-                const body = `
-                    <div class="space-y-5 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                        <input type="hidden" id="service-id" value="${s.id || ''}">
-                        
-                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <span class="text-xs font-bold text-gray-500 uppercase">Status do Serviço</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="service-active" class="sr-only peer" ${s.active ? 'checked' : ''}>
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                            </label>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase">Nome do Serviço</label>
-                                <input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label>
-                                    <input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
-                                </div>
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase">Unidade</label>
-                                    <input type="text" id="service-unit" value="${s.unit || ''}" placeholder="Ex: p/ hora" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                             <div class="mb-4 border-b border-gray-200 pb-2">
-                                <span class="font-bold text-gray-800 text-sm flex items-center gap-2">
-                                    <i class="ph-fill ph-paint-brush text-accent"></i> Identidade Visual
-                                </span>
-                            </div>
-                            
-                            <div class="space-y-5">
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Ícone Principal</label>
-                                    <input type="hidden" id="service-icon-input" value="${s.icon}">
-                                    <button onclick="window.app.toggleIconPicker()" class="w-full bg-white border border-gray-300 rounded-lg p-3 flex items-center justify-between hover:bg-gray-50 transition group">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
-                                                <i id="icon-preview-display" class="ph-fill ${s.icon} text-xl text-primary"></i>
-                                            </div>
-                                            <span class="text-sm font-bold text-gray-600 group-hover:text-primary">Selecionar Ícone...</span>
-                                        </div>
-                                        <i class="ph-bold ph-caret-down text-gray-400"></i>
-                                    </button>
-
-                                    <div id="icon-picker-modal" class="hidden mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-4 animate-fade-in">
-                                        <input type="text" id="icon-search-input" oninput="window.app.filterIconGrid(this.value)" placeholder="Buscar..." class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm mb-3 focus:outline-none focus:border-accent">
-                                        <div class="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto custom-scrollbar">
-                                            ${iconGridHTML}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="text-xs font-bold text-gray-500 uppercase mb-3 block">Tema do Card</label>
-                                    <input type="hidden" id="service-theme-input" value="${s.theme}">
-                                    <div class="flex gap-4 flex-wrap">
-                                        ${colorDotsHTML}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-bold text-blue-800 text-sm">Preço Promocional?</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="service-promo" class="sr-only peer" onchange="${promoToggle}" ${s.isPromotion ? 'checked' : ''}>
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
-                            <div id="serv-promo-container" class="${s.isPromotion ? '' : 'hidden'} mt-2">
-                                <input type="number" step="0.01" id="serv-promo-price" value="${s.promoPrice || ''}" placeholder="Novo Valor" class="w-full bg-white border border-blue-200 rounded-lg p-2 form-input text-blue-900 font-bold">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase">Descrição</label>
-                            <textarea id="service-desc" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${s.description}</textarea>
-                        </div>
-                    </div>`;
-
+                const iconGridHTML = ICON_LIBRARY.map(ic => `<div onclick="window.app.selectServiceIcon('${ic}')" class="icon-grid-item p-3 rounded-lg hover:bg-gray-100 cursor-pointer flex items-center justify-center transition" data-icon="${ic}" title="${ic}"><i class="ph-fill ${ic} text-2xl text-gray-600 hover:text-primary"></i></div>`).join('');
+                const colorDotsHTML = Object.entries(THEMES).map(([key, val]) => `<div onclick="window.app.selectServiceTheme('${key}')" data-theme="${key}" class="theme-dot w-8 h-8 rounded-full cursor-pointer transition-all hover:scale-110 ${val.dot} ${s.theme === key ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}" title="${val.name}"></div>`).join('');
+                const body = `<div class="space-y-5 h-[60vh] overflow-y-auto pr-2 custom-scrollbar"><input type="hidden" id="service-id" value="${s.id || ''}"><div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200"><span class="text-xs font-bold text-gray-500 uppercase">Status do Serviço</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="service-active" class="sr-only peer" ${s.active ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label></div><div class="space-y-4"><div><label class="text-xs font-bold text-gray-500 uppercase">Nome do Serviço</label><input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700"></div><div class="grid grid-cols-2 gap-4"><div><label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label><input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Unidade</label><input type="text" id="service-unit" value="${s.unit || ''}" placeholder="Ex: p/ hora" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div></div></div><div class="bg-gray-50 p-5 rounded-xl border border-gray-200"><div class="mb-4 border-b border-gray-200 pb-2"><span class="font-bold text-gray-800 text-sm flex items-center gap-2"><i class="ph-fill ph-paint-brush text-accent"></i> Identidade Visual</span></div><div class="space-y-5"><div><label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Ícone Principal</label><input type="hidden" id="service-icon-input" value="${s.icon}"><button onclick="window.app.toggleIconPicker()" class="w-full bg-white border border-gray-300 rounded-lg p-3 flex items-center justify-between hover:bg-gray-50 transition group"><div class="flex items-center gap-3"><div class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center"><i id="icon-preview-display" class="ph-fill ${s.icon} text-xl text-primary"></i></div><span class="text-sm font-bold text-gray-600 group-hover:text-primary">Selecionar Ícone...</span></div><i class="ph-bold ph-caret-down text-gray-400"></i></button><div id="icon-picker-modal" class="hidden mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-4 animate-fade-in"><input type="text" id="icon-search-input" oninput="window.app.filterIconGrid(this.value)" placeholder="Buscar..." class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm mb-3 focus:outline-none focus:border-accent"><div class="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto custom-scrollbar">${iconGridHTML}</div></div></div><div><label class="text-xs font-bold text-gray-500 uppercase mb-3 block">Tema do Card</label><input type="hidden" id="service-theme-input" value="${s.theme}"><div class="flex gap-4 flex-wrap">${colorDotsHTML}</div></div></div></div><div class="bg-blue-50 p-4 rounded-xl border border-blue-100"><div class="flex items-center justify-between mb-2"><span class="font-bold text-blue-800 text-sm">Preço Promocional?</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="service-promo" class="sr-only peer" onchange="${promoToggle}" ${s.isPromotion ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div></label></div><div id="serv-promo-container" class="${s.isPromotion ? '' : 'hidden'} mt-2"><input type="number" step="0.01" id="serv-promo-price" value="${s.promoPrice || ''}" placeholder="Novo Valor" class="w-full bg-white border border-blue-200 rounded-lg p-2 form-input text-blue-900 font-bold"></div></div><div><label class="text-xs font-bold text-gray-500 uppercase">Descrição</label><textarea id="service-desc" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${s.description}</textarea></div></div>`;
                 const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500">Cancelar</button><button onclick="window.app.saveService(${isEdit})" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">Salvar</button>`;
                 window.app.openModalGeneric(isEdit ? "Editar Serviço" : "Novo Serviço", body, footer);
             },
-
             saveService: (isEdit) => {
-                const id = document.getElementById('service-id').value;
-                const name = document.getElementById('service-name').value;
-                const price = parseFloat(document.getElementById('service-price').value);
-                const unit = document.getElementById('service-unit').value;
-                const description = document.getElementById('service-desc').value;
-                const active = document.getElementById('service-active').checked;
-                const isPromotion = document.getElementById('service-promo').checked;
-                
-                // CAPTURA OBRIGATÓRIA DOS VALORES VISUAIS
-                // Se por acaso vier vazio, aplicamos um fallback seguro
-                const icon = document.getElementById('service-icon-input').value || 'ph-star-four';
-                const theme = document.getElementById('service-theme-input').value || 'default';
-
+                const id = document.getElementById('service-id').value; const name = document.getElementById('service-name').value; const price = parseFloat(document.getElementById('service-price').value); const unit = document.getElementById('service-unit').value; const description = document.getElementById('service-desc').value; const active = document.getElementById('service-active').checked; const isPromotion = document.getElementById('service-promo').checked;
+                const icon = document.getElementById('service-icon-input').value || 'ph-star-four'; const theme = document.getElementById('service-theme-input').value || 'default';
                 let promoPrice = null;
-
                 if(!name || isNaN(price) || price <= 0) return window.app.toast('Dados inválidos', 'error');
-
-                if (isPromotion) {
-                    promoPrice = parseFloat(document.getElementById('serv-promo-price').value);
-                    if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional inválido', 'error');
-                }
-
-                const data = { 
-                    id: isEdit ? id : 'S' + Date.now(), 
-                    name, price, unit, description, active, 
-                    isPromotion, promoPrice,
-                    icon, theme // Salvo sempre
-                };
-
-                if(isEdit) {
-                    const idx = DB.services.findIndex(s => s.id === id);
-                    if (idx !== -1) DB.services[idx] = data;
-                } else {
-                    DB.services.push(data);
-                }
-                
-                window.app.toast('Serviço salvo!', 'success');
-                initDashboard();
-                window.app.closeModal();
+                if (isPromotion) { promoPrice = parseFloat(document.getElementById('serv-promo-price').value); if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional inválido', 'error'); }
+                const data = { id: isEdit ? id : 'S' + Date.now(), name, price, unit, description, active, isPromotion, promoPrice, icon, theme };
+                if(isEdit) { const idx = DB.services.findIndex(s => s.id === id); if (idx !== -1) DB.services[idx] = data; } else { DB.services.push(data); }
+                window.app.toast('Serviço salvo!', 'success'); initDashboard(); window.app.closeModal();
             },
 
-            // AUTH & GERAL & PUBLIC
+            // ==========================================
+            // AUTH & PUBLIC INTERACTION
+            // ==========================================
             logout: () => { window.app.openConfirmModal('Sair do Painel', 'Deseja encerrar sua sessão administrativa?', 'warning', 'Sair Agora', () => { isAdmin = false; localStorage.removeItem('isAdmin'); window.location.hash = '#/'; router(); window.app.toast('Você saiu do sistema.', 'success'); }); },
             connectGoogle: () => { user = { name: "Visitante", avatar: "https://placehold.co/40x40/d97706/FFF?text=Eu" }; localStorage.setItem('user', JSON.stringify(user)); initCommunity(); window.app.toast('Conectado como Visitante', 'success'); },
             postComment: () => { const text = document.getElementById('new-comment').value; if(text.trim()) { DB.comments.unshift({ id: Date.now(), user: user.name, avatar: user.avatar, text: text, date: "Agora mesmo" }); initCommunity(); window.app.toast('Comentário publicado!', 'success'); } },
             handleLogin: () => { const e = document.getElementById('email').value; const p = document.getElementById('password').value; if(e === 'admin@ronaldo.com' && p === 'admin') { isAdmin = true; localStorage.setItem('isAdmin', 'true'); window.location.hash = '#/painel'; router(); window.app.toast('Bem-vindo, Chefe!', 'success'); } else { window.app.toast('Credenciais inválidas', 'error'); } },
-            openModalGeneric: (title, bodyHTML, footerHTML) => { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = bodyHTML; document.getElementById('modal-footer').innerHTML = footerHTML; const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('opacity-0', 'scale-95'); }, 10); },
-            closeModal: () => { const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.add('opacity-0'); content.classList.add('opacity-0', 'scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); },
             openServiceModal: (id) => { const s = DB.services.find(x => x.id === id); const body = `<div class="space-y-6 animate-fade-in"><div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden"><div class="absolute right-0 top-0 w-20 h-20 bg-accent/5 rounded-full -mr-5 -mt-5"></div><h4 class="text-lg font-bold text-gray-900 mb-2">${s.name}</h4><p class="text-gray-600 text-sm leading-relaxed mb-4">${s.description}</p><div class="flex items-end justify-between border-t border-gray-100 pt-4"><div><p class="text-xs text-gray-400 uppercase font-bold">Investimento</p><p class="text-2xl font-black text-primary">R$ ${s.price.toFixed(2)}</p></div><span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">${s.unit || 'Preço Fixo'}</span></div></div><div class="space-y-3"><p class="text-sm font-bold text-gray-700 uppercase tracking-wide">Seus Dados</p><input type="text" placeholder="Nome Completo" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><input type="email" placeholder="E-mail Profissional" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><textarea placeholder="Conte um pouco sobre seu projeto..." rows="3" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"></textarea></div></div>`; const footer = `<button onclick="window.app.closeModal()" class="px-5 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.closeModal(); window.app.toast('Solicitação enviada!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-2 rounded-full font-bold shadow-lg transition">Enviar Proposta</button>`; window.app.openModalGeneric("Solicitar Orçamento", body, footer); }
         };
 
