@@ -100,7 +100,7 @@
         // ==========================================
         // 1. TEMPLATES HTML
         // ==========================================
-        const TEMPLATES = {
+const TEMPLATES = {
             header: `
                 <header class="w-full py-4 transition-all duration-300">
                     <div class="container mx-auto px-4 flex justify-between items-center">
@@ -184,7 +184,7 @@
                     </div>
                 </section>
             `,
-            // === TEMPLATE DE DETALHES DO LIVRO (COM BOTÕES EXTERNOS)
+
             book_details: `
                 <div class="animate-fade-in pt-10">
                     <button onclick="history.back()" class="flex items-center gap-2 text-gray-500 hover:text-primary font-bold mb-8 transition">
@@ -263,7 +263,7 @@
                                 <div class="mt-6 flex items-center gap-2">
                                      <button id="detail-fav-btn" class="flex items-center gap-2 text-gray-500 hover:text-red-500 transition font-bold text-sm px-4 py-2 rounded-lg hover:bg-red-50">
                                         <i id="detail-fav-icon" class="ph-fill ph-heart text-xl text-gray-300"></i> Adicionar aos Favoritos
-                                    </button>
+                                     </button>
                                 </div>
                             </div>
                         </div>
@@ -294,7 +294,8 @@
                         </div>
                     </div>
                 </div>
-            `,// === TEMPLATE LIVROS (SEM SIDEBAR, ESTILO GALERIA) ===
+            `,
+
             livros: `
                 <div class="animate-fade-in pt-10 pb-20">
                     <div class="text-center mb-16">
@@ -403,136 +404,51 @@
                     </div>
                 </div>
             `,    
-            dashboard: `
+
+        dashboard: `
                 <div class="animate-fade-in">
-                    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <div>
                             <h2 class="text-3xl font-bold text-primary font-serif">Painel do Escritor</h2>
                             <p class="text-gray-500">Gestão completa de Produtos e Serviços.</p>
                         </div>
                         <div class="flex gap-3 w-full md:w-auto">
-                            <button onclick="window.app.openAboutConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-primary px-5 py-2.5 rounded-lg hover:border-accent hover:text-accent transition font-bold text-sm shadow-sm">
-                                <i class="ph-bold ph-user-gear"></i> Editar Bio
-                            </button>
-                            <button onclick="window.app.openHomeConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-slate-800 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition font-bold text-sm">
-                                <i class="ph-bold ph-house-line"></i> Personalizar Home
-                            </button>
-                            
-                            <button onclick="window.app.toast('Relatório baixado!', 'success')" class="hidden md:flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:border-accent hover:text-accent transition shadow-sm font-bold text-sm"><i class="ph ph-file-pdf"></i></button>
+                            <button onclick="window.app.openAboutConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-primary px-5 py-2.5 rounded-lg hover:border-accent hover:text-accent transition font-bold text-sm shadow-sm"><i class="ph-bold ph-user-gear"></i> Editar Bio</button>
+                            <button onclick="window.app.openHomeConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-slate-800 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition font-bold text-sm"><i class="ph-bold ph-house-line"></i> Personalizar Home</button>
                             <button onclick="window.app.logout()" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm"><i class="ph ph-sign-out"></i> Sair</button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                        <div class="dashboard-card border-l-4 border-accent">
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Livros)</p>
-                            <h3 class="text-3xl font-black text-primary">R$ 14.502</h3>
-                        </div>
-                        <div class="dashboard-card border-l-4 border-blue-500">
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Serviços)</p>
-                            <h3 class="text-3xl font-black text-primary">R$ 5.200</h3>
-                        </div>
-                        <div class="dashboard-card">
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Leads Totais</p>
-                            <h3 class="text-3xl font-black text-primary">1.205</h3>
-                        </div>
-                        <div class="dashboard-card">
-                            <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Solicitações Pendentes</p>
-                            <h3 class="text-3xl font-black text-accent">3</h3>
-                        </div>
+                    <div class="flex gap-6 border-b border-gray-200 mb-8">
+                        <button onclick="window.app.setAdminTab('main')" id="tab-main" class="pb-3 text-sm font-bold border-b-2 border-accent text-accent transition">Visão Geral & Cruds</button>
+                        <button onclick="window.app.setAdminTab('analytics')" id="tab-analytics" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition">Relatórios & Tráfego</button>
+                        <button onclick="window.app.setAdminTab('leads')" id="tab-leads" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition flex items-center gap-2">Solicitações <span id="badge-leads" class="bg-red-500 text-white text-[10px] px-1.5 rounded-full hidden">0</span></button>
                     </div>
 
-                    <div class="grid grid-cols-1 gap-12">
-                        
-                        <div class="dashboard-card">
-                            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                                <div>
-                                    <h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-book text-accent"></i> Catálogo de Livros</h3>
-                                </div>
-                                <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
-                                    <input type="text" placeholder="Buscar livro..." oninput="window.app.setAdminFilter('books', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-accent">
-                                    <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto min-h-[300px]">
-                                <table class="w-full text-left text-sm text-gray-600">
-                                    <thead class="bg-gray-50 text-gray-400 uppercase text-xs border-b border-gray-200">
-                                        <tr>
-                                            <th class="p-3">Capa</th>
-                                            <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'title')">
-                                                Título <i id="sort-books-title" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'price')">
-                                                Preço <i id="sort-books-price" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'isPromotion')">
-                                                Promoção <i id="sort-books-isPromotion" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'active')">
-                                                Status <i id="sort-books-active" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 text-right">Ação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="admin-books-table"></tbody>
-                                </table>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
-                                <span class="text-xs text-gray-400" id="admin-books-info">Mostrando 0 de 0</span>
-                                <div class="flex gap-2" id="admin-books-pagination"></div>
-                            </div>
-                        </div>
-
-                        <div class="dashboard-card border-t-4 border-blue-500">
-                            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                                <div>
-                                    <h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Meus Serviços</h3>
-                                </div>
-                                <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
-                                    <input type="text" placeholder="Buscar serviço..." oninput="window.app.setAdminFilter('services', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-blue-500">
-                                    <button onclick="window.app.openServiceEditModal()" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
-                                </div>
-                            </div>
-                            <div class="overflow-x-auto min-h-[200px]">
-                                <table class="w-full text-left text-sm text-gray-600">
-                                    <thead class="bg-blue-50 text-blue-400 uppercase text-xs border-b border-blue-100">
-                                        <tr>
-                                            <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'name')">
-                                                Serviço <i id="sort-services-name" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'price')">
-                                                Preço Base <i id="sort-services-price" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'isPromotion')">
-                                                Promoção <i id="sort-services-isPromotion" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'active')">
-                                                Status <i id="sort-services-active" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                            </th>
-                                            <th class="p-3 text-right">Ação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="admin-services-table"></tbody>
-                                </table>
-                            </div>
-                            <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
-                                <span class="text-xs text-gray-400" id="admin-services-info">Mostrando 0 de 0</span>
-                                <div class="flex gap-2" id="admin-services-pagination"></div>
-                            </div>
-                        </div>
-
-                    </div>
+                    <div id="dashboard-content"></div>
                     <div class="h-20"></div>
                 </div>
             `,
-
-        };
         
+        };
 
         // ==========================================
         // 2. DADOS & ESTADO
         // ==========================================
         const DB = {
+
+        // Adicione isso dentro do DB, logo após 'comments: [...]'
+            leads: [
+                { id: 1, name: "Fernanda Costa", email: "fer.costa@email.com", service: "Mentoria Literária", desc: "Tenho um manuscrito de 300 páginas...", date: "12/12/2025", status: "pending" },
+                { id: 2, name: "Roberto Silva", email: "beto@email.com", service: "Design de Capa", desc: "Capa para Sci-Fi cyberpunk.", date: "11/12/2025", status: "archived" }
+            ],
+            stats: {
+                totalVisits: 15420,
+                clicksAmazon: 842,
+                clicksML: 320,
+                clicksShopee: 510,
+                mostViewedBook: "O Código da Eternidade"
+            },
             homeConfig: {
                     heroBookId: '1',
                     showLaunchBadge: true,
@@ -633,11 +549,13 @@
         generateBooks();
 
         const adminState = {
+            currentTab: 'main', // 'main' (SEU DASH ORIGINAL), 'analytics', 'leads'
             books: { page: 1, filter: '', sortKey: 'title', sortOrder: 'asc' }, 
             services: { page: 1, filter: '', sortKey: 'name', sortOrder: 'asc' },
-            itemsPerPage: 5 // Mantenho a paginação pois visualmente fica melhor, mesmo com poucos itens
+            itemsPerPage: 5
         };
 
+        
         // ESTADO GLOBAL SIMPLIFICADO
         let favorites = JSON.parse(localStorage.getItem('user_favorites')) || []; 
         let user = JSON.parse(localStorage.getItem('user')) || null;
@@ -753,124 +671,354 @@
         }
 
         function initDashboard() {
-            const sortList = (list, key, order) => {
-                return list.sort((a, b) => {
-                    let valA = a[key]; let valB = b[key];
-                    if (typeof valA === 'string') valA = valA.toLowerCase();
-                    if (typeof valB === 'string') valB = valB.toLowerCase();
-                    if (valA < valB) return order === 'asc' ? -1 : 1;
-                    if (valA > valB) return order === 'asc' ? 1 : -1;
-                    return 0;
-                });
-            };
-            const updateIcons = (context, activeKey, activeOrder) => {
-                const keys = context === 'books' ? ['title', 'price', 'isPromotion', 'active'] : ['name', 'price', 'isPromotion', 'active'];
-                keys.forEach(k => {
-                    const el = document.getElementById(`sort-${context}-${k}`);
-                    if(el) {
-                        if(k === activeKey) { el.className = `ph-bold ${activeOrder === 'asc' ? 'ph-caret-up' : 'ph-caret-down'} text-accent align-middle ml-1`; } 
-                        else { el.className = `ph-bold ph-arrows-down-up text-gray-300 group-hover:text-gray-500 align-middle ml-1`; }
-                    }
-                });
-            };
+                    const content = document.getElementById('dashboard-content');
+                    if(!content) return;
 
-            // LÓGICA LIVROS (MANTIDA IGUAL AO SEU ÚLTIMO CÓDIGO)
-            let filteredBooks = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
-            filteredBooks = sortList(filteredBooks, adminState.books.sortKey, adminState.books.sortOrder);
-            updateIcons('books', adminState.books.sortKey, adminState.books.sortOrder);
-            const totalBooks = filteredBooks.length;
-            const startB = (adminState.books.page - 1) * adminState.itemsPerPage;
-            const pagedBooks = filteredBooks.slice(startB, startB + adminState.itemsPerPage);
-            const booksBody = document.getElementById('admin-books-table');
-            if(booksBody) {
-                if(pagedBooks.length === 0) { booksBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`; } 
-                else {
-                    booksBody.innerHTML = pagedBooks.map(b => `
-                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
-                            <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
-                            <td class="p-3 font-bold text-primary">${b.title}</td>
-                            <td class="p-3 text-gray-500">${b.isPromotion && b.promoPrice ? `<span class="line-through text-xs">R$ ${b.price}</span><br><span class="text-green-600 font-bold">R$ ${b.promoPrice}</span>` : `R$ ${b.price.toFixed(2)}`}</td>
-                            <td class="p-3 text-center">${b.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">SIM</span>' : '<span class="text-[10px] text-gray-300">-</span>'}</td>
-                            <td class="p-3 text-center"><span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}"><span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-500'}"></span>${b.active ? 'Ativo' : 'Inativo'}</span></td>
-                            <td class="p-3 text-right"><button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button></td>
-                        </tr>`).join('');
-                }
-            }
-            // Paginação Livros (Mantida)
-            const bookPages = Math.ceil(totalBooks / adminState.itemsPerPage);
-            document.getElementById('admin-books-info').innerText = `Mostrando ${pagedBooks.length} de ${totalBooks}`;
-            let bookNavHTML = '';
-            if(bookPages > 1) {
-                bookNavHTML += `<button onclick="window.app.changeAdminPage('books', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
-                bookNavHTML += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.books.page} / ${bookPages}</span>`;
-                bookNavHTML += `<button onclick="window.app.changeAdminPage('books', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === bookPages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
-            }
-            document.getElementById('admin-books-pagination').innerHTML = bookNavHTML;
+                    // 1. Atualiza visual dos botões das abas
+                    ['main', 'analytics', 'leads'].forEach(t => {
+                        const btn = document.getElementById(`tab-${t}`);
+                        if(btn) {
+                            if(adminState.currentTab === t) btn.className = "pb-3 text-sm font-bold border-b-2 border-accent text-primary transition";
+                            else btn.className = "pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition";
+                        }
+                    });
 
+                    // Badge de Leads
+                    const pending = DB.leads.filter(l => l.status === 'pending').length;
+                    const badge = document.getElementById('badge-leads');
+                    if(badge) { badge.innerText = pending; badge.classList.toggle('hidden', pending === 0); }
 
-            // ================= LÓGICA DE SERVIÇOS (ATUALIZADA) =================
-            let filteredServices = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
-            filteredServices = sortList(filteredServices, adminState.services.sortKey, adminState.services.sortOrder);
-            updateIcons('services', adminState.services.sortKey, adminState.services.sortOrder);
-
-            const totalServices = filteredServices.length;
-            const startS = (adminState.services.page - 1) * adminState.itemsPerPage;
-            const pagedServices = filteredServices.slice(startS, startS + adminState.itemsPerPage);
-
-            const servicesBody = document.getElementById('admin-services-table');
-            if(servicesBody) {
-                if(pagedServices.length === 0) {
-                    servicesBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>`;
-                } else {
-                    servicesBody.innerHTML = pagedServices.map(s => {
-                        // Aplica o tema na linha da tabela
-                        const theme = THEMES[s.theme || 'default'];
-                        
-                        return `
-                        <tr class="border-b ${theme.border} hover:bg-opacity-80 transition ${s.active ? theme.bg : 'opacity-60 bg-gray-50'}">
-                            <td class="p-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center shadow-sm text-xl ${theme.text}">
-                                        <i class="ph-fill ${s.icon || 'ph-star-four'}"></i>
+                    // 2. LÓGICA DE RENDERIZAÇÃO DAS ABAS
+                    if (adminState.currentTab === 'main') {
+                        content.innerHTML = `
+                            <div class="animate-fade-in">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                                    <div class="dashboard-card border-l-4 border-accent">
+                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Livros)</p>
+                                        <h3 class="text-3xl font-black text-primary">R$ 14.502</h3>
                                     </div>
-                                    <div>
-                                        <div class="font-bold text-gray-800">${s.name}</div>
-                                        <div class="text-xs ${theme.text} opacity-80 truncate max-w-[150px]">${s.description}</div>
+                                    <div class="dashboard-card border-l-4 border-blue-500">
+                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Serviços)</p>
+                                        <h3 class="text-3xl font-black text-primary">R$ 5.200</h3>
+                                    </div>
+                                    <div class="dashboard-card">
+                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Leads Totais</p>
+                                        <h3 class="text-3xl font-black text-primary">1.205</h3>
+                                    </div>
+                                    <div class="dashboard-card">
+                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Solicitações Pendentes</p>
+                                        <h3 class="text-3xl font-black text-accent">${pending}</h3>
                                     </div>
                                 </div>
-                            </td>
-                            <td class="p-3 font-mono ${theme.text}">
-                                ${s.isPromotion && s.promoPrice ? `<span class="line-through text-xs opacity-60">R$ ${s.price}</span> <span class="font-bold">R$ ${s.promoPrice}</span>` : `R$ ${s.price.toFixed(2)}`}
-                                <span class="text-[10px] opacity-60 font-sans font-normal">${s.unit || ''}</span>
-                            </td>
-                            <td class="p-3 text-center">
-                                ${s.isPromotion ? '<span class="text-[10px] bg-white text-orange-600 border border-orange-200 px-2 py-0.5 rounded font-bold shadow-sm">SIM</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
-                            </td>
-                            <td class="p-3 text-center">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full bg-white/60 border ${theme.border} text-gray-600">
-                                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
-                                    ${s.active ? 'Ativo' : 'Inativo'}
-                                </span>
-                            </td>
-                            <td class="p-3 text-right flex justify-end gap-2">
-                                <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                                <button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
-                            </td>
-                        </tr>
-                    `}).join('');
-                }
-            }
 
-            // Render Paginação Serviços
-            const servicePages = Math.ceil(totalServices / adminState.itemsPerPage);
-            document.getElementById('admin-services-info').innerText = `Mostrando ${pagedServices.length} de ${totalServices}`;
-            let servNavHTML = '';
-            if(servicePages > 1) {
-                servNavHTML += `<button onclick="window.app.changeAdminPage('services', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
-                servNavHTML += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.services.page} / ${servicePages}</span>`;
-                servNavHTML += `<button onclick="window.app.changeAdminPage('services', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === servicePages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
+                                <div class="grid grid-cols-1 gap-12">
+                                    
+                                    <div class="dashboard-card">
+                                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                            <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-book text-accent"></i> Catálogo de Livros</h3></div>
+                                            <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                                                <input type="text" placeholder="Buscar livro..." oninput="window.app.setAdminFilter('books', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-accent">
+                                                <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
+                                            </div>
+                                        </div>
+                                        <div class="overflow-x-auto min-h-[300px]">
+                                            <table class="w-full text-left text-sm text-gray-600">
+                                                <thead class="bg-gray-50 text-gray-400 uppercase text-xs border-b border-gray-200">
+                                                    <tr>
+                                                        <th class="p-3">Capa</th>
+                                                        <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'title')">
+                                                            Título <i id="sort-books-title" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'price')">
+                                                            Preço <i id="sort-books-price" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'isPromotion')">
+                                                            Promoção <i id="sort-books-isPromotion" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'active')">
+                                                            Status <i id="sort-books-active" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 text-right">Ação</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="admin-books-table"></tbody>
+                                            </table>
+                                        </div>
+                                        <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4"><span class="text-xs text-gray-400" id="admin-books-info"></span><div class="flex gap-2" id="admin-books-pagination"></div></div>
+                                    </div>
+
+                                    <div class="dashboard-card border-t-4 border-blue-500">
+                                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                                            <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Meus Serviços</h3></div>
+                                            <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                                                <input type="text" placeholder="Buscar serviço..." oninput="window.app.setAdminFilter('services', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-blue-500">
+                                                <button onclick="window.app.openServiceEditModal()" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
+                                            </div>
+                                        </div>
+                                        <div class="overflow-x-auto min-h-[200px]">
+                                            <table class="w-full text-left text-sm text-gray-600">
+                                                <thead class="bg-blue-50 text-blue-400 uppercase text-xs border-b border-blue-100">
+                                                    <tr>
+                                                        <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'name')">
+                                                            Serviço <i id="sort-services-name" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'price')">
+                                                            Preço Base <i id="sort-services-price" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'isPromotion')">
+                                                            Promoção <i id="sort-services-isPromotion" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'active')">
+                                                            Status <i id="sort-services-active" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                                        </th>
+                                                        <th class="p-3 text-right">Ação</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="admin-services-table"></tbody>
+                                            </table>
+                                        </div>
+                                        <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4"><span class="text-xs text-gray-400" id="admin-services-info"></span><div class="flex gap-2" id="admin-services-pagination"></div></div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        
+                        // --- HELPER DE ORDENAÇÃO ---
+                        const sortList = (list, key, order) => {
+                            return list.sort((a, b) => {
+                                let valA = a[key]; let valB = b[key];
+                                if (typeof valA === 'string') valA = valA.toLowerCase();
+                                if (typeof valB === 'string') valB = valB.toLowerCase();
+                                if (valA < valB) return order === 'asc' ? -1 : 1;
+                                if (valA > valB) return order === 'asc' ? 1 : -1;
+                                return 0;
+                            });
+                        };
+                        
+                        // --- HELPER DE ÍCONES DE ORDENAÇÃO ---
+                        const updateIcons = (context, activeKey, activeOrder) => {
+                            const keys = context === 'books' ? ['title', 'price', 'isPromotion', 'active'] : ['name', 'price', 'isPromotion', 'active'];
+                            keys.forEach(k => {
+                                const el = document.getElementById(`sort-${context}-${k}`);
+                                if(el) {
+                                    if(k === activeKey) { el.className = `ph-bold ${activeOrder === 'asc' ? 'ph-caret-up' : 'ph-caret-down'} text-accent align-middle ml-1`; } 
+                                    else { el.className = `ph-bold ph-arrows-down-up text-gray-300 group-hover:text-gray-500 align-middle ml-1`; }
+                                }
+                            });
+                        };
+
+                        // --- RENDERIZAÇÃO DA TABELA DE LIVROS (CORRIGIDA) ---
+                        const renderBooks = () => {
+                            let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
+                            list = sortList(list, adminState.books.sortKey, adminState.books.sortOrder);
+                            updateIcons('books', adminState.books.sortKey, adminState.books.sortOrder);
+                            
+                            const start = (adminState.books.page - 1) * adminState.itemsPerPage;
+                            const paged = list.slice(start, start + adminState.itemsPerPage);
+                            const tbody = document.getElementById('admin-books-table');
+                            
+                            if(tbody) {
+                                if(paged.length === 0) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`;
+                                else {
+                                    tbody.innerHTML = paged.map(b => `
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
+                                            <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
+                                            <td class="p-3 font-bold text-primary">${b.title}</td>
+                                            <td class="p-3 text-gray-500">
+                                                ${b.isPromotion && b.promoPrice ? 
+                                                    `<div class="flex flex-col"><span class="line-through text-xs text-gray-400">R$ ${b.price}</span><span class="text-green-600 font-bold">R$ ${b.promoPrice}</span></div>` : 
+                                                    `R$ ${b.price.toFixed(2)}`
+                                                }
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                ${b.isPromotion ? 
+                                                    '<span class="text-[10px] bg-orange-50 text-orange-700 border border-orange-200 px-2 py-0.5 rounded font-bold">SIM</span>' : 
+                                                    '<span class="text-[10px] text-gray-300">-</span>'
+                                                }
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}">
+                                                    <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
+                                                    ${b.active ? 'Ativo' : 'Inativo'}
+                                                </span>
+                                            </td>
+                                            <td class="p-3 text-right">
+                                                <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                                                <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                                            </td>
+                                        </tr>`).join('');
+                                }
+                            }
+                            // Paginação Livros
+                            const pages = Math.ceil(list.length / adminState.itemsPerPage);
+                            document.getElementById('admin-books-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
+                            let nav = '';
+                            if(pages > 1) {
+                                nav += `<button onclick="window.app.changeAdminPage('books', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
+                                nav += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.books.page} / ${pages}</span>`;
+                                nav += `<button onclick="window.app.changeAdminPage('books', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === pages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
+                            }
+                            document.getElementById('admin-books-pagination').innerHTML = nav;
+                        };
+
+                        // --- RENDERIZAÇÃO DA TABELA DE SERVIÇOS (CORRIGIDA) ---
+                        const renderServices = () => {
+                            let list = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
+                            list = sortList(list, adminState.services.sortKey, adminState.services.sortOrder);
+                            updateIcons('services', adminState.services.sortKey, adminState.services.sortOrder);
+
+                            const start = (adminState.services.page - 1) * adminState.itemsPerPage;
+                            const paged = list.slice(start, start + adminState.itemsPerPage);
+                            const tbody = document.getElementById('admin-services-table');
+
+                            if(tbody) {
+                                if(paged.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>`;
+                                else {
+                                    tbody.innerHTML = paged.map(s => {
+                                        const theme = THEMES[s.theme || 'default'];
+                                        return `
+                                        <tr class="border-b ${theme.border} hover:bg-opacity-80 transition ${s.active ? theme.bg : 'opacity-60 bg-gray-50'}">
+                                            <td class="p-3">
+                                                <div class="flex items-center gap-3">
+                                                    <div class="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center shadow-sm text-xl ${theme.text}">
+                                                        <i class="ph-fill ${s.icon || 'ph-star-four'}"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-bold text-gray-800">${s.name}</div>
+                                                        <div class="text-xs ${theme.text} opacity-80 truncate max-w-[150px]">${s.description}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="p-3 font-mono text-sm ${theme.text}">
+                                                ${s.isPromotion && s.promoPrice ? 
+                                                    `<span class="line-through text-xs opacity-60 mr-1">R$ ${s.price}</span><span class="font-bold">R$ ${s.promoPrice}</span>` : 
+                                                    `R$ ${s.price.toFixed(2)}`
+                                                }
+                                                <span class="text-[10px] opacity-60 font-sans font-normal ml-1 block">${s.unit || ''}</span>
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                ${s.isPromotion ? 
+                                                    '<span class="text-[10px] bg-white text-orange-600 border border-orange-200 px-2 py-0.5 rounded font-bold shadow-sm">SIM</span>' : 
+                                                    '<span class="text-[10px] text-gray-400">-</span>'
+                                                }
+                                            </td>
+                                            <td class="p-3 text-center">
+                                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full bg-white/60 border ${theme.border} text-gray-600">
+                                                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
+                                                    ${s.active ? 'Ativo' : 'Inativo'}
+                                                </span>
+                                            </td>
+                                            <td class="p-3 text-right flex justify-end gap-2">
+                                                <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                                                <button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    `}).join('');
+                                }
+                            }
+                            // Paginação Serviços
+                            const pages = Math.ceil(list.length / adminState.itemsPerPage);
+                            document.getElementById('admin-services-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
+                            let nav = '';
+                            if(pages > 1) {
+                                nav += `<button onclick="window.app.changeAdminPage('services', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
+                                nav += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.services.page} / ${pages}</span>`;
+                                nav += `<button onclick="window.app.changeAdminPage('services', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === pages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
+                            }
+                            document.getElementById('admin-services-pagination').innerHTML = nav;
+                        };
+
+                        // Executa a renderização inicial
+                        renderBooks();
+                        renderServices();
+
+                    } else if (adminState.currentTab === 'analytics') {
+                        const total = DB.stats.clicksAmazon + DB.stats.clicksML + DB.stats.clicksShopee;
+                        content.innerHTML = `
+                            <div class="animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                                    <h3 class="font-bold text-primary mb-6">Tráfego por Loja</h3>
+                                    <div class="space-y-4">
+                                        <div><div class="flex justify-between text-xs font-bold mb-1"><span>Amazon</span><span>${DB.stats.clicksAmazon}</span></div><div class="w-full bg-gray-100 h-2 rounded-full"><div class="bg-[#FF9900] h-2 rounded-full" style="width: ${(DB.stats.clicksAmazon/total*100)||0}%"></div></div></div>
+                                        <div><div class="flex justify-between text-xs font-bold mb-1"><span>Mercado Livre</span><span>${DB.stats.clicksML}</span></div><div class="w-full bg-gray-100 h-2 rounded-full"><div class="bg-[#FFE600] h-2 rounded-full" style="width: ${(DB.stats.clicksML/total*100)||0}%"></div></div></div>
+                                        <div><div class="flex justify-between text-xs font-bold mb-1"><span>Shopee</span><span>${DB.stats.clicksShopee}</span></div><div class="w-full bg-gray-100 h-2 rounded-full"><div class="bg-[#EE4D2D] h-2 rounded-full" style="width: ${(DB.stats.clicksShopee/total*100)||0}%"></div></div></div>
+                                    </div>
+                                </div>
+                                <div class="bg-primary p-8 rounded-2xl shadow-lg text-white">
+                                    <h3 class="font-serif text-2xl font-bold mb-4">Livro em Alta</h3>
+                                    <p class="text-4xl font-black text-accent mb-2">"${DB.stats.mostViewedBook}"</p>
+                                    <p class="text-slate-400 text-sm">Este livro recebeu 45% de todos os cliques esta semana.</p>
+                                </div>
+                            </div>`;
+
+                    } else if (adminState.currentTab === 'leads') {
+                        const list = DB.leads;
+                        content.innerHTML = `
+                            <div class="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                                <h3 class="font-bold text-lg text-primary mb-6">Pedidos de Orçamento</h3>
+                                <div class="space-y-4">
+                                    ${list.length ? list.map(l => `
+                                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-gray-50 rounded-xl border border-gray-100 ${l.status==='pending'?'border-l-4 border-l-red-500':''}">
+                                            <div>
+                                                <div class="flex items-center gap-2"><span class="font-bold text-gray-800">${l.name}</span> <span class="text-xs text-gray-400">(${l.email})</span></div>
+                                                <div class="text-xs font-bold text-accent uppercase mt-1">${l.service}</div>
+                                                <p class="text-sm text-gray-600 italic mt-2">"${l.desc}"</p>
+                                            </div>
+                                            <div class="mt-4 md:mt-0 flex gap-2">
+                                                <a href="mailto:${l.email}" class="text-xs font-bold bg-white border border-gray-200 px-3 py-2 rounded hover:text-primary transition">Responder</a>
+                                                ${l.status==='pending' ? `<button onclick="window.app.archiveLead(${l.id})" class="text-xs font-bold bg-green-100 text-green-700 px-3 py-2 rounded hover:bg-green-200 transition">Baixa</button>` : '<span class="text-xs text-gray-400 px-3 py-2">Arquivado</span>'}
+                                            </div>
+                                        </div>
+                                    `).join('') : '<p class="text-gray-400 p-4 text-center">Nenhuma solicitação.</p>'}
+                                </div>
+                            </div>`;
+                    }
+                }
+
+        function renderBooksTable() {
+            let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
+            list.sort((a, b) => {
+                let vA = a[adminState.books.sortKey], vB = b[adminState.books.sortKey];
+                if (typeof vA === 'string') vA = vA.toLowerCase(); if (typeof vB === 'string') vB = vB.toLowerCase();
+                if (vA < vB) return adminState.books.sortOrder === 'asc' ? -1 : 1; if (vA > vB) return adminState.books.sortOrder === 'asc' ? 1 : -1; return 0;
+            });
+            const start = (adminState.books.page - 1) * adminState.itemsPerPage;
+            const paged = list.slice(start, start + adminState.itemsPerPage);
+            const tbody = document.getElementById('admin-books-table');
+            if (tbody) {
+                tbody.innerHTML = paged.length ? paged.map(b => `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td class="p-3"><img src="${b.cover}" class="w-8 h-12 object-cover rounded"></td>
+                        <td class="p-3 font-bold text-primary">${b.title}</td>
+                        <td class="p-3">R$ ${b.price.toFixed(2)}</td>
+                        <td class="p-3 text-center text-xs">${b.isPromotion ? '✅' : '-'}</td>
+                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${b.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
+                        <td class="p-3 text-right"><button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
+                    </tr>`).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum livro encontrado.</td></tr>';
+                document.getElementById('admin-books-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
             }
-            document.getElementById('admin-services-pagination').innerHTML = servNavHTML;
+        }
+
+        function renderServicesTable() {
+            let list = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
+            list.sort((a, b) => {
+                let vA = a[adminState.services.sortKey], vB = b[adminState.services.sortKey];
+                if (typeof vA === 'string') vA = vA.toLowerCase(); if (typeof vB === 'string') vB = vB.toLowerCase();
+                if (vA < vB) return adminState.services.sortOrder === 'asc' ? -1 : 1; if (vA > vB) return adminState.services.sortOrder === 'asc' ? 1 : -1; return 0;
+            });
+            const start = (adminState.services.page - 1) * adminState.itemsPerPage;
+            const paged = list.slice(start, start + adminState.itemsPerPage);
+            const tbody = document.getElementById('admin-services-table');
+            if (tbody) {
+                tbody.innerHTML = paged.length ? paged.map(s => `
+                    <tr class="border-b border-blue-100 hover:bg-blue-50 transition">
+                        <td class="p-3 font-bold text-gray-700 flex items-center gap-2"><i class="ph-fill ${s.icon} text-blue-500"></i> ${s.name}</td>
+                        <td class="p-3">R$ ${s.price}</td>
+                        <td class="p-3 text-center text-xs">${s.isPromotion ? '✅' : '-'}</td>
+                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${s.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
+                        <td class="p-3 text-right"><button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
+                    </tr>`).join('') : '<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>';
+                document.getElementById('admin-services-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
+            }
         }
 
         function initHome() {
@@ -998,96 +1146,91 @@
         }
 
         function initLivros() {
-            const grid = document.getElementById('books-grid');
-            const controls = document.getElementById('pagination-controls');
-            if(!grid) return;
+                    const grid = document.getElementById('books-grid');
+                    const controls = document.getElementById('pagination-controls');
+                    if(!grid) return;
 
-            // FILTRO: Mostrar apenas livros ATIVOS
-            const activeBooks = DB.books.filter(b => b.active === true);
+                    // FILTRO: Mostrar apenas livros ATIVOS
+                    const activeBooks = DB.books.filter(b => b.active === true);
 
-            // Paginação (Agora baseada nos livros ativos)
-            const start = (currentPage - 1) * itemsPerPage;
-            const booksToShow = activeBooks.slice(start, start + itemsPerPage);
-            const totalPages = Math.ceil(activeBooks.length / itemsPerPage);
+                    // Paginação (Agora baseada nos livros ativos)
+                    const start = (currentPage - 1) * itemsPerPage;
+                    const booksToShow = activeBooks.slice(start, start + itemsPerPage);
+                    const totalPages = Math.ceil(activeBooks.length / itemsPerPage);
 
-            // ... (O restante do código de renderização do grid continua igual) ...
-            
-            grid.innerHTML = booksToShow.map(b => {
-                // ... (seu código de template do card aqui) ...
-                // Nota: Copie o conteúdo do template anterior, sem alterações na estrutura visual do card
-                const isFav = favorites.includes(b.id);
-                const heartClass = isFav ? 'ph-fill text-red-500' : 'ph-bold text-gray-400';
-                
-                return `
-                <div class="bg-white p-5 rounded-3xl shadow-lg border border-gray-50 flex flex-col h-full group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                    <div class="relative mb-5 overflow-hidden rounded-2xl bg-gray-100 aspect-[2/3] shadow-inner">
-                        <img src="${b.cover}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110 cursor-pointer" onclick="window.location.hash='#/livro/${b.id}'">
-                        <button onclick="window.app.toggleFavorite('${b.id}')" class="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-20">
-                            <i class="${heartClass} ph-heart text-xl transition-colors"></i>
-                        </button>
-                    </div>
-                    <div class="text-center">
-                        <p class="text-[10px] font-bold text-accent uppercase tracking-wider mb-2">${b.genre}</p>
-                        <h3 class="text-xl font-bold text-gray-900 leading-tight font-serif cursor-pointer hover:text-accent transition mb-4" onclick="window.location.hash='#/livro/${b.id}'">${b.title}</h3>
-                        <button onclick="window.location.hash='#/livro/${b.id}'" class="w-full bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold text-sm py-3 rounded-xl transition border border-gray-200 hover:border-primary">
-                            Comprar - R$ ${b.isPromotion && b.promoPrice ? b.promoPrice.toFixed(2) : b.price.toFixed(2)}
-                        </button>
-                    </div>
-                </div>`;
-            }).join('');
+                    grid.innerHTML = booksToShow.map(b => {
+                        const isFav = favorites.includes(b.id);
+                        const heartClass = isFav ? 'ph-fill text-red-500' : 'ph-bold text-gray-400';
+                        
+                        return `
+                        <div class="bg-white p-5 rounded-3xl shadow-lg border border-gray-50 flex flex-col h-full group hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                            <div class="relative mb-5 overflow-hidden rounded-2xl bg-gray-100 aspect-[2/3] shadow-inner">
+                                <img src="${b.cover}" class="w-full h-full object-cover transition duration-700 group-hover:scale-110 cursor-pointer" onclick="window.location.hash='#/livro/${b.id}'">
+                                <button onclick="window.app.toggleFavorite('${b.id}')" class="absolute top-3 right-3 w-10 h-10 bg-white/90 backdrop-blur rounded-full flex items-center justify-center shadow-md hover:scale-110 transition z-20">
+                                    <i class="${heartClass} ph-heart text-xl transition-colors"></i>
+                                </button>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[10px] font-bold text-accent uppercase tracking-wider mb-2">${b.genre}</p>
+                                <h3 class="text-xl font-bold text-gray-900 leading-tight font-serif cursor-pointer hover:text-accent transition mb-4" onclick="window.location.hash='#/livro/${b.id}'">${b.title}</h3>
+                                <button onclick="window.location.hash='#/livro/${b.id}'" class="w-full bg-gray-50 hover:bg-primary hover:text-white text-primary font-bold text-sm py-3 rounded-xl transition border border-gray-200 hover:border-primary">
+                                    Comprar - R$ ${b.isPromotion && b.promoPrice ? b.promoPrice.toFixed(2) : b.price.toFixed(2)}
+                                </button>
+                            </div>
+                        </div>`;
+                    }).join('');
 
-            // ... (Controles de paginação mantidos iguais) ...
-             let paginationHTML = ``;
-            if(totalPages > 1) {
-                paginationHTML += `<button onclick="window.app.changePage(${currentPage - 1})" class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''}><i class="ph ph-caret-left"></i></button>`;
-                for(let i = 1; i <= totalPages; i++) { paginationHTML += `<button onclick="window.app.changePage(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}">${i}</button>`; }
-                paginationHTML += `<button onclick="window.app.changePage(${currentPage + 1})" class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''}><i class="ph ph-caret-right"></i></button>`;
-            }
-            controls.innerHTML = paginationHTML;
-        }
+                    let paginationHTML = ``;
+                    if(totalPages > 1) {
+                        paginationHTML += `<button onclick="window.app.changePage(${currentPage - 1})" class="pagination-btn" ${currentPage === 1 ? 'disabled' : ''}><i class="ph ph-caret-left"></i></button>`;
+                        for(let i = 1; i <= totalPages; i++) { paginationHTML += `<button onclick="window.app.changePage(${i})" class="pagination-btn ${i === currentPage ? 'active' : ''}">${i}</button>`; }
+                        paginationHTML += `<button onclick="window.app.changePage(${currentPage + 1})" class="pagination-btn" ${currentPage === totalPages ? 'disabled' : ''}><i class="ph ph-caret-right"></i></button>`;
+                    }
+                    controls.innerHTML = paginationHTML;
+                }
 
         function initServicos() { 
-            const grid = document.getElementById('services-grid'); 
-            if(!grid) return; 
-            
-            // Mapa de cores para textos/bordas (versão light para fundo branco)
-            const colorMap = {
-                'default': 'text-primary border-primary',
-                'orange': 'text-orange-500 border-orange-500',
-                'blue': 'text-blue-600 border-blue-600',
-                'purple': 'text-purple-600 border-purple-600',
-                'green': 'text-emerald-600 border-emerald-600'
-            };
-
-            grid.innerHTML = DB.services.map((s, index) => {
-                const themeClass = colorMap[s.theme || 'default'];
-                const iconClass = s.icon || 'ph-star-four';
-
-                return `
-                <div class="card-interaction bg-white p-10 rounded-[2rem] shadow-xl border border-gray-100 flex flex-col h-full relative overflow-hidden group">
-                    <div class="absolute top-0 left-0 w-full h-2 bg-current ${themeClass.split(' ')[0]} opacity-80"></div>
+                    const grid = document.getElementById('services-grid'); 
+                    if(!grid) return; 
                     
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="p-3 bg-gray-50 rounded-2xl text-3xl ${themeClass.split(' ')[0]}">
-                            <i class="ph-fill ${iconClass}"></i>
-                        </div>
-                        <div class="text-6xl text-gray-100 font-black z-0 group-hover:text-gray-200 transition">0${index+1}</div>
-                    </div>
+                    // Mapa de cores para textos/bordas (versão light para fundo branco)
+                    const colorMap = {
+                        'default': 'text-primary border-primary',
+                        'orange': 'text-orange-500 border-orange-500',
+                        'blue': 'text-blue-600 border-blue-600',
+                        'purple': 'text-purple-600 border-purple-600',
+                        'green': 'text-emerald-600 border-emerald-600'
+                    };
 
-                    <div class="relative z-10 flex-1">
-                        <h3 class="text-2xl font-bold text-gray-900 mb-3 font-serif">${s.name}</h3>
-                        <div class="text-4xl font-black text-slate-800 mb-6 flex items-baseline gap-2">
-                            R$ ${s.price} <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">${s.unit || ''}</span>
-                        </div>
-                        <p class="text-gray-600 mb-10 text-base leading-relaxed">${s.description}</p>
-                    </div>
-                    <button onclick="window.app.openServiceModal('${s.id}')" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-sm transition hover:bg-accent hover:shadow-xl hover:-translate-y-1">
-                        Solicitar Orçamento
-                    </button>
-                </div>`;
-            }).join(''); 
-        }
-        
+                    grid.innerHTML = DB.services.map((s, index) => {
+                        const themeClass = colorMap[s.theme || 'default'];
+                        const iconClass = s.icon || 'ph-star-four';
+
+                        return `
+                        <div class="card-interaction bg-white p-10 rounded-[2rem] shadow-xl border border-gray-100 flex flex-col h-full relative overflow-hidden group">
+                            <div class="absolute top-0 left-0 w-full h-2 bg-current ${themeClass.split(' ')[0]} opacity-80"></div>
+                            
+                            <div class="flex justify-between items-start mb-6">
+                                <div class="p-3 bg-gray-50 rounded-2xl text-3xl ${themeClass.split(' ')[0]}">
+                                    <i class="ph-fill ${iconClass}"></i>
+                                </div>
+                                <div class="text-6xl text-gray-100 font-black z-0 group-hover:text-gray-200 transition">0${index+1}</div>
+                            </div>
+
+                            <div class="relative z-10 flex-1">
+                                <h3 class="text-2xl font-bold text-gray-900 mb-3 font-serif">${s.name}</h3>
+                                <div class="text-4xl font-black text-slate-800 mb-6 flex items-baseline gap-2">
+                                    R$ ${s.price} <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">${s.unit || ''}</span>
+                                </div>
+                                <p class="text-gray-600 mb-10 text-base leading-relaxed">${s.description}</p>
+                            </div>
+                            <button onclick="window.app.openServiceModal('${s.id}')" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-sm transition hover:bg-accent hover:shadow-xl hover:-translate-y-1">
+                                Solicitar Orçamento
+                            </button>
+                        </div>`;
+                    }).join(''); 
+                }
+
         function initAbout() {
             // Dados básicos e imagens
             const els = {
@@ -1120,6 +1263,72 @@
             }
         }
 
+        // --- FUNÇÕES QUE FAZEM AS TABELAS FUNCIONAREM ---
+        function renderBooksTable() {
+            // 1. Filtra e Ordena
+            let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
+            list.sort((a, b) => {
+                let vA = a[adminState.books.sortKey], vB = b[adminState.books.sortKey];
+                if (typeof vA === 'string') vA = vA.toLowerCase();
+                if (typeof vB === 'string') vB = vB.toLowerCase();
+                if (vA < vB) return adminState.books.sortOrder === 'asc' ? -1 : 1;
+                if (vA > vB) return adminState.books.sortOrder === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            // 2. Pagina
+            const start = (adminState.books.page - 1) * adminState.itemsPerPage;
+            const paged = list.slice(start, start + adminState.itemsPerPage);
+
+            // 3. Injeta no HTML
+            const tbody = document.getElementById('admin-books-table');
+            if (tbody) {
+                tbody.innerHTML = paged.length ? paged.map(b => `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td class="p-3"><img src="${b.cover}" class="w-8 h-12 object-cover rounded"></td>
+                        <td class="p-3 font-bold text-primary">${b.title}</td>
+                        <td class="p-3">R$ ${b.price.toFixed(2)}</td>
+                        <td class="p-3 text-center text-xs">${b.isPromotion ? '✅' : '-'}</td>
+                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${b.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
+                        <td class="p-3 text-right"><button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum livro encontrado.</td></tr>';
+                
+                // Atualiza Info da Paginação
+                document.getElementById('admin-books-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
+            }
+        }
+
+        function renderServicesTable() {
+            let list = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
+            list.sort((a, b) => {
+                let vA = a[adminState.services.sortKey], vB = b[adminState.services.sortKey];
+                if (typeof vA === 'string') vA = vA.toLowerCase();
+                if (typeof vB === 'string') vB = vB.toLowerCase();
+                if (vA < vB) return adminState.services.sortOrder === 'asc' ? -1 : 1;
+                if (vA > vB) return adminState.services.sortOrder === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            const start = (adminState.services.page - 1) * adminState.itemsPerPage;
+            const paged = list.slice(start, start + adminState.itemsPerPage);
+
+            const tbody = document.getElementById('admin-services-table');
+            if (tbody) {
+                tbody.innerHTML = paged.length ? paged.map(s => `
+                    <tr class="border-b border-blue-100 hover:bg-blue-50 transition">
+                        <td class="p-3 font-bold text-gray-700 flex items-center gap-2"><i class="ph-fill ${s.icon} text-blue-500"></i> ${s.name}</td>
+                        <td class="p-3">R$ ${s.price}</td>
+                        <td class="p-3 text-center text-xs">${s.isPromotion ? '✅' : '-'}</td>
+                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${s.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
+                        <td class="p-3 text-right"><button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
+                    </tr>
+                `).join('') : '<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>';
+
+                document.getElementById('admin-services-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
+            }
+        }        
+
         function initHeaderLogic() { const btn = document.getElementById('menu-button'); const menu = document.getElementById('mobile-menu'); if(btn && menu) { btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); }; document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add('hidden'); }); } const header = document.getElementById('header-container'); window.addEventListener('scroll', () => { if(window.scrollY > 10) { header.classList.add('glass-header'); header.classList.remove('py-4'); header.classList.add('py-2'); } else { header.classList.remove('glass-header'); header.classList.remove('py-2'); header.classList.add('py-4'); } }); }
 
         // ==========================================
@@ -1132,7 +1341,7 @@
             cropper: null,
                 currentCropCallback: null,
 
-                handleImageUpload: (input, targetImgId, targetInputId, aspectRatio = 1) => {
+            handleImageUpload: (input, targetImgId, targetInputId, aspectRatio = 1) => {
                     const file = input.files[0];
                     if (!file) return;
 
@@ -1168,9 +1377,9 @@
                         };
                     };
                     reader.readAsDataURL(file);
-                },
+            },
 
-                confirmCrop: () => {
+            confirmCrop: () => {
                     if (!window.app.cropper) return;
                     // Gera o Base64 (qualidade 0.8 para não pesar tanto o LocalStorage)
                     const canvas = window.app.cropper.getCroppedCanvas({ maxWidth: 800, maxHeight: 800 });
@@ -1178,16 +1387,63 @@
                     
                     if (window.app.currentCropCallback) window.app.currentCropCallback(base64);
                     window.app.cancelCrop();
-                },
+            },
 
-                cancelCrop: () => {
+            cancelCrop: () => {
                     document.getElementById('cropper-modal').classList.add('hidden');
                     if (window.app.cropper) {
                         window.app.cropper.destroy();
                         window.app.cropper = null;
                     }
                     window.app.currentCropCallback = null;
-                },
+            },
+
+            setAdminTab: (tab) => {
+                adminState.currentTab = tab;
+                initDashboard(); // Re-renderiza o painel
+            },
+
+            
+
+            // --- CRM: LEADS ---
+            submitBudgetRequest: () => {
+                // Pega dados do modal de serviço aberto
+                const name = document.querySelector('#modal-content input[placeholder="Nome Completo"]').value;
+                const email = document.querySelector('#modal-content input[placeholder="E-mail Profissional"]').value;
+                const desc = document.querySelector('#modal-content textarea').value;
+                const serviceName = document.querySelector('#modal-content h4').innerText;
+
+                if(!name || !email) return window.app.toast('Preencha nome e e-mail!', 'error');
+
+                DB.leads.unshift({
+                    id: Date.now(),
+                    name, email, desc,
+                    service: serviceName,
+                    date: new Date().toLocaleDateString('pt-BR'),
+                    status: 'pending'
+                });
+
+                window.app.toast('Solicitação enviada com sucesso!', 'success');
+                window.app.closeModal();
+            },
+
+            archiveLead: (id) => {
+                const lead = DB.leads.find(l => l.id === id);
+                if(lead) {
+                    lead.status = 'archived';
+                    initDashboard(); // Atualiza a lista
+                    window.app.toast('Solicitação arquivada.', 'success');
+                }
+            },
+
+            // --- ANALYTICS ---
+            trackClick: (type) => {
+                // Simulação de tracking
+                if(type === 'amazon') DB.stats.clicksAmazon++;
+                if(type === 'ml') DB.stats.clicksML++;
+                if(type === 'shopee') DB.stats.clicksShopee++;
+                // Em um app real, aqui enviaria para o backend
+            },
 
 
             // ==========================================
@@ -1469,6 +1725,31 @@
                 if(isEdit) { const index = DB.books.findIndex(b => b.id === id); if (index !== -1) { DB.books[index] = bookData; window.app.toast('Livro atualizado!', 'success'); } } else { DB.books.unshift(bookData); window.app.toast('Novo livro cadastrado!', 'success'); }
                 initDashboard(); window.app.closeModal();
             },
+
+            setAdminTab: (tab) => {
+                    adminState.currentTab = tab;
+                    initDashboard();
+                },
+                archiveLead: (id) => {
+                    const lead = DB.leads.find(l => l.id === id);
+                    if(lead) { lead.status = 'archived'; initDashboard(); window.app.toast('Solicitação arquivada.', 'success'); }
+                },
+                // Rastreio de cliques nos botões de compra
+                trackClick: (type) => {
+                    if(type === 'amazon') DB.stats.clicksAmazon++;
+                    if(type === 'ml') DB.stats.clicksML++;
+                    if(type === 'shopee') DB.stats.clicksShopee++;
+                },
+                // Salvar novo pedido de orçamento (Modal Serviços)
+                submitBudgetRequest: () => {
+                    const name = document.querySelector('#modal-content input[placeholder="Nome Completo"]').value;
+                    const email = document.querySelector('#modal-content input[placeholder="E-mail Profissional"]').value;
+                    const desc = document.querySelector('#modal-content textarea').value;
+                    const serviceName = document.querySelector('#modal-content h4').innerText;
+                    if(!name || !email) return window.app.toast('Preencha nome e e-mail!', 'error');
+                    DB.leads.unshift({ id: Date.now(), name, email, desc, service: serviceName, date: new Date().toLocaleDateString('pt-BR'), status: 'pending' });
+                    window.app.toast('Solicitação enviada!', 'success'); window.app.closeModal();
+                },
 
             // ==========================================
             // CRUD: SERVIÇOS
