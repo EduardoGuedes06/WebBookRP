@@ -502,39 +502,42 @@ const TEMPLATES = {
                 }
             ],
             posts: [
-                { 
-                    id: 1, 
-                    title: "Como venci o bloqueio criativo", 
-                    date: "10/12/2025", 
-                    category: "Escrita", 
-                    coverType: 'color', coverColor: '1e293b', coverText: "Bloqueio Criativo",
-                    coverTextColor: 'white', // <--- NOVO CAMPO
-                    image: "https://placehold.co/600x300/1e293b/FFF?text=Bloqueio+Criativo", 
-                    content: "O bloqueio criativo é o pesadelo de todo escritor...",
-                    link: "https://pomofocus.io",
-                    allowLikes: true, allowComments: true, status: 'published',
-                    likes: 142, likedBy: [],
-                    comments: [
-                        { id: 101, user: "Carlos M.", avatar: "https://placehold.co/40x40/333/FFF?text=C", text: "Ótima dica!", date: "Há 2 horas", likes: 5, likedBy: [], authorLike: true },
-                        { id: 102, user: "Ana Clara", avatar: "https://placehold.co/40x40/555/FFF?text=A", text: "Vou testar.", date: "Há 5 horas", likes: 2, likedBy: [], authorLike: false }
-                    ]
-                },
-                { 
-                    id: 2, 
-                    title: "O futuro da Ficção", 
-                    date: "12/12/2025", 
-                    category: "Opinião", 
-                    coverType: 'upload', coverColor: '', coverText: '',
-                    coverTextColor: 'black', // <--- NOVO CAMPO (Exemplo Preto)
-                    image: "https://placehold.co/600x300/d97706/FFF?text=Sci-Fi+BR", 
-                    content: "A ficção especulativa nacional tem crescido...",
-                    link: "",
-                    allowLikes: true, allowComments: true, status: 'published',
-                    likes: 89, likedBy: [],
-                    comments: []
-                }
-            ],
-        };
+                            { 
+                                id: 1, 
+                                title: "Como venci o bloqueio criativo", 
+                                date: "10/12/2025", 
+                                category: "Escrita", 
+                                coverType: 'color', coverColor: '1e293b', coverText: "Bloqueio Criativo", coverTextColor: 'white',
+                                image: "https://placehold.co/600x300/1e293b/FFF?text=Bloqueio+Criativo", 
+                                content: "O bloqueio criativo é o pesadelo de todo escritor. Neste post, compartilho a técnica Pomodoro que mudou minha rotina. O segredo é não parar de escrever, mesmo que seja ruim.",
+                                link: "https://pomofocus.io",
+                                allowLikes: true, allowComments: true, status: 'published',
+                                likes: 142, likedBy: [],
+                                comments: [
+                                    { id: 101, user: "Carlos M.", avatar: "https://placehold.co/40x40/333/FFF?text=C", text: "Ótima dica!", date: "12/12/2025", likes: 5, likedBy: [], authorLike: true },
+                                    { id: 102, user: "Ana Clara", avatar: "https://placehold.co/40x40/555/FFF?text=A", text: "Vou testar hoje.", date: "12/12/2025", likes: 2, likedBy: [], authorLike: false },
+                                    { id: 103, user: "Marcos D.", avatar: "https://placehold.co/40x40/444/FFF?text=M", text: "Funciona mesmo?", date: "11/12/2025", likes: 0, likedBy: [], authorLike: false },
+                                    { id: 104, user: "Julia S.", avatar: "https://placehold.co/40x40/666/FFF?text=J", text: "Texto incrível!", date: "10/12/2025", likes: 1, likedBy: [], authorLike: false },
+                                    { id: 105, user: "Pedro H.", avatar: "https://placehold.co/40x40/777/FFF?text=P", text: "Salvou meu dia.", date: "09/12/2025", likes: 3, likedBy: [], authorLike: false },
+                                    { id: 106, user: "Lucas F.", avatar: "https://placehold.co/40x40/888/FFF?text=L", text: "Muito bom.", date: "08/12/2025", likes: 0, likedBy: [], authorLike: false },
+                                    { id: 107, user: "Fernanda", avatar: "https://placehold.co/40x40/999/FFF?text=F", text: "Compartilhando...", date: "08/12/2025", likes: 10, likedBy: [], authorLike: true }
+                                ]
+                            },
+                            { 
+                                id: 2, 
+                                title: "O futuro da Ficção", 
+                                date: "12/12/2025", 
+                                category: "Opinião", 
+                                coverType: 'upload', coverColor: '', coverText: '', coverTextColor: 'black',
+                                image: "https://placehold.co/600x300/d97706/FFF?text=Sci-Fi+BR", 
+                                content: "A ficção especulativa nacional tem crescido. O que vocês acham do cenário atual?",
+                                link: "",
+                                allowLikes: true, allowComments: true, status: 'published',
+                                likes: 89, likedBy: [],
+                                comments: []
+                            }
+                        ],
+            };
 
         // BIBLIOTECA DE ÍCONES PARA O SELETOR
         const ICON_LIBRARY = [
@@ -609,8 +612,15 @@ const TEMPLATES = {
             currentTab: 'main',
             books: { page: 1, filter: '', sortKey: 'title', sortOrder: 'asc' }, 
             services: { page: 1, filter: '', sortKey: 'name', sortOrder: 'asc' },
-            leads: { page: 1, filterDays: 60 }, // <--- FALTAVA ISSO AQUI
+            leads: { page: 1, filterDays: 60 },
+            // Estado para os comentários do post selecionado no Admin
+            postComments: { page: 1, filterText: '', filterDate: 'all', itemsPerPage: 5 },
             itemsPerPage: 5
+        };
+        
+        // Estado para controlar quantos comentários aparecem na área pública (por post)
+        const publicState = {
+            expandedComments: {} // { postId: 3 (default), 10, 20... }
         };
 
         
@@ -1323,88 +1333,99 @@ const TEMPLATES = {
         }
 
         function initCommunity() {
-                    const feed = document.getElementById('public-blog-feed');
-                    const sidebarComments = document.getElementById('sidebar-comments');
-                    if(!feed) return;
+            const feed = document.getElementById('public-blog-feed');
+            const sidebarComments = document.getElementById('sidebar-comments');
+            if(!feed) return;
 
-                    const publishedPosts = DB.posts.filter(p => p.status === 'published');
-                    
-                    feed.innerHTML = publishedPosts.map(post => {
-                        const userLiked = user && post.likedBy.includes(user.name);
-                        const isTextBlack = post.coverTextColor === 'black';
+            const publishedPosts = DB.posts.filter(p => p.status === 'published');
+            
+            feed.innerHTML = publishedPosts.map(post => {
+                const userLiked = user && post.likedBy.includes(user.name);
+                const isTextBlack = post.coverTextColor === 'black';
+                const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)]';
+                const metaColor = isTextBlack ? 'text-gray-700' : 'text-white';
+                const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black via-black/50 to-transparent';
+                const likeBtnBorder = isTextBlack ? 'border-gray-300 bg-white/50 hover:bg-white' : 'border-white/20 bg-white/10 hover:bg-white/20';
+                const likeIconColor = userLiked ? 'text-red-500' : (isTextBlack ? 'text-gray-900' : 'text-white');
+                const linkHTML = post.link ? `<a href="${post.link}" target="_blank" class="text-xs font-bold text-accent hover:underline mt-2 inline-flex items-center gap-1"><i class="ph-bold ph-link"></i> Acessar Link</a>` : '';
 
-                        // Configuração Dinâmica de Cores
-                        const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]';
-                        const metaColor = isTextBlack ? 'text-gray-700' : 'text-white/90';
-                        const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black/90 via-black/40 to-transparent';
-                        
-                        // Botão de Like ajustado para contraste
-                        const likeBtnBorder = isTextBlack ? 'border-gray-300 bg-white/50 hover:bg-white' : 'border-white/20 bg-white/10 hover:bg-white/20';
-                        const likeIconColor = userLiked ? 'text-red-500' : (isTextBlack ? 'text-gray-900' : 'text-white');
+                // --- LÓGICA DE EXIBIÇÃO DE COMENTÁRIOS PÚBLICOS ---
+                const limit = publicState.expandedComments[post.id] || 3; // Padrão: 3
+                const visibleComments = post.comments.slice(0, limit);
+                const hasMore = post.comments.length > limit;
+                const remaining = post.comments.length - limit;
+                // ----------------------------------------------------
 
-                        const linkHTML = post.link ? `<a href="${post.link}" target="_blank" class="text-xs font-bold text-accent hover:underline mt-2 inline-flex items-center gap-1"><i class="ph-bold ph-link"></i> Acessar Link</a>` : '';
-
-                        return `
-                        <div class="group bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative mb-10">
-                            <div class="relative h-[350px] overflow-hidden">
-                                <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10"></div>
-                                
-                                <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                                
-                                <div class="absolute bottom-0 left-0 w-full p-8 z-20">
-                                    <div class="flex justify-between items-end">
-                                        <div>
-                                            <span class="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 inline-block shadow-sm">${post.category}</span>
-                                            <h3 class="text-3xl font-serif font-bold ${titleColor} mb-2 leading-tight animate-pulse-slow">${post.title}</h3>
-                                            <div class="flex items-center gap-4 ${metaColor} text-sm font-medium">
-                                                <span><i class="ph-fill ph-calendar"></i> ${post.date}</span>
-                                            </div>
-                                        </div>
-                                        ${post.allowLikes ? `
-                                        <button onclick="${user ? `window.app.togglePublicPostLike(${post.id})` : 'window.app.connectGoogle()'}" class="w-12 h-12 rounded-full flex items-center justify-center border ${likeBtnBorder} backdrop-blur-md transition transform hover:scale-110 shadow-lg">
-                                            <i class="ph-fill ph-heart text-2xl ${likeIconColor}"></i>
-                                        </button>` : ''}
+                return `
+                <div class="group bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative mb-10">
+                    <div class="relative h-[350px] overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10 opacity-90"></div>
+                        <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                        <div class="absolute bottom-0 left-0 w-full p-8 z-20">
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <span class="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 inline-block shadow-lg shadow-black/20">${post.category}</span>
+                                    <h3 class="text-3xl font-serif font-bold ${titleColor} mb-2 leading-tight animate-pulse-slow">${post.title}</h3>
+                                    <div class="flex items-center gap-4 ${metaColor} text-sm font-medium drop-shadow-md">
+                                        <span><i class="ph-fill ph-calendar"></i> ${post.date}</span>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="p-8 pt-6">
-                                <p class="text-gray-600 leading-relaxed text-lg mb-4">${post.content}</p>
-                                ${linkHTML}
-                                <div class="border-t border-gray-100 mt-6 pt-6">
-                                    <div class="flex items-center gap-6 text-sm text-gray-400 mb-6">
-                                        <span class="flex items-center gap-2 ${userLiked ? 'text-red-500 font-bold' : ''}"><i class="ph-fill ph-heart"></i> ${post.likes} curtidas</span>
-                                        <span class="flex items-center gap-2"><i class="ph-fill ph-chat-circle"></i> ${post.comments.length} comentários</span>
-                                    </div>
-                                    <div class="space-y-4 mb-6">
-                                        ${post.comments.map(c => `
-                                            <div class="flex gap-3">
-                                                <img src="${c.avatar}" class="w-8 h-8 rounded-full">
-                                                <div class="flex-1">
-                                                    <div class="bg-gray-50 p-3 rounded-2xl rounded-tl-none relative">
-                                                        ${c.authorLike ? '<i class="ph-fill ph-star absolute -top-1 -right-1 text-accent bg-white rounded-full p-1 shadow-sm text-xs"></i>' : ''}
-                                                        <div class="flex justify-between items-baseline"><span class="font-bold text-xs text-gray-900">${c.user}</span><span class="text-[10px] text-gray-400">${c.date}</span></div>
-                                                        <p class="text-sm text-gray-600">${c.text}</p>
-                                                    </div>
-                                                    <div class="flex gap-3 mt-1 ml-2">
-                                                        <button onclick="${user ? `window.app.togglePublicCommentLike(${post.id}, ${c.id})` : 'window.app.connectGoogle()'}" class="text-[10px] font-bold text-gray-400 hover:text-red-500 flex items-center gap-1"><i class="ph-bold ph-heart"></i> ${c.likes || 0}</button>
-                                                        ${user && user.name === 'Ronaldo Pereira' ? `<button onclick="window.app.adminDeleteComment(${post.id}, ${c.id})" class="text-[10px] text-red-400 font-bold hover:text-red-600">Excluir</button>` : ''}
-                                                    </div>
-                                                </div>
-                                            </div>`).join('')}
-                                    </div>
-                                    ${post.allowComments ? (user ? `<div class="flex gap-3 items-start"><img src="${user.avatar}" class="w-8 h-8 rounded-full"><div class="flex-1 relative"><textarea id="comment-input-${post.id}" rows="1" placeholder="Comente..." class="w-full bg-gray-50 border-0 rounded-xl p-3 pr-12 text-sm focus:ring-2 focus:ring-accent resize-none"></textarea><button onclick="window.app.publicPostComment(${post.id})" class="absolute right-2 top-2 text-primary hover:text-accent p-1"><i class="ph-bold ph-paper-plane-right text-xl"></i></button></div></div>` : `<button onclick="window.app.connectGoogle()" class="w-full py-3 border border-gray-200 border-dashed rounded-xl text-xs font-bold text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-2"><i class="ph-bold ph-sign-in"></i> Faça login</button>`) : '<p class="text-center text-xs text-gray-400 italic">Comentários desativados.</p>'}
-                                </div>
+                                ${post.allowLikes ? `
+                                <button onclick="${user ? `window.app.togglePublicPostLike(${post.id})` : 'window.app.connectGoogle()'}" class="w-12 h-12 rounded-full flex items-center justify-center border ${likeBtnBorder} backdrop-blur-md transition transform hover:scale-110 shadow-lg">
+                                    <i class="ph-fill ph-heart text-2xl ${likeIconColor} drop-shadow-md"></i>
+                                </button>` : ''}
                             </div>
                         </div>
-                    `;
-                    }).join('');
-                    
-                    // Sidebar logic... (mantém igual ao anterior ou copie do bloco initCommunity completo que mandei antes se precisar)
-                    const allComments = [];
-                    DB.posts.forEach(p => p.comments.forEach(c => allComments.push({...c, postTitle: p.title})));
-                    sidebarComments.innerHTML = allComments.slice(0, 5).map(c => `<div class="flex gap-3 pb-4 border-b border-gray-50 last:border-0"><img src="${c.avatar}" class="w-8 h-8 rounded-full"><div><p class="text-xs text-gray-600"><span class="font-bold text-primary">${c.user}</span> comentou:</p><p class="text-xs italic text-gray-500 my-1 line-clamp-2">"${c.text}"</p><p class="text-[10px] text-accent font-bold truncate max-w-[200px]">${c.postTitle}</p></div></div>`).join('');
-                }
+                    </div>
+
+                    <div class="p-8 pt-6">
+                        <p class="text-gray-600 leading-relaxed text-lg mb-4">${post.content}</p>
+                        ${linkHTML}
+                        <div class="border-t border-gray-100 mt-6 pt-6">
+                            <div class="flex items-center gap-6 text-sm text-gray-400 mb-6">
+                                <span class="flex items-center gap-2 ${userLiked ? 'text-red-500 font-bold' : ''}"><i class="ph-fill ph-heart"></i> ${post.likes} curtidas</span>
+                                <span class="flex items-center gap-2"><i class="ph-fill ph-chat-circle"></i> ${post.comments.length} comentários</span>
+                            </div>
+                            
+                            <div class="space-y-4 mb-4">
+                                ${visibleComments.map(c => {
+                                    const cLiked = user && c.likedBy && c.likedBy.includes(user.name);
+                                    return `
+                                    <div class="flex gap-3 animate-fade-in">
+                                        <img src="${c.avatar}" class="w-8 h-8 rounded-full">
+                                        <div class="flex-1">
+                                            <div class="bg-gray-50 p-3 rounded-2xl rounded-tl-none relative">
+                                                ${c.authorLike ? '<i class="ph-fill ph-star absolute -top-1 -right-1 text-accent bg-white rounded-full p-1 shadow-sm text-xs"></i>' : ''}
+                                                <div class="flex justify-between items-baseline"><span class="font-bold text-xs text-gray-900">${c.user}</span><span class="text-[10px] text-gray-400">${c.date}</span></div>
+                                                <p class="text-sm text-gray-600">${c.text}</p>
+                                            </div>
+                                            <div class="flex gap-3 mt-1 ml-2">
+                                                <button onclick="${user ? `window.app.togglePublicCommentLike(${post.id}, ${c.id})` : 'window.app.connectGoogle()'}" class="text-[10px] font-bold text-gray-400 hover:text-red-500 flex items-center gap-1"><i class="ph-bold ph-heart"></i> ${c.likes || 0}</button>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                            
+                            ${hasMore ? `
+                                <div class="text-center mb-6">
+                                    <button onclick="window.app.loadMoreComments(${post.id})" class="text-xs font-bold text-accent hover:underline py-2">
+                                        Ver mais ${remaining > 5 ? 5 : remaining} comentários...
+                                    </button>
+                                </div>
+                            ` : ''}
+
+                            ${post.allowComments ? (user ? `<div class="flex gap-3 items-start"><img src="${user.avatar}" class="w-8 h-8 rounded-full"><div class="flex-1 relative"><textarea id="comment-input-${post.id}" rows="1" placeholder="Comente..." class="w-full bg-gray-50 border-0 rounded-xl p-3 pr-12 text-sm focus:ring-2 focus:ring-accent resize-none"></textarea><button onclick="window.app.publicPostComment(${post.id})" class="absolute right-2 top-2 text-primary hover:text-accent p-1"><i class="ph-bold ph-paper-plane-right text-xl"></i></button></div></div>` : `<button onclick="window.app.connectGoogle()" class="w-full py-3 border border-gray-200 border-dashed rounded-xl text-xs font-bold text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-2"><i class="ph-bold ph-sign-in"></i> Faça login</button>`) : '<p class="text-center text-xs text-gray-400 italic">Comentários desativados.</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+            
+            const allComments = [];
+            DB.posts.forEach(p => p.comments.forEach(c => allComments.push({...c, postTitle: p.title})));
+            sidebarComments.innerHTML = allComments.slice(0, 5).map(c => `<div class="flex gap-3 pb-4 border-b border-gray-50 last:border-0"><img src="${c.avatar}" class="w-8 h-8 rounded-full"><div><p class="text-xs text-gray-600"><span class="font-bold text-primary">${c.user}</span> comentou:</p><p class="text-xs italic text-gray-500 my-1 line-clamp-2">"${c.text}"</p><p class="text-[10px] text-accent font-bold truncate max-w-[200px]">${c.postTitle}</p></div></div>`).join('');
+        }
 
         function initLivros() {
                     const grid = document.getElementById('books-grid');
@@ -1826,60 +1847,121 @@ const TEMPLATES = {
                 },
 
             renderAdminPostDetail: (id) => {
-                    const post = DB.posts.find(p => p.id === id);
-                    const container = document.getElementById('admin-post-detail');
-                    if(!container || !post) return;
-                    const isTextBlack = post.coverTextColor === 'black';
-                    const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-md';
-                    const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black/90 via-black/40 to-transparent';
+                const post = DB.posts.find(p => p.id === id);
+                const container = document.getElementById('admin-post-detail');
+                if(!container || !post) return;
 
-                    container.className = "lg:col-span-2 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm relative";
-                    container.innerHTML = `
-                        <div class="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white shrink-0">
-                            <div class="flex items-center gap-2"><span class="text-xs font-bold text-gray-400 uppercase">Editando:</span><span class="font-bold text-primary truncate max-w-[200px]">${post.title}</span>${!post.allowComments ? '<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded ml-2">Coments Off</span>' : ''}</div>
-                            <div class="flex gap-2">
-                                <button onclick="window.app.openPostModal(${post.id})" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Editar"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
-                                <button onclick="window.app.deletePost(${post.id})" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Excluir"><i class="ph-bold ph-trash text-lg"></i></button>
+                // --- LÓGICA DE FILTRO E PAGINAÇÃO DE COMENTÁRIOS ---
+                let filteredComments = post.comments.filter(c => {
+                    const matchesText = c.text.toLowerCase().includes(adminState.postComments.filterText.toLowerCase()) || 
+                                      c.user.toLowerCase().includes(adminState.postComments.filterText.toLowerCase());
+                    
+                    let matchesDate = true;
+                    if (adminState.postComments.filterDate !== 'all') {
+                        // Converte DD/MM/AAAA para Date
+                        const parts = c.date.split('/');
+                        const cDate = new Date(parts[2], parts[1]-1, parts[0]);
+                        const cutoff = new Date();
+                        cutoff.setDate(cutoff.getDate() - parseInt(adminState.postComments.filterDate));
+                        matchesDate = cDate >= cutoff;
+                    }
+                    return matchesText && matchesDate;
+                });
+
+                const totalComments = filteredComments.length;
+                const totalPages = Math.ceil(totalComments / adminState.postComments.itemsPerPage);
+                // Garante que a página atual é válida
+                if (adminState.postComments.page > totalPages && totalPages > 0) adminState.postComments.page = totalPages;
+                
+                const start = (adminState.postComments.page - 1) * adminState.postComments.itemsPerPage;
+                const pagedComments = filteredComments.slice(start, start + adminState.postComments.itemsPerPage);
+                // ----------------------------------------------------
+
+                // Lógica de Cor do Preview (igual ao anterior)
+                const isTextBlack = post.coverTextColor === 'black';
+                const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-md';
+                const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black/90 via-black/40 to-transparent';
+
+                container.className = "lg:col-span-2 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm relative";
+                container.innerHTML = `
+                    <div class="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white shrink-0">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-bold text-gray-400 uppercase">Editando:</span>
+                            <span class="font-bold text-primary truncate max-w-[200px]">${post.title}</span>
+                            ${!post.allowComments ? '<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded ml-2">Coments Off</span>' : ''}
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="window.app.openPostModal(${post.id})" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Editar"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
+                            <button onclick="window.app.deletePost(${post.id})" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Excluir"><i class="ph-bold ph-trash text-lg"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto custom-scrollbar p-8 bg-gray-50/50">
+                        <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                            <div class="relative h-40 rounded-lg overflow-hidden mb-4 group">
+                                <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10"></div>
+                                <img src="${post.image}" class="w-full h-full object-cover">
+                                <div class="absolute bottom-2 left-4 z-20">
+                                    <h2 class="text-xl font-serif font-bold ${titleColor} leading-tight">${post.title}</h2>
+                                </div>
                             </div>
+                            <p class="text-gray-600 text-sm whitespace-pre-line">${post.content}</p>
+                            ${post.link ? `<div class="mt-4 p-2 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700 truncate"><i class="ph-bold ph-link"></i> ${post.link}</div>` : ''}
                         </div>
 
-                        <div class="flex-1 overflow-y-auto custom-scrollbar p-8 bg-gray-50/50">
-                            <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-                                <div class="relative h-40 rounded-lg overflow-hidden mb-4 group">
-                                    <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10"></div>
-                                    <img src="${post.image}" class="w-full h-full object-cover">
-                                    <div class="absolute bottom-2 left-4 z-20">
-                                        <h2 class="text-xl font-serif font-bold ${titleColor} leading-tight">${post.title}</h2>
-                                    </div>
+                        <div class="max-w-2xl mx-auto">
+                            <div class="flex justify-between items-center mb-4">
+                                <h4 class="font-bold text-gray-700 flex items-center gap-2"><i class="ph-fill ph-chats-circle text-accent"></i> Moderação (${post.comments.length})</h4>
+                            </div>
+                            
+                            <div class="bg-white p-3 rounded-xl border border-gray-200 mb-4 flex gap-2">
+                                <div class="flex-1 relative">
+                                    <i class="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                                    <input type="text" placeholder="Buscar comentário..." 
+                                        oninput="window.app.setCommentFilter('filterText', this.value)" 
+                                        value="${adminState.postComments.filterText}"
+                                        class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-8 p-2 text-xs focus:outline-none focus:border-accent">
                                 </div>
-                                
-                                <p class="text-gray-600 text-sm whitespace-pre-line">${post.content}</p>
-                                ${post.link ? `<div class="mt-4 p-2 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700 truncate"><i class="ph-bold ph-link"></i> ${post.link}</div>` : ''}
+                                <select onchange="window.app.setCommentFilter('filterDate', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs font-bold text-gray-600 focus:outline-none">
+                                    <option value="all" ${adminState.postComments.filterDate === 'all' ? 'selected' : ''}>Todas as Datas</option>
+                                    <option value="7" ${adminState.postComments.filterDate === '7' ? 'selected' : ''}>Últimos 7 dias</option>
+                                    <option value="30" ${adminState.postComments.filterDate === '30' ? 'selected' : ''}>Últimos 30 dias</option>
+                                </select>
                             </div>
 
-                            <div class="max-w-2xl mx-auto">
-                                <h4 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="ph-fill ph-chats-circle text-accent"></i> Moderação (${post.comments.length})</h4>
-                                <div class="space-y-3">
-                                    ${post.comments.map(c => `
-                                        <div class="bg-white p-3 rounded-xl border ${c.authorLike ? 'border-accent/50 ring-1 ring-accent/10' : 'border-gray-200'} shadow-sm relative group">
-                                            <div class="flex gap-3">
-                                                <img src="${c.avatar}" class="w-8 h-8 rounded-full">
-                                                <div class="flex-1">
-                                                    <div class="flex justify-between"><span class="font-bold text-sm text-gray-800">${c.user}</span><span class="text-xs text-gray-400">${c.date}</span></div>
-                                                    <p class="text-sm text-gray-600 mt-1">${c.text}</p>
-                                                    <div class="flex gap-3 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                                                        <button onclick="window.app.toggleAuthorLike(${post.id}, ${c.id})" class="text-xs font-bold ${c.authorLike ? 'text-red-500' : 'text-gray-400 hover:text-accent'}"><i class="ph-bold ${c.authorLike ? 'ph-heart-break' : 'ph-star'}"></i> ${c.authorLike ? 'Tirar Destaque' : 'Destacar'}</button>
-                                                        <button onclick="window.app.adminDeleteComment(${post.id}, ${c.id})" class="text-xs font-bold text-gray-400 hover:text-red-500"><i class="ph-bold ph-trash"></i> Remover</button>
-                                                    </div>
+                            <div class="space-y-3">
+                                ${pagedComments.length > 0 ? pagedComments.map(c => `
+                                    <div class="bg-white p-3 rounded-xl border ${c.authorLike ? 'border-accent/50 ring-1 ring-accent/10' : 'border-gray-200'} shadow-sm relative group animate-fade-in">
+                                        <div class="flex gap-3">
+                                            <img src="${c.avatar}" class="w-8 h-8 rounded-full">
+                                            <div class="flex-1">
+                                                <div class="flex justify-between">
+                                                    <span class="font-bold text-sm text-gray-800">${c.user}</span>
+                                                    <span class="text-xs text-gray-400">${c.date}</span>
+                                                </div>
+                                                <p class="text-sm text-gray-600 mt-1">${c.text}</p>
+                                                <div class="flex gap-3 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                    <button onclick="window.app.toggleAuthorLike(${post.id}, ${c.id})" class="text-xs font-bold ${c.authorLike ? 'text-red-500' : 'text-gray-400 hover:text-accent'}"><i class="ph-bold ${c.authorLike ? 'ph-heart-break' : 'ph-star'}"></i> ${c.authorLike ? 'Tirar Destaque' : 'Destacar'}</button>
+                                                    <button onclick="window.app.adminDeleteComment(${post.id}, ${c.id})" class="text-xs font-bold text-gray-400 hover:text-red-500"><i class="ph-bold ph-trash"></i> Remover</button>
                                                 </div>
                                             </div>
                                         </div>
-                                    `).join('')}
-                                </div>
+                                    </div>
+                                `).join('') : '<div class="text-center py-8 text-gray-400 text-xs italic">Nenhum comentário encontrado com estes filtros.</div>'}
                             </div>
+
+                            ${totalPages > 1 ? `
+                            <div class="flex justify-center items-center gap-3 mt-6">
+                                <button onclick="window.app.changeCommentPage(-1)" class="w-8 h-8 rounded border bg-white hover:bg-gray-50 flex items-center justify-center text-gray-600 disabled:opacity-50" ${adminState.postComments.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
+                                <span class="text-xs font-bold text-gray-500">Pág ${adminState.postComments.page} de ${totalPages}</span>
+                                <button onclick="window.app.changeCommentPage(1)" class="w-8 h-8 rounded border bg-white hover:bg-gray-50 flex items-center justify-center text-gray-600 disabled:opacity-50" ${adminState.postComments.page >= totalPages ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
+                            </div>
+                            ` : ''}
+
                         </div>
-                    `;
-                },
+                    </div>
+                `;
+            },
 
             openPostModal: (id = null) => {
                 const post = id ? DB.posts.find(p => p.id === id) : { 
@@ -2263,7 +2345,42 @@ const TEMPLATES = {
             // CRUD: LIVROS
             // ==========================================
             deleteBook: (id) => { window.app.openConfirmModal('Excluir Livro?', 'Você tem certeza? Essa ação removerá a obra da sua biblioteca permanentemente.', 'danger', 'Sim, Excluir', () => { DB.books = DB.books.filter(b => b.id !== id); if(DB.books.length % adminState.itemsPerPage === 0 && adminState.books.page > 1) { adminState.books.page--; } initDashboard(); window.app.toast('Livro excluído com sucesso.', 'success'); }); },
+
+            setCommentFilter: (key, value) => {
+                adminState.postComments[key] = value;
+                adminState.postComments.page = 1; // Reseta para pág 1
+                if(window.app.selectedPostId) window.app.renderAdminPostDetail(window.app.selectedPostId);
+            },
+            changeCommentPage: (dir) => {
+                adminState.postComments.page += dir;
+                if(window.app.selectedPostId) window.app.renderAdminPostDetail(window.app.selectedPostId);
+            },
+
+            // --- CONTROLE DE COMENTÁRIOS (PÚBLICO) ---
+            loadMoreComments: (postId) => {
+                const current = publicState.expandedComments[postId] || 3;
+                // Aumenta 5, mas trava em 20
+                let next = current + 5;
+                if (next > 20) next = 20; 
+                
+                // Se já estiver em 20, ou se o próximo passo cobrir todos, mostra todos (ou mantém 20)
+                // O pedido foi "limite de 20". Se tiver mais que 20, o botão some ou leva pra outro lugar?
+                // Vou travar em 20 e mudar o texto se houver mais.
+                
+                publicState.expandedComments[postId] = next;
+                initCommunity();
+            },
             
+            // ATENÇÃO: Adicione isso à função selectAdminPost para resetar o estado dos comentários ao trocar de post
+            selectAdminPost: (id) => {
+                window.app.selectedPostId = id;
+                // Reseta paginação/filtros de comentário ao trocar de post
+                adminState.postComments.page = 1;
+                adminState.postComments.filterText = '';
+                adminState.postComments.filterDate = 'all';
+                initDashboard();
+            },
+
             openBookModal: (id = null) => {
                 const book = id ? DB.books.find(b => b.id === id) : { id: '', title: '', genre: 'Ficção', price: '', promoPrice: '', cover: 'https://placehold.co/300x450/333/FFF?text=Sem+Capa', synopsis: '', coverSynopsis: '', isPromotion: false, active: true, linkAmazon: '', linkML: '', linkShopee: '' };
                 const isEdit = !!id;
