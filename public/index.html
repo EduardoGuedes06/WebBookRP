@@ -417,7 +417,7 @@ const TEMPLATES = {
                 </div>
             `,    
 
-        dashboard: `
+            dashboard: `
                 <div class="animate-fade-in">
                     <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                         <div>
@@ -425,15 +425,18 @@ const TEMPLATES = {
                             <p class="text-gray-500">Gestão completa de Produtos e Serviços.</p>
                         </div>
                         <div class="flex gap-3 w-full md:w-auto">
-                            <button onclick="window.app.openAboutConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-primary px-5 py-2.5 rounded-lg hover:border-accent hover:text-accent transition font-bold text-sm shadow-sm"><i class="ph-bold ph-user-gear"></i> Editar Bio</button>
-                            <button onclick="window.app.openHomeConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-slate-800 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition font-bold text-sm"><i class="ph-bold ph-house-line"></i> Personalizar Home</button>
-                            <button onclick="window.app.logout()" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm"><i class="ph ph-sign-out"></i> Sair</button>
+                            <button onclick="window.app.openAboutConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-primary px-5 py-2.5 rounded-lg hover:border-accent hover:text-accent transition font-bold text-sm shadow-sm"><i class="ph-bold ph-user-gear"></i> Bio</button>
+                            <button onclick="window.app.openHomeConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-slate-800 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition font-bold text-sm"><i class="ph-bold ph-house-line"></i> Home</button>
+                            
+                            <button onclick="window.app.setAdminTab('config')" class="flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 hover:text-primary transition" title="Configurações do Sistema"><i class="ph-bold ph-gear"></i></button>
+                            
+                            <button onclick="window.app.logout()" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm"><i class="ph ph-sign-out"></i></button>
                         </div>
                     </div>
 
                     <div class="flex gap-6 border-b border-gray-200 mb-8 overflow-x-auto">
                         <button onclick="window.app.setAdminTab('main')" id="tab-main" class="pb-3 text-sm font-bold border-b-2 border-accent text-accent transition whitespace-nowrap">Visão Geral & Cruds</button>
-                        <button onclick="window.app.setAdminTab('analytics')" id="tab-analytics" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap">Relatórios & Tráfego</button>
+                        <button onclick="window.app.setAdminTab('analytics')" id="tab-analytics" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap">Relatórios</button>
                         <button onclick="window.app.setAdminTab('leads')" id="tab-leads" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition flex items-center gap-2 whitespace-nowrap">Solicitações <span id="badge-leads" class="bg-red-500 text-white text-[10px] px-1.5 rounded-full hidden">0</span></button>
                         <button onclick="window.app.setAdminTab('community')" id="tab-community" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap flex items-center gap-2"><i class="ph-bold ph-chats-circle"></i> Comunidade</button>
                     </div>
@@ -450,6 +453,13 @@ const TEMPLATES = {
         // ==========================================
         const DB = {
             leads: [],
+            systemConfig: {
+                maxActiveProjects: 4,
+                enableNotifications: true,
+                autoReply: false,
+                currency: 'BRL',
+                adminName: 'Ronaldo Pereira'
+            },
             stats: {
                 totalVisits: 15420,
                 clicksAmazon: 842,
@@ -560,21 +570,21 @@ const TEMPLATES = {
             'green':   { name: 'Forest',   bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', dot: 'bg-emerald-600' },
             'red':     { name: 'Passion',  bg: 'bg-rose-50',    border: 'border-rose-200',    text: 'text-rose-800',    dot: 'bg-rose-600' },
         };
+
         // Gerador de Livros Mock   
-        function generateBooks() {
+        function generateBooks() { /* ...seu código atual... */ 
              const covers = ['1e293b', 'd97706', '475569', '0f766e', 'be123c', '4338ca'];
              const genres = ['Ficção', 'Fantasia', 'Thriller'];
              for(let i=1; i<=6; i++) {
                 DB.books.push({id: i.toString(), title: `Livro Vol.${i}`, genre: genres[i%3], price: 29.90+(i*2), active: true, isPromotion: i%2===0, promoPrice: 20.00, cover: `https://placehold.co/300x450/${covers[i%6]}/FFF`, synopsis: "Sinopse...", linkAmazon:'#', linkML:'#', linkShopee:'#'});
              }
         }
-        generateBooks();
 
         function generateServices() {
              DB.services = [
-                { id: 'S1', name: 'Design de Capa', price: 800, active: true, isPromotion: false, icon: 'ph-paint-brush-broad', theme: 'purple', description: 'Capa completa.' },
-                { id: 'S2', name: 'Revisão', price: 0.05, unit: 'p/ palavra', active: true, isPromotion: true, promoPrice: 0.03, icon: 'ph-text-aa', theme: 'blue', description: 'Revisão gramatical.' },
-                { id: 'S3', name: 'Mentoria', price: 500, active: false, icon: 'ph-student', theme: 'orange', description: 'Aulas particulares.' }
+                { id: 'S1', name: 'Design de Capa', price: 800, active: true, isPromotion: false, icon: 'ph-paint-brush-broad', theme: 'purple', description: 'Capa impactante.' },
+                { id: 'S2', name: 'Revisão', price: 0.05, unit: 'p/ palavra', active: true, isPromotion: true, promoPrice: 0.03, icon: 'ph-text-aa', theme: 'blue', description: 'Revisão.' },
+                { id: 'S3', name: 'Mentoria', price: 500, active: false, icon: 'ph-student', theme: 'orange', description: 'Aulas.' }
              ];
         }
 
@@ -582,29 +592,30 @@ const TEMPLATES = {
             const names = ["Fernanda Costa", "Roberto Silva", "Ana Souza", "Carlos Lima", "Beatriz Melo"];
             const emails = ["fer.costa@email.com", "beto@email.com", "ana.souza@email.com", "carlos@l.com", "bia@m.com"];
             const services = ["Mentoria Literária", "Design de Capa", "Revisão Textual"];
+            const statuses = ['pending', 'analyzing', 'working', 'finished', 'cancelled'];
             
-            // Cria 45 leads (alguns repetidos para testar o agrupamento)
             for(let i=0; i<45; i++) {
-                const randIndex = Math.floor(Math.random() * names.length); // Pega aleatório para gerar repetição
-                const daysAgo = Math.floor(Math.random() * 90); // Últimos 90 dias
+                const randIndex = Math.floor(Math.random() * names.length);
+                const daysAgo = Math.floor(Math.random() * 90);
                 const date = new Date();
                 date.setDate(date.getDate() - daysAgo);
                 
                 DB.leads.push({
                     id: Date.now() + i,
                     name: names[randIndex],
-                    email: emails[randIndex], // Mesmo email = mesma pessoa
+                    email: emails[randIndex],
                     service: services[Math.floor(Math.random() * services.length)],
-                    desc: `Solicitação de teste número ${i}. Gostaria de saber mais sobre prazos.`,
-                    date: date.toLocaleDateString('pt-BR'), // Formato DD/MM/AAAA
-                    timestamp: date.getTime(), // Para ordenação
-                    status: Math.random() > 0.7 ? 'archived' : 'pending'
+                    desc: `Solicitação nº ${i}. Gostaria de um orçamento.`,
+                    date: date.toLocaleDateString('pt-BR'),
+                    timestamp: date.getTime(),
+                    status: statuses[Math.floor(Math.random() * statuses.length)],
+                    notes: "" 
                 });
             }
-            // Ordena por mais recente
             DB.leads.sort((a, b) => b.timestamp - a.timestamp);
-        }        
+        }
 
+        generateBooks();
         generateServices();
         generateMockLeads();
 
@@ -612,8 +623,7 @@ const TEMPLATES = {
             currentTab: 'main',
             books: { page: 1, filter: '', sortKey: 'title', sortOrder: 'asc' }, 
             services: { page: 1, filter: '', sortKey: 'name', sortOrder: 'asc' },
-            leads: { page: 1, filterDays: 60 },
-            // Estado para os comentários do post selecionado no Admin
+            leads: { page: 1, filterDays: 60, statusFilter: 'all', subTab: 'all' }, 
             postComments: { page: 1, filterText: '', filterDate: 'all', itemsPerPage: 5 },
             itemsPerPage: 5
         };
@@ -802,8 +812,7 @@ const TEMPLATES = {
             // ============================================================
             } else if (adminState.currentTab === 'analytics') {
                 const totalClicks = DB.stats.clicksAmazon + DB.stats.clicksML + DB.stats.clicksShopee;
-                const conversionRate = ((pendingTotal / DB.stats.totalVisits) * 100).toFixed(2);
-                
+                const conversionRate = ((pendingTotal / DB.stats.totalVisits) * 100).toFixed(2);       
                 content.innerHTML = `
                     <div class="animate-fade-in space-y-8">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -892,148 +901,210 @@ const TEMPLATES = {
                             </div>
                         </div>
                     </div>`;
-
-
-            // ============================================================
-            // ABA 3: SOLICITAÇÕES (LEADS) - INTERATIVA E AGRUPADA
-            // ============================================================
             } else if (adminState.currentTab === 'leads') {
-                // 1. Filtragem por Data
-                const now = new Date();
-                const cutoff = new Date();
-                cutoff.setDate(now.getDate() - adminState.leads.filterDays);
-                
-                let filteredLeads = DB.leads.filter(l => {
-                    const lDate = new Date(l.timestamp); // Usando timestamp para precisão
-                    return adminState.leads.filterDays === 'all' ? true : lDate >= cutoff;
-                });
+                            // 1. Filtragem Base (Data)
+                            const now = new Date();
+                            const cutoff = new Date();
+                            cutoff.setDate(now.getDate() - adminState.leads.filterDays);
+                            
+                            let filteredLeads = DB.leads.filter(l => {
+                                const lDate = new Date(l.timestamp);
+                                const dateMatch = adminState.leads.filterDays === 'all' ? true : lDate >= cutoff;
+                                
+                                // Filtro da Sub-Aba (Atuando vs Todos)
+                                if (adminState.leads.subTab === 'active') {
+                                    return dateMatch && (l.status === 'working' || l.status === 'analyzing');
+                                }
+                                
+                                // Filtro de Status Específico (Dropdown)
+                                if (adminState.leads.statusFilter !== 'all') {
+                                    return dateMatch && l.status === adminState.leads.statusFilter;
+                                }
+                                
+                                return dateMatch;
+                            });
 
-                // 2. Métricas da Aba
-                const countPending = filteredLeads.filter(l => l.status === 'pending').length;
-                const countArchived = filteredLeads.filter(l => l.status === 'archived').length;
-                const currentMonth = now.getMonth();
-                const countMonth = filteredLeads.filter(l => new Date(l.timestamp).getMonth() === currentMonth).length;
+                            // KPIs
+                            const countPending = DB.leads.filter(l => l.status === 'pending').length;
+                            const countWorking = DB.leads.filter(l => l.status === 'working').length;
+                            const countFinished = DB.leads.filter(l => l.status === 'finished').length;
 
-                // 3. Lógica de Agrupamento (Por Email)
-                const groupedMap = new Map();
-                filteredLeads.forEach(lead => {
-                    if (!groupedMap.has(lead.email)) {
-                        groupedMap.set(lead.email, []);
-                    }
-                    groupedMap.get(lead.email).push(lead);
-                });
-                
-                // Converte mapa para array de grupos para poder paginar
-                const groupedArray = Array.from(groupedMap.values());
-                
-                // 4. Paginação dos GRUPOS
-                const totalGroups = groupedArray.length;
-                const startL = (adminState.leads.page - 1) * adminState.itemsPerPage;
-                const pagedGroups = groupedArray.slice(startL, startL + adminState.itemsPerPage);
+                            // Agrupamento por Email (Para mostrar na lista)
+                            const groupedMap = new Map();
+                            filteredLeads.forEach(lead => {
+                                if (!groupedMap.has(lead.email)) groupedMap.set(lead.email, []);
+                                groupedMap.get(lead.email).push(lead);
+                            });
+                            const groupedArray = Array.from(groupedMap.values());
+                            
+                            // Paginação
+                            const totalGroups = groupedArray.length;
+                            const startL = (adminState.leads.page - 1) * adminState.itemsPerPage;
+                            const pagedGroups = groupedArray.slice(startL, startL + adminState.itemsPerPage);
 
-                // HTML da Lista
-                const listHTML = pagedGroups.map(group => {
-                    const mainLead = group[0]; // O mais recente (já ordenamos no DB)
-                    const count = group.length;
-                    const isMulti = count > 1;
-                    const statusColor = mainLead.status === 'pending' ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-green-500';
-                    const statusBadge = mainLead.status === 'pending' ? '<span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded">Pendente</span>' : '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded">Baixado</span>';
+                            // Helper de Cores de Status
+                            const getStatusStyle = (status) => {
+                                const map = {
+                                    'pending': { color: 'bg-red-100 text-red-700', label: 'Pendente' },
+                                    'analyzing': { color: 'bg-yellow-100 text-yellow-700', label: 'Em Análise' },
+                                    'working': { color: 'bg-blue-100 text-blue-700', label: 'Atuando' },
+                                    'finished': { color: 'bg-green-100 text-green-700', label: 'Finalizado' },
+                                    'cancelled': { color: 'bg-gray-100 text-gray-500', label: 'Cancelado' }
+                                };
+                                return map[status] || map['pending'];
+                            };
 
-                    // Se tiver múltiplos, gera o HTML do "Accordion"
-                    let subItemsHTML = '';
-                    if (isMulti) {
-                        subItemsHTML = `
-                            <div id="group-${mainLead.email.replace(/[^a-zA-Z0-9]/g, '')}" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3 bg-white/50">
-                                <p class="text-xs font-bold text-gray-400 uppercase">Histórico de Solicitações (${count})</p>
-                                ${group.map(sub => `
-                                    <div class="flex justify-between items-start text-xs bg-white p-2 rounded border border-gray-100">
-                                        <div>
-                                            <span class="font-bold text-primary">${sub.service}</span>
-                                            <span class="text-gray-400 ml-2">${sub.date}</span>
-                                            <p class="text-gray-600 mt-1 italic">"${sub.desc}"</p>
+                            const listHTML = pagedGroups.map(group => {
+                                const mainLead = group[0];
+                                const count = group.length;
+                                const st = getStatusStyle(mainLead.status);
+                                
+                                return `
+                                    <div onclick="window.app.openLeadModal('${mainLead.email}')" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer group">
+                                        <div class="flex justify-between items-start">
+                                            <div class="flex gap-4 items-start">
+                                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-500 text-sm">
+                                                    ${mainLead.name.charAt(0)}
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-2">
+                                                        <h4 class="font-bold text-gray-800 group-hover:text-primary transition">${mainLead.name}</h4>
+                                                        ${count > 1 ? `<span class="bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">+${count-1} pedidos</span>` : ''}
+                                                    </div>
+                                                    <span class="text-xs text-gray-400">${mainLead.email}</span>
+                                                    <div class="mt-2 flex items-center gap-2">
+                                                        <span class="text-[10px] font-bold uppercase ${st.color} px-2 py-0.5 rounded">${st.label}</span>
+                                                        <span class="text-xs text-gray-500">• ${mainLead.service}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="text-right">
+                                                <span class="text-xs text-gray-400 block">${mainLead.date}</span>
+                                                <i class="ph-bold ph-caret-right text-gray-300 mt-4 group-hover:text-accent transition"></i>
+                                            </div>
                                         </div>
-                                        ${sub.status === 'pending' ? `<button onclick="window.app.archiveLead(${sub.id})" class="text-green-600 hover:underline">Dar Baixa</button>` : '<span class="text-gray-400">Ok</span>'}
                                     </div>
-                                `).join('')}
-                            </div>
-                        `;
-                    }
+                                `;
+                            }).join('');
 
-                    return `
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
-                            <div class="flex flex-col md:flex-row justify-between items-start gap-4">
-                                <div class="flex gap-4 items-start w-full">
-                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-500 text-sm flex-shrink-0">
-                                        ${mainLead.name.charAt(0)}
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <h4 class="font-bold text-gray-800">${mainLead.name}</h4>
-                                            <span class="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">${mainLead.email}</span>
-                                            ${statusBadge}
-                                            ${isMulti ? `<span class="bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer hover:bg-accent-hover transition" onclick="document.getElementById('group-${mainLead.email.replace(/[^a-zA-Z0-9]/g, '')}').classList.toggle('hidden')"><i class="ph-bold ph-stack"></i> +${count-1} pedidos</span>` : ''}
+                            content.innerHTML = `
+                                <div class="animate-fade-in">
+                                    <div class="grid grid-cols-3 gap-4 mb-8">
+                                        <div class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 shadow-sm">
+                                            <div class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="ph-fill ph-warning-circle text-xl"></i></div>
+                                            <div><p class="text-xs font-bold text-gray-400 uppercase">Pendentes</p><h3 class="text-2xl font-black text-gray-800">${countPending}</h3></div>
                                         </div>
-                                        <div class="mt-2">
-                                            <span class="text-xs font-bold text-primary uppercase tracking-wide">${mainLead.service}</span>
-                                            <span class="text-xs text-gray-400 mx-2">•</span>
-                                            <span class="text-xs text-gray-500"><i class="ph-fill ph-calendar"></i> ${mainLead.date}</span>
+                                        <div class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 shadow-sm">
+                                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="ph-fill ph-gear-fine text-xl"></i></div>
+                                            <div><p class="text-xs font-bold text-gray-400 uppercase">Em Atuação</p><h3 class="text-2xl font-black text-gray-800">${countWorking}</h3></div>
                                         </div>
-                                        <p class="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100 italic">"${mainLead.desc}"</p>
+                                        <div class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 shadow-sm">
+                                            <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center"><i class="ph-fill ph-check-circle text-xl"></i></div>
+                                            <div><p class="text-xs font-bold text-gray-400 uppercase">Finalizados</p><h3 class="text-2xl font-black text-gray-800">${countFinished}</h3></div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="flex flex-col gap-2 min-w-[100px]">
-                                    <a href="mailto:${mainLead.email}" class="text-xs font-bold text-center bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg hover:border-primary hover:text-primary transition">Responder</a>
-                                    ${mainLead.status === 'pending' ? `<button onclick="window.app.archiveLead(${mainLead.id})" class="text-xs font-bold bg-green-50 text-green-700 border border-green-100 px-4 py-2 rounded-lg hover:bg-green-100 transition">Dar Baixa</button>` : ''}
-                                </div>
-                            </div>
-                            ${subItemsHTML}
-                        </div>
-                    `;
-                }).join('');
 
-                // Renderiza a Aba Leads
+                                    <div class="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
+                                        <div class="flex p-1 bg-gray-100 rounded-lg">
+                                            <button onclick="window.app.setLeadSubTab('all')" class="px-4 py-1.5 rounded-md text-xs font-bold transition ${adminState.leads.subTab === 'all' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Todas</button>
+                                            <button onclick="window.app.setLeadSubTab('active')" class="px-4 py-1.5 rounded-md text-xs font-bold transition ${adminState.leads.subTab === 'active' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Em Atuação</button>
+                                        </div>
+                                        
+                                        <div class="flex gap-2">
+                                            <select onchange="window.app.setLeadStatusFilter(this.value)" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg p-2 outline-none">
+                                                <option value="all">Todos Status</option>
+                                                <option value="pending">Pendentes</option>
+                                                <option value="analyzing">Em Análise</option>
+                                                <option value="working">Atuando</option>
+                                                <option value="finished">Finalizados</option>
+                                                <option value="cancelled">Cancelados</option>
+                                            </select>
+                                            <select onchange="window.app.filterLeads(this.value)" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg p-2 outline-none">
+                                                <option value="30" ${adminState.leads.filterDays == 30 ? 'selected' : ''}>30 Dias</option>
+                                                <option value="60" ${adminState.leads.filterDays == 60 ? 'selected' : ''}>60 Dias</option>
+                                                <option value="all" ${adminState.leads.filterDays == 'all' ? 'selected' : ''}>Tudo</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3">
+                                        ${listHTML || '<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">Nenhum registro encontrado.</div>'}
+                                    </div>
+
+                                    <div class="flex justify-center items-center gap-3 mt-8">
+                                        <button onclick="window.app.changeLeadsPage(-1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
+                                        <span class="text-xs font-bold text-gray-500">Pág ${adminState.leads.page}</span>
+                                        <button onclick="window.app.changeLeadsPage(1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page >= Math.ceil(totalGroups/adminState.itemsPerPage) ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
+                                    </div>
+                                </div>`;
+                } else if (adminState.currentTab === 'config') {
+                const conf = DB.systemConfig;
                 content.innerHTML = `
-                    <div class="animate-fade-in">
-                        <div class="grid grid-cols-3 gap-4 mb-8">
-                            <div class="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600"><i class="ph-fill ph-warning-circle text-xl"></i></div>
-                                <div><p class="text-xs font-bold text-red-400 uppercase">Pendentes</p><h3 class="text-2xl font-black text-red-700">${countPending}</h3></div>
-                            </div>
-                            <div class="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="ph-fill ph-check-circle text-xl"></i></div>
-                                <div><p class="text-xs font-bold text-green-400 uppercase">Resolvidos</p><h3 class="text-2xl font-black text-green-700">${countArchived}</h3></div>
-                            </div>
-                            <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-4">
-                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="ph-fill ph-calendar-plus text-xl"></i></div>
-                                <div><p class="text-xs font-bold text-blue-400 uppercase">Novos (Mês)</p><h3 class="text-2xl font-black text-blue-700">${countMonth}</h3></div>
-                            </div>
+                    <div class="animate-fade-in max-w-4xl mx-auto">
+                        <div class="mb-8">
+                            <h3 class="text-2xl font-bold text-primary font-serif">Configurações do Sistema</h3>
+                            <p class="text-gray-500 text-sm">Ajustes globais da plataforma e preferências.</p>
                         </div>
 
-                        <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                            <div class="flex items-center gap-3">
-                                <span class="text-sm font-bold text-gray-500"><i class="ph-bold ph-funnel"></i> Filtrar:</span>
-                                <select onchange="window.app.filterLeads(this.value)" class="bg-gray-50 border border-gray-200 text-sm font-bold text-primary rounded-lg p-2 focus:outline-none focus:border-accent">
-                                    <option value="30" ${adminState.leads.filterDays == 30 ? 'selected' : ''}>Últimos 30 dias</option>
-                                    <option value="60" ${adminState.leads.filterDays == 60 ? 'selected' : ''}>Últimos 60 dias (Padrão)</option>
-                                    <option value="90" ${adminState.leads.filterDays == 90 ? 'selected' : ''}>Últimos 90 dias</option>
-                                    <option value="all" ${adminState.leads.filterDays == 'all' ? 'selected' : ''}>Todo o Período</option>
-                                </select>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                                <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Fluxo de Trabalho</h4>
+                                
+                                <div class="space-y-6">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Limite de Projetos Simultâneos</label>
+                                        <div class="flex items-center gap-4">
+                                            <input type="range" min="1" max="20" value="${conf.maxActiveProjects}" oninput="document.getElementById('range-val').innerText = this.value" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                                            <span id="range-val" class="font-bold text-xl text-blue-600 w-8 text-center">${conf.maxActiveProjects}</span>
+                                        </div>
+                                        <p class="text-[10px] text-gray-400 mt-1">Define o alerta de sobrecarga no dashboard.</p>
+                                    </div>
+
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <span class="text-sm font-bold text-gray-700 block">Resposta Automática</span>
+                                            <span class="text-xs text-gray-400">Enviar e-mail de recebimento ao lead?</span>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" ${conf.autoReply ? 'checked' : ''} class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
-                            <button onclick="window.app.exportLeads()" class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-black transition shadow-lg">
-                                <i class="ph-bold ph-export"></i> Exportar CSV
-                            </button>
-                        </div>
 
-                        <div class="space-y-4">
-                            ${listHTML || '<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">Nenhuma solicitação encontrada neste período.</div>'}
-                        </div>
+                            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                                <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-gear text-gray-500"></i> Preferências</h4>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Moeda Padrão</label>
+                                        <select class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm font-bold text-gray-700">
+                                            <option value="BRL" selected>BRL (R$)</option>
+                                            <option value="USD">USD ($)</option>
+                                            <option value="EUR">EUR (€)</option>
+                                        </select>
+                                    </div>
 
-                        <div class="flex justify-center items-center gap-3 mt-8">
-                            <button onclick="window.app.changeLeadsPage(-1)" class="w-10 h-10 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
-                            <span class="text-xs font-bold text-gray-500">Página ${adminState.leads.page} de ${Math.ceil(totalGroups/adminState.itemsPerPage)}</span>
-                            <button onclick="window.app.changeLeadsPage(1)" class="w-10 h-10 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page >= Math.ceil(totalGroups/adminState.itemsPerPage) ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
+                                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                                        <div>
+                                            <span class="text-sm font-bold text-gray-700 block">Notificações no Painel</span>
+                                            <span class="text-xs text-gray-400">Alertas de novos leads e comentários.</span>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" ${conf.enableNotifications ? 'checked' : ''} class="sr-only peer">
+                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>`;
+                        
+                        <div class="mt-8 text-right">
+                            <button onclick="window.app.toast('Configurações salvas!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition">Salvar Alterações</button>
+                        </div>
+                    </div>
+                `;
             } else if (adminState.currentTab === 'community') {
                 const posts = DB.posts;
                 
@@ -1086,12 +1157,13 @@ const TEMPLATES = {
                     </div>
                 `;
                 
+                // Se houver um post selecionado, carrega os detalhes
                 if(window.app.selectedPostId) {
                     window.app.renderAdminPostDetail(window.app.selectedPostId);
                 }
             }
-    }
-
+        }
+        
         function renderBooksTable() {
             // 1. Filtra e Ordena
             let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
@@ -1616,11 +1688,9 @@ const TEMPLATES = {
             `;
         }
 
-        // Renomeie suas funções antigas renderBooksTable -> renderBooksTableRows para evitar conflito e chame elas no initDashboard (Main Tab)
-        function renderBooksTableRows() { /* ...seu código antigo de renderizar TRs... */ renderBooksTable(); } 
-        function renderServicesTableRows() { /* ...seu código antigo de renderizar TRs... */ renderServicesTable(); }        
+        function renderBooksTableRows() {renderBooksTable(); } 
+        function renderServicesTableRows() {renderServicesTable(); }        
 
-        // --- FUNÇÕES QUE FAZEM AS TABELAS FUNCIONAREM ---
         function renderBooksTable() {
             // 1. Filtra e Ordena
             let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
@@ -1674,9 +1744,6 @@ const TEMPLATES = {
         
         function initHeaderLogic() { const btn = document.getElementById('menu-button'); const menu = document.getElementById('mobile-menu'); if(btn && menu) { btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); }; document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add('hidden'); }); } const header = document.getElementById('header-container'); window.addEventListener('scroll', () => { if(window.scrollY > 10) { header.classList.add('glass-header'); header.classList.remove('py-4'); header.classList.add('py-2'); } else { header.classList.remove('glass-header'); header.classList.remove('py-2'); header.classList.add('py-4'); } }); }
 
-        // ==========================================
-        // 4. API PÚBLICA
-        // ===========================1===============
         window.app = {
             toast: (msg, type) => showToast(msg, type),
             _pendingConfirmAction: null,
@@ -1771,6 +1838,99 @@ const TEMPLATES = {
                 a.click();
                 window.app.toast('Download do CSV iniciado!', 'success');
             },          
+
+            setLeadSubTab: (tab) => {
+                adminState.leads.subTab = tab;
+                adminState.leads.page = 1;
+                initDashboard();
+            },
+            setLeadStatusFilter: (status) => {
+                adminState.leads.statusFilter = status;
+                adminState.leads.page = 1;
+                initDashboard();
+            },
+            
+            openLeadModal: (email) => {
+                // Pega TODOS os leads desse email
+                const leads = DB.leads.filter(l => l.email === email);
+                if(leads.length === 0) return;
+                const mainLead = leads[0]; // Dados cadastrais do mais recente
+
+                // Função auxiliar para cor do status no modal
+                const getStatusColor = (s) => {
+                    if(s === 'pending') return 'bg-red-100 text-red-700';
+                    if(s === 'working') return 'bg-blue-100 text-blue-700';
+                    if(s === 'finished') return 'bg-green-100 text-green-700';
+                    return 'bg-gray-100 text-gray-600';
+                };
+
+                const body = `
+                    <div class="h-[70vh] flex flex-col">
+                        <div class="flex items-start gap-4 mb-6 pb-6 border-b border-gray-100">
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-slate-800 flex items-center justify-center text-white text-2xl font-bold">
+                                ${mainLead.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-800">${mainLead.name}</h3>
+                                <p class="text-gray-500 text-sm flex items-center gap-2"><i class="ph-bold ph-envelope"></i> ${mainLead.email}</p>
+                                <p class="text-xs text-gray-400 mt-1">Cliente desde: ${leads[leads.length-1].date}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
+                            ${leads.map(lead => `
+                                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 transition hover:border-accent">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <span class="text-xs font-bold uppercase text-primary tracking-wide">${lead.service}</span>
+                                            <span class="text-xs text-gray-400 ml-2">${lead.date}</span>
+                                        </div>
+                                        
+                                        <select onchange="window.app.updateLeadStatus(${lead.id}, this.value)" class="text-[10px] font-bold uppercase rounded py-1 px-2 border border-gray-300 focus:border-accent outline-none ${getStatusColor(lead.status)}">
+                                            <option value="pending" ${lead.status === 'pending' ? 'selected' : ''}>Pendente</option>
+                                            <option value="analyzing" ${lead.status === 'analyzing' ? 'selected' : ''}>Em Análise</option>
+                                            <option value="working" ${lead.status === 'working' ? 'selected' : ''}>Atuando</option>
+                                            <option value="finished" ${lead.status === 'finished' ? 'selected' : ''}>Finalizado</option>
+                                            <option value="cancelled" ${lead.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
+                                        </select>
+                                    </div>
+                                    <p class="text-sm text-gray-600 italic bg-white p-3 rounded-lg border border-gray-100">"${lead.desc}"</p>
+                                    
+                                    <div class="mt-3">
+                                        <textarea placeholder="Anotações internas..." onchange="window.app.saveLeadNote(${lead.id}, this.value)" class="w-full text-xs bg-transparent border-b border-gray-300 focus:border-accent outline-none h-8 resize-none text-gray-500">${lead.notes || ''}</textarea>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                // Botões de Ação em Massa (Footer)
+                const footer = `
+                    <div class="flex justify-between w-full">
+                        <button onclick="window.app.closeModal()" class="text-gray-500 font-bold text-sm px-4">Fechar</button>
+                        <div class="flex gap-2">
+                             <a href="mailto:${mainLead.email}" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50">Enviar E-mail</a>
+                        </div>
+                    </div>
+                `;
+                
+                window.app.openModalGeneric("Gestão do Cliente", body, footer);
+            },
+
+            updateLeadStatus: (id, newStatus) => {
+                const lead = DB.leads.find(l => l.id === id);
+                if(lead) {
+                    lead.status = newStatus;
+                    window.app.toast(`Status atualizado para: ${newStatus}`, 'success');
+                    initDashboard(); // Atualiza a lista de fundo
+                }
+            },
+            
+            saveLeadNote: (id, note) => {
+                const lead = DB.leads.find(l => l.id === id);
+                if(lead) lead.notes = note;
+            },            
 
             selectedPostId: null,
 
