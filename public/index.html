@@ -521,9 +521,24 @@
             author: { name: "Ronaldo Pereira", role: "Escritor", avatar: "https://placehold.co/150x150/1e293b/FFF?text=RP" },
             books: [], 
             services: [
-                { id: 'S1', name: 'Design de Capa', price: 800.00, active: true, isPromotion: false, promoPrice: null, unit: '', description: 'Capa impactante focada em vendas. Identidade visual completa.' },
-                { id: 'S2', name: 'Revisão Textual', price: 0.05, active: true, isPromotion: true, promoPrice: 0.03, unit: 'p/ palavra', description: 'Correção ortográfica, gramatical e de coerência.' },
-                { id: 'S3', name: 'Mentoria Literária', price: 500.00, active: false, isPromotion: false, promoPrice: null, description: 'Sessões de 1h30 para desbloquear sua escrita e planejar sua carreira.' }
+                { 
+                    id: 'S1', name: 'Design de Capa', price: 800.00, active: true, isPromotion: false, promoPrice: null, unit: '', 
+                    description: 'Capa impactante focada em vendas. Identidade visual completa.',
+                    icon: 'ph-paint-brush-broad',
+                    theme: 'purple'
+                },
+                { 
+                    id: 'S2', name: 'Revisão Textual', price: 0.05, active: true, isPromotion: true, promoPrice: 0.03, unit: 'p/ palavra', 
+                    description: 'Correção ortográfica, gramatical e de coerência.',
+                    icon: 'ph-text-aa',
+                    theme: 'blue'
+                },
+                { 
+                    id: 'S3', name: 'Mentoria Literária', price: 500.00, active: false, isPromotion: false, promoPrice: null, 
+                    description: 'Sessões de 1h30 para desbloquear sua escrita e planejar sua carreira.',
+                    icon: 'ph-student',
+                    theme: 'orange'
+                }
             ],
             posts: [
                 { id: 1, title: "Como venci o bloqueio criativo", date: "2 dias atrás", category: "Escrita", image: "https://placehold.co/600x300/1e293b/FFF?text=Bloqueio", likes: 142, comments: 23 },
@@ -829,11 +844,21 @@
             
             if(!container) return;
 
-            // 1. RENDERIZAR HERO
+            // --- HELPER DE TEMAS VISUAIS ---
+            const getThemeClasses = (theme) => {
+                const map = {
+                    'default': { card: 'bg-primary', text: 'text-white', iconBg: 'bg-white/10', iconColor: 'text-accent', sub: 'text-slate-400', desc: 'text-slate-300', btn: 'bg-white text-primary hover:bg-accent hover:text-white' },
+                    'orange':  { card: 'bg-gradient-to-br from-orange-500 to-amber-600', text: 'text-white', iconBg: 'bg-white/20', iconColor: 'text-white', sub: 'text-orange-100', desc: 'text-orange-50', btn: 'bg-white text-orange-600 hover:bg-gray-100' },
+                    'blue':    { card: 'bg-gradient-to-br from-blue-600 to-indigo-700', text: 'text-white', iconBg: 'bg-white/20', iconColor: 'text-blue-200', sub: 'text-blue-200', desc: 'text-blue-100', btn: 'bg-white text-blue-700 hover:bg-blue-50' },
+                    'purple':  { card: 'bg-gradient-to-br from-purple-700 to-fuchsia-800', text: 'text-white', iconBg: 'bg-white/20', iconColor: 'text-fuchsia-200', sub: 'text-purple-200', desc: 'text-purple-100', btn: 'bg-white text-purple-800 hover:bg-purple-50' },
+                    'green':   { card: 'bg-gradient-to-br from-emerald-600 to-teal-700', text: 'text-white', iconBg: 'bg-white/20', iconColor: 'text-emerald-100', sub: 'text-emerald-100', desc: 'text-emerald-50', btn: 'bg-white text-teal-700 hover:bg-teal-50' },
+                };
+                return map[theme] || map['default'];
+            };
+
+            // 1. RENDERIZAR HERO (Mantido igual)
             const heroBook = DB.books.find(b => b.id === DB.homeConfig.heroBookId) || DB.books[0];
-            
             if(heroSection && heroBook) {
-                // Lógica de Estilização do Título (Última palavra com gradiente)
                 const titleWords = heroBook.title.split(' ');
                 let formattedTitle = heroBook.title;
                 if (titleWords.length > 1) {
@@ -842,28 +867,22 @@
                     formattedTitle = `${firstPart} <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400 font-serif italic pr-2">${lastWord}.</span>`;
                 }
 
-                // Lógica do Badge "Último Lançamento"
                 const badgeContainer = heroSection.querySelector('.inline-flex');
                 if(DB.homeConfig.showLaunchBadge) {
-                    badgeContainer.classList.remove('hidden');
-                    badgeContainer.classList.add('inline-flex');
+                    badgeContainer.classList.remove('hidden'); badgeContainer.classList.add('inline-flex');
                 } else {
-                    badgeContainer.classList.remove('inline-flex');
-                    badgeContainer.classList.add('hidden');
+                    badgeContainer.classList.remove('inline-flex'); badgeContainer.classList.add('hidden');
                 }
 
-                // Atualização dos Textos
                 heroSection.querySelector('h1').innerHTML = formattedTitle;
-                // Usa a CoverSynopsis se existir, senão corta a sinopse normal
                 const shortDesc = heroBook.coverSynopsis || (heroBook.synopsis.substring(0, 80) + "...");
                 heroSection.querySelector('p').innerText = shortDesc;
-                
                 heroSection.querySelector('img').src = heroBook.cover;
                 heroSection.querySelector('a').innerText = `Ler Agora`;
                 heroSection.querySelector('a').href = `#/livro/${heroBook.id}`;
             }
 
-            // 2. RENDERIZAR DESTAQUES (Mantido igual)
+            // 2. RENDERIZAR DESTAQUES (ATUALIZADO COM TEMAS)
             container.innerHTML = DB.homeConfig.highlights.map(id => {
                 const book = DB.books.find(b => b.id === id);
                 const service = DB.services.find(s => s.id === id);
@@ -885,16 +904,25 @@
                         </div>
                     </div>`;
                 } else if (service) {
+                    // LÓGICA DE TEMA APLICADA AQUI
+                    const style = getThemeClasses(service.theme || 'default');
+                    const iconClass = service.icon || 'ph-star-four';
+
                     return `
-                    <div class="card-interaction bg-primary p-8 rounded-3xl shadow-xl text-white flex flex-col justify-center relative overflow-hidden group min-h-[300px]">
+                    <div class="card-interaction ${style.card} p-8 rounded-3xl shadow-xl flex flex-col justify-center relative overflow-hidden group min-h-[300px]">
                         <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-20"></div>
                         <div class="relative z-10">
                             <div class="flex items-center gap-4 mb-4">
-                                <div class="bg-white/10 p-3 rounded-2xl backdrop-blur-md"><i class="ph ph-star-four text-2xl text-accent"></i></div>
-                                <div><h3 class="text-xl font-bold leading-none">${service.name}</h3><p class="text-[10px] text-slate-400 uppercase tracking-wide mt-1">Serviço Exclusivo</p></div>
+                                <div class="${style.iconBg} p-3 rounded-2xl backdrop-blur-md shadow-sm">
+                                    <i class="ph-fill ${iconClass} text-2xl ${style.iconColor}"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-xl font-bold leading-none ${style.text}">${service.name}</h3>
+                                    <p class="text-[10px] ${style.sub} uppercase tracking-wide mt-1">Serviço Exclusivo</p>
+                                </div>
                             </div>
-                            <p class="text-slate-300 text-sm mb-6 leading-relaxed line-clamp-3">${service.description}</p>
-                            <button onclick="window.app.openServiceModal('${service.id}')" class="w-full bg-white text-primary py-3 px-8 rounded-full font-bold text-sm transition hover:bg-accent hover:text-white">
+                            <p class="${style.desc} text-sm mb-6 leading-relaxed line-clamp-3">${service.description}</p>
+                            <button onclick="window.app.openServiceModal('${service.id}')" class="w-full py-3 px-8 rounded-full font-bold text-sm transition shadow-md ${style.btn}">
                                 Solicitar Orçamento
                             </button>
                         </div>
@@ -982,7 +1010,48 @@
             controls.innerHTML = paginationHTML;
         }
 
-        function initServicos() { const grid = document.getElementById('services-grid'); if(!grid) return; grid.innerHTML = DB.services.map((s, index) => `<div class="card-interaction bg-white p-10 rounded-[2rem] shadow-xl border border-gray-100 flex flex-col h-full relative overflow-hidden group"><div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-accent"></div><div class="text-8xl text-gray-50 absolute -bottom-10 -right-10 font-black z-0 group-hover:text-gray-100 transition">0${index+1}</div><div class="relative z-10"><h3 class="text-2xl font-bold text-gray-900 mb-3 font-serif">${s.name}</h3><div class="text-4xl font-black text-slate-800 mb-6 flex items-baseline gap-2">R$ ${s.price} <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">${s.unit || ''}</span></div><p class="text-gray-600 mb-10 text-base leading-relaxed">${s.description}</p><button onclick="window.app.openServiceModal('${s.id}')" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-sm transition hover:bg-accent hover:shadow-xl hover:-translate-y-1">Solicitar Orçamento</button></div></div>`).join(''); }
+        function initServicos() { 
+            const grid = document.getElementById('services-grid'); 
+            if(!grid) return; 
+            
+            // Mapa de cores para textos/bordas (versão light para fundo branco)
+            const colorMap = {
+                'default': 'text-primary border-primary',
+                'orange': 'text-orange-500 border-orange-500',
+                'blue': 'text-blue-600 border-blue-600',
+                'purple': 'text-purple-600 border-purple-600',
+                'green': 'text-emerald-600 border-emerald-600'
+            };
+
+            grid.innerHTML = DB.services.map((s, index) => {
+                const themeClass = colorMap[s.theme || 'default'];
+                const iconClass = s.icon || 'ph-star-four';
+
+                return `
+                <div class="card-interaction bg-white p-10 rounded-[2rem] shadow-xl border border-gray-100 flex flex-col h-full relative overflow-hidden group">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-current ${themeClass.split(' ')[0]} opacity-80"></div>
+                    
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="p-3 bg-gray-50 rounded-2xl text-3xl ${themeClass.split(' ')[0]}">
+                            <i class="ph-fill ${iconClass}"></i>
+                        </div>
+                        <div class="text-6xl text-gray-100 font-black z-0 group-hover:text-gray-200 transition">0${index+1}</div>
+                    </div>
+
+                    <div class="relative z-10 flex-1">
+                        <h3 class="text-2xl font-bold text-gray-900 mb-3 font-serif">${s.name}</h3>
+                        <div class="text-4xl font-black text-slate-800 mb-6 flex items-baseline gap-2">
+                            R$ ${s.price} <span class="text-xs font-bold text-gray-400 uppercase tracking-wide">${s.unit || ''}</span>
+                        </div>
+                        <p class="text-gray-600 mb-10 text-base leading-relaxed">${s.description}</p>
+                    </div>
+                    <button onclick="window.app.openServiceModal('${s.id}')" class="w-full bg-primary text-white py-4 rounded-xl font-bold text-sm transition hover:bg-accent hover:shadow-xl hover:-translate-y-1">
+                        Solicitar Orçamento
+                    </button>
+                </div>`;
+            }).join(''); 
+        }
+        
         function initAbout() { const els = { name: document.getElementById('author-name-title'), role: document.getElementById('author-role'), bio: document.getElementById('author-bio'), img: document.getElementById('author-avatar') }; if(els.name) els.name.innerText = DB.author.name; if(els.role) els.role.innerText = DB.author.role; if(els.bio) els.bio.innerText = DB.author.bio; if(els.img) els.img.src = DB.author.avatar; }
         function initHeaderLogic() { const btn = document.getElementById('menu-button'); const menu = document.getElementById('mobile-menu'); if(btn && menu) { btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); }; document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add('hidden'); }); } const header = document.getElementById('header-container'); window.addEventListener('scroll', () => { if(window.scrollY > 10) { header.classList.add('glass-header'); header.classList.remove('py-4'); header.classList.add('py-2'); } else { header.classList.remove('glass-header'); header.classList.remove('py-2'); header.classList.add('py-4'); } }); }
 
@@ -1010,128 +1079,34 @@
                 if (window.location.hash.includes('livro/')) initBookDetails(id);
             },
 
-            // --- HELPER DO DROPDOWN CUSTOMIZADO ---
-            toggleDropdown: (id) => {
-                const el = document.getElementById(id);
-                if(el) el.classList.toggle('hidden');
-            },
-            selectHeroBook: (bookId, bookTitle) => {
-                // Atualiza o valor invisível
-                document.getElementById('config-hero-input').value = bookId;
-                // Atualiza o texto do botão
-                document.getElementById('config-hero-btn-text').innerText = bookTitle;
-                // Fecha o dropdown
-                document.getElementById('custom-dropdown-list').classList.add('hidden');
-            },
+            // --- HELPER: Dropdown Customizado ---
+            toggleDropdown: (id) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); },
+            selectHeroBook: (bookId, bookTitle) => { document.getElementById('config-hero-input').value = bookId; document.getElementById('config-hero-btn-text').innerText = bookTitle; document.getElementById('custom-dropdown-list').classList.add('hidden'); },
 
-            // --- GERENCIADOR DA HOME (CMS ATUALIZADO) ---
-
+            // --- CMS HOME ---
             openHomeConfigModal: () => {
                 const currentHeroBook = DB.books.find(b => b.id === DB.homeConfig.heroBookId) || DB.books[0];
-                
-                // GERA LISTA DO DROPDOWN CUSTOMIZADO
-                const dropdownItems = DB.books.map(b => `
-                    <div onclick="window.app.selectHeroBook('${b.id}', '${b.title}')" class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 flex items-center gap-3 transition">
-                        <img src="${b.cover}" class="w-8 h-10 object-cover rounded shadow-sm">
-                        <span class="text-sm font-bold text-gray-700">${b.title}</span>
-                    </div>
-                `).join('');
-
+                const dropdownItems = DB.books.map(b => `<div onclick="window.app.selectHeroBook('${b.id}', '${b.title}')" class="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-50 flex items-center gap-3 transition"><img src="${b.cover}" class="w-8 h-10 object-cover rounded shadow-sm"><span class="text-sm font-bold text-gray-700">${b.title}</span></div>`).join('');
                 const isChecked = (id) => DB.homeConfig.highlights.includes(id) ? 'checked' : '';
-                const highlightsList = [
-                    ...DB.books.map(b => ({id: b.id, type: 'Livro', name: b.title})),
-                    ...DB.services.map(s => ({id: s.id, type: 'Serviço', name: s.name}))
-                ].map(item => `
-                    <label class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition">
-                        <input type="checkbox" name="home-highlights" value="${item.id}" ${isChecked(item.id)} class="w-5 h-5 text-accent rounded focus:ring-accent">
-                        <div><span class="text-xs font-bold uppercase text-gray-400 block">${item.type}</span><span class="text-sm font-bold text-gray-700">${item.name}</span></div>
-                    </label>
-                `).join('');
-
-                const body = `
-                    <div class="space-y-8 animate-fade-in custom-scrollbar max-h-[60vh] overflow-y-auto pr-2 pb-10">
-                        
-                        <div class="bg-gray-50 p-6 rounded-2xl border border-gray-200">
-                            <div class="flex items-center gap-3 mb-2">
-                                <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">1</div>
-                                <h4 class="font-bold text-primary">Destaque Principal (Hero)</h4>
-                            </div>
-                            <p class="text-xs text-gray-500 mb-6 ml-11">Este livro aparecerá com destaque máximo no topo.</p>
-                            
-                            <div class="relative ml-11 mb-6">
-                                <input type="hidden" id="config-hero-input" value="${currentHeroBook.id}">
-                                <button onclick="window.app.toggleDropdown('custom-dropdown-list')" class="w-full bg-white border border-gray-300 rounded-xl p-4 flex items-center justify-between shadow-sm hover:border-accent transition group">
-                                    <span id="config-hero-btn-text" class="font-bold text-gray-700">${currentHeroBook.title}</span>
-                                    <i class="ph-bold ph-caret-down text-gray-400 group-hover:text-accent"></i>
-                                </button>
-                                <div id="custom-dropdown-list" class="hidden absolute top-full left-0 w-full bg-white border border-gray-200 rounded-xl shadow-xl mt-2 z-50 max-h-48 overflow-y-auto custom-scrollbar">
-                                    ${dropdownItems}
-                                </div>
-                            </div>
-
-                            <div class="ml-11 flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200">
-                                <div>
-                                    <span class="font-bold text-gray-800 text-sm block">Selo "Último Lançamento"</span>
-                                    <span class="text-xs text-gray-400">Exibir badge pulsante acima do título?</span>
-                                </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="config-launch-badge" class="sr-only peer" ${DB.homeConfig.showLaunchBadge ? 'checked' : ''}>
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold text-xs">2</div>
-                                <h4 class="font-bold text-primary">Em Destaque (Highlights)</h4>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 ml-11">
-                                ${highlightsList}
-                            </div>
-                        </div>
-
-                        <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs">3</div>
-                                <h4 class="font-bold text-primary">Frase de Efeito</h4>
-                            </div>
-                            <div class="space-y-3 ml-11">
-                                <textarea id="config-quote-text" rows="2" class="w-full bg-white border border-blue-200 rounded-lg p-3 text-sm font-serif italic text-gray-700">${DB.homeConfig.quote.text}</textarea>
-                                <input type="text" id="config-quote-author" value="${DB.homeConfig.quote.author}" class="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm font-bold text-gray-700">
-                            </div>
-                        </div>
-                    </div>
-                `;
-
+                const highlightsList = [...DB.books.map(b => ({id: b.id, type: 'Livro', name: b.title})), ...DB.services.map(s => ({id: s.id, type: 'Serviço', name: s.name}))].map(item => `<label class="flex items-center gap-3 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 cursor-pointer transition"><input type="checkbox" name="home-highlights" value="${item.id}" ${isChecked(item.id)} class="w-5 h-5 text-accent rounded focus:ring-accent"><div><span class="text-xs font-bold uppercase text-gray-400 block">${item.type}</span><span class="text-sm font-bold text-gray-700">${item.name}</span></div></label>`).join('');
+                const body = `<div class="space-y-8 animate-fade-in custom-scrollbar max-h-[60vh] overflow-y-auto pr-2 pb-10"><div class="bg-gray-50 p-6 rounded-2xl border border-gray-200"><div class="flex items-center gap-3 mb-2"><div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">1</div><h4 class="font-bold text-primary">Destaque Principal (Hero)</h4></div><p class="text-xs text-gray-500 mb-6 ml-11">Este livro aparecerá com destaque máximo no topo.</p><div class="relative ml-11 mb-6"><input type="hidden" id="config-hero-input" value="${currentHeroBook.id}"><button onclick="window.app.toggleDropdown('custom-dropdown-list')" class="w-full bg-white border border-gray-300 rounded-xl p-4 flex items-center justify-between shadow-sm hover:border-accent transition group"><span id="config-hero-btn-text" class="font-bold text-gray-700">${currentHeroBook.title}</span><i class="ph-bold ph-caret-down text-gray-400 group-hover:text-accent"></i></button><div id="custom-dropdown-list" class="hidden absolute top-full left-0 w-full bg-white border border-gray-200 rounded-xl shadow-xl mt-2 z-50 max-h-48 overflow-y-auto custom-scrollbar">${dropdownItems}</div></div><div class="ml-11 flex items-center justify-between bg-white p-4 rounded-xl border border-gray-200"><div><span class="font-bold text-gray-800 text-sm block">Selo "Último Lançamento"</span><span class="text-xs text-gray-400">Exibir badge pulsante acima do título?</span></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="config-launch-badge" class="sr-only peer" ${DB.homeConfig.showLaunchBadge ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label></div></div><div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm"><div class="flex items-center gap-3 mb-4"><div class="w-8 h-8 rounded-full bg-accent text-white flex items-center justify-center font-bold text-xs">2</div><h4 class="font-bold text-primary">Em Destaque (Highlights)</h4></div><div class="grid grid-cols-1 md:grid-cols-2 gap-3 ml-11">${highlightsList}</div></div><div class="bg-blue-50 p-6 rounded-2xl border border-blue-100"><div class="flex items-center gap-3 mb-4"><div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-xs">3</div><h4 class="font-bold text-primary">Frase de Efeito</h4></div><div class="space-y-3 ml-11"><textarea id="config-quote-text" rows="2" class="w-full bg-white border border-blue-200 rounded-lg p-3 text-sm font-serif italic text-gray-700">${DB.homeConfig.quote.text}</textarea><input type="text" id="config-quote-author" value="${DB.homeConfig.quote.author}" class="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm font-bold text-gray-700"></div></div></div>`;
                 const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.saveHomeConfig()" class="bg-primary text-white px-6 py-2 rounded-lg font-bold shadow-lg">Salvar</button>`;
                 window.app.openModalGeneric("Personalizar Home", body, footer);
             },
-
             saveHomeConfig: () => {
                 const heroId = document.getElementById('config-hero-input').value;
                 const showLaunch = document.getElementById('config-launch-badge').checked;
                 const quoteText = document.getElementById('config-quote-text').value;
                 const quoteAuthor = document.getElementById('config-quote-author').value;
-                
                 const checkboxes = document.querySelectorAll('input[name="home-highlights"]:checked');
                 const selectedHighlights = Array.from(checkboxes).map(cb => cb.value);
-
                 if (selectedHighlights.length === 0) return window.app.toast('Selecione pelo menos 1 destaque.', 'error');
                 if (selectedHighlights.length > 4) return window.app.toast('Máximo de 4 destaques.', 'error');
-
-                DB.homeConfig = {
-                    heroBookId: heroId,
-                    showLaunchBadge: showLaunch, // Salva o estado do badge
-                    highlights: selectedHighlights,
-                    quote: { text: quoteText, author: quoteAuthor }
-                };
-
-                window.app.toast('Home atualizada!', 'success');
-                window.app.closeModal();
+                DB.homeConfig = { heroBookId: heroId, showLaunchBadge: showLaunch, highlights: selectedHighlights, quote: { text: quoteText, author: quoteAuthor } };
+                window.app.toast('Home atualizada!', 'success'); window.app.closeModal();
             },
 
-            // --- SISTEMA DE MODAL DE CONFIRMAÇÃO ---
+            // --- SISTEMA DE CONFIRMAÇÃO ---
             openConfirmModal: (title, message, iconType, confirmText, callback) => {
                 window.app._pendingConfirmAction = callback;
                 const isDanger = iconType === 'danger';
@@ -1144,144 +1119,178 @@
             },
             executeConfirm: () => { if (window.app._pendingConfirmAction) { window.app._pendingConfirmAction(); window.app._pendingConfirmAction = null; } window.app.closeModal(); },
 
-            // --- CRUD LIVROS (COM CAMPO NOVO SINOPSE CAPA) ---
+            // --- CRUD LIVROS ---
             deleteBook: (id) => { window.app.openConfirmModal('Excluir Livro?', 'Você tem certeza? Essa ação removerá a obra da sua biblioteca permanentemente.', 'danger', 'Sim, Excluir', () => { DB.books = DB.books.filter(b => b.id !== id); if(DB.books.length % adminState.itemsPerPage === 0 && adminState.books.page > 1) { adminState.books.page--; } initDashboard(); window.app.toast('Livro excluído com sucesso.', 'success'); }); },
-
             openBookModal: (id = null) => {
-                 const book = id ? DB.books.find(b => b.id === id) : { 
-                    id: '', title: '', genre: 'Ficção', price: '', promoPrice: '', cover: '', 
-                    synopsis: '', coverSynopsis: '', isPromotion: false, active: true, 
-                    linkAmazon: '', linkML: '', linkShopee: '' 
-                };
+                 const book = id ? DB.books.find(b => b.id === id) : { id: '', title: '', genre: 'Ficção', price: '', promoPrice: '', cover: '', synopsis: '', coverSynopsis: '', isPromotion: false, active: true, linkAmazon: '', linkML: '', linkShopee: '' };
                 const isEdit = !!id;
                 const toggleScript = `if(this.checked){document.getElementById('promo-input-container').classList.remove('hidden');document.getElementById('book-promo-price').focus();}else{document.getElementById('promo-input-container').classList.add('hidden');document.getElementById('book-promo-price').value='';}`;
-
-                const body = `
-                    <div class="space-y-4 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                        <input type="hidden" id="book-id" value="${book.id || ''}">
-                        
-                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <div><label class="text-xs font-bold text-gray-500 uppercase block">Visibilidade</label><span class="text-sm font-bold text-primary">O livro está visível no site?</span></div>
-                            <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="book-active" class="sr-only peer" ${book.active ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2">
-                                <label class="text-xs font-bold text-gray-500 uppercase">Título da Obra</label>
-                                <input type="text" id="book-title" value="${book.title}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase">Gênero</label>
-                                <select id="book-genre" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
-                                    <option value="Ficção" ${book.genre === 'Ficção' ? 'selected' : ''}>Ficção</option>
-                                    <option value="Fantasia" ${book.genre === 'Fantasia' ? 'selected' : ''}>Fantasia</option>
-                                    <option value="Terror" ${book.genre === 'Terror' ? 'selected' : ''}>Terror</option>
-                                    <option value="Romance" ${book.genre === 'Romance' ? 'selected' : ''}>Romance</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase">Preço Original (R$)</label>
-                                <input type="number" step="0.01" id="book-price" value="${book.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
-                            </div>
-                        </div>
-
-                        <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <label class="text-xs font-bold text-primary uppercase flex justify-between">
-                                Resumo da Capa (Home)
-                                <span class="text-gray-400 font-normal text-[10px]">Máx 65 caracteres</span>
-                            </label>
-                            <input type="text" id="book-cover-synopsis" value="${book.coverSynopsis || ''}" maxlength="65" placeholder="Frase de impacto para a Home..." class="w-full bg-white border border-gray-300 rounded-lg p-2 mt-1 form-input text-sm">
-                        </div>
-
-                        <div class="bg-orange-50 p-4 rounded-xl border border-orange-100 transition-all">
-                            <div class="flex items-center justify-between mb-2">
-                                <div><h4 class="font-bold text-orange-800 text-sm">Modo Promoção</h4><p class="text-xs text-orange-600">Ativa oferta especial na página.</p></div>
-                                <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="book-promo" class="sr-only peer" onchange="${toggleScript}" ${book.isPromotion ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div></label>
-                            </div>
-                            <div id="promo-input-container" class="${book.isPromotion ? '' : 'hidden'} animate-fade-in mt-3 border-t border-orange-200 pt-3">
-                                <label class="text-xs font-bold text-orange-700 uppercase">Preço Promocional (R$)</label>
-                                <input type="number" step="0.01" id="book-promo-price" value="${book.promoPrice || ''}" placeholder="Ex: 19.90" class="w-full bg-white border border-orange-200 rounded-lg p-2 form-input text-orange-900 font-bold">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase">URL da Capa</label>
-                            <input type="text" id="book-cover" value="${book.cover}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input text-xs">
-                        </div>
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase">Sinopse Completa</label>
-                            <textarea id="book-synopsis" rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm leading-relaxed">${book.synopsis || ''}</textarea>
-                        </div>
-                        <div class="border-t border-gray-100 pt-4">
-                            <h4 class="font-bold text-gray-700 mb-3 text-sm">Links de Venda</h4>
-                            <div class="grid grid-cols-1 gap-2">
-                                <input type="text" id="link-amazon" value="${book.linkAmazon}" placeholder="Link Amazon" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
-                                <input type="text" id="link-ml" value="${book.linkML}" placeholder="Link Mercado Livre" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
-                                <input type="text" id="link-shopee" value="${book.linkShopee}" placeholder="Link Shopee" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs">
-                            </div>
-                        </div>
-                    </div>`;
-
+                const body = `<div class="space-y-4 h-[60vh] overflow-y-auto pr-2 custom-scrollbar"><input type="hidden" id="book-id" value="${book.id || ''}"><div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200"><div><label class="text-xs font-bold text-gray-500 uppercase block">Visibilidade</label><span class="text-sm font-bold text-primary">O livro está visível no site?</span></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="book-active" class="sr-only peer" ${book.active ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label></div><div class="grid grid-cols-2 gap-4"><div class="col-span-2"><label class="text-xs font-bold text-gray-500 uppercase">Título da Obra</label><input type="text" id="book-title" value="${book.title}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Gênero</label><select id="book-genre" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"><option value="Ficção" ${book.genre === 'Ficção' ? 'selected' : ''}>Ficção</option><option value="Fantasia" ${book.genre === 'Fantasia' ? 'selected' : ''}>Fantasia</option><option value="Terror" ${book.genre === 'Terror' ? 'selected' : ''}>Terror</option><option value="Romance" ${book.genre === 'Romance' ? 'selected' : ''}>Romance</option></select></div><div><label class="text-xs font-bold text-gray-500 uppercase">Preço Original (R$)</label><input type="number" step="0.01" id="book-price" value="${book.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div></div><div class="bg-gray-50 p-3 rounded-lg border border-gray-200"><label class="text-xs font-bold text-primary uppercase flex justify-between">Resumo da Capa (Home)<span class="text-gray-400 font-normal text-[10px]">Máx 65 caracteres</span></label><input type="text" id="book-cover-synopsis" value="${book.coverSynopsis || ''}" maxlength="65" placeholder="Frase de impacto para a Home..." class="w-full bg-white border border-gray-300 rounded-lg p-2 mt-1 form-input text-sm"></div><div class="bg-orange-50 p-4 rounded-xl border border-orange-100 transition-all"><div class="flex items-center justify-between mb-2"><div><h4 class="font-bold text-orange-800 text-sm">Modo Promoção</h4><p class="text-xs text-orange-600">Ativa oferta especial na página.</p></div><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="book-promo" class="sr-only peer" onchange="${toggleScript}" ${book.isPromotion ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div></label></div><div id="promo-input-container" class="${book.isPromotion ? '' : 'hidden'} animate-fade-in mt-3 border-t border-orange-200 pt-3"><label class="text-xs font-bold text-orange-700 uppercase">Preço Promocional (R$)</label><input type="number" step="0.01" id="book-promo-price" value="${book.promoPrice || ''}" placeholder="Ex: 19.90" class="w-full bg-white border border-orange-200 rounded-lg p-2 form-input text-orange-900 font-bold"></div></div><div><label class="text-xs font-bold text-gray-500 uppercase">URL da Capa</label><input type="text" id="book-cover" value="${book.cover}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input text-xs"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Sinopse Completa</label><textarea id="book-synopsis" rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm leading-relaxed">${book.synopsis || ''}</textarea></div><div class="border-t border-gray-100 pt-4"><h4 class="font-bold text-gray-700 mb-3 text-sm">Links de Venda</h4><div class="grid grid-cols-1 gap-2"><input type="text" id="link-amazon" value="${book.linkAmazon}" placeholder="Link Amazon" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs"><input type="text" id="link-ml" value="${book.linkML}" placeholder="Link Mercado Livre" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs"><input type="text" id="link-shopee" value="${book.linkShopee}" placeholder="Link Shopee" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs"></div></div></div>`;
                 const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold text-sm hover:text-gray-800 transition">Cancelar</button><button onclick="window.app.saveBook(${isEdit})" class="bg-primary hover:bg-slate-800 text-white px-6 py-2 rounded-lg font-bold shadow-lg transition flex items-center gap-2"><i class="ph-bold ph-floppy-disk"></i> Salvar</button>`;
                 window.app.openModalGeneric(isEdit ? "Editar Livro" : "Cadastrar Novo Livro", body, footer);
             },
-
             saveBook: (isEdit) => {
-                const id = document.getElementById('book-id').value;
-                const title = document.getElementById('book-title').value;
-                const genre = document.getElementById('book-genre').value;
-                const price = parseFloat(document.getElementById('book-price').value);
-                const cover = document.getElementById('book-cover').value || 'https://placehold.co/300x450/333/FFF?text=Capa';
-                const synopsis = document.getElementById('book-synopsis').value;
-                const coverSynopsis = document.getElementById('book-cover-synopsis').value; // Novo Campo
-                
-                const active = document.getElementById('book-active').checked;
-                const isPromotion = document.getElementById('book-promo').checked;
-                const linkAmazon = document.getElementById('link-amazon').value;
-                const linkML = document.getElementById('link-ml').value;
-                const linkShopee = document.getElementById('link-shopee').value;
-                let promoPrice = null;
-
-                if(!title || isNaN(price) || price <= 0) return window.app.toast('Dados inválidos: Título e Preço são obrigatórios.', 'error');
-
-                if (isPromotion) {
-                    promoPrice = parseFloat(document.getElementById('book-promo-price').value);
-                    if (isNaN(promoPrice) || promoPrice <= 0) return window.app.toast('Preço promocional inválido.', 'error');
-                    if (promoPrice >= price) return window.app.toast('Preço promocional deve ser menor que o original.', 'error');
-                }
-
-                const bookData = {
-                    id: isEdit ? id : Date.now().toString(),
-                    title, genre, price, cover, synopsis, coverSynopsis, // Salva o novo campo
-                    active, isPromotion, promoPrice, 
-                    linkAmazon, linkML, linkShopee
-                };
-
-                if(isEdit) {
-                    const index = DB.books.findIndex(b => b.id === id);
-                    if (index !== -1) { DB.books[index] = bookData; window.app.toast('Livro atualizado!', 'success'); }
-                } else {
-                    DB.books.unshift(bookData); window.app.toast('Novo livro cadastrado!', 'success');
-                }
+                const id = document.getElementById('book-id').value; const title = document.getElementById('book-title').value; const genre = document.getElementById('book-genre').value; const price = parseFloat(document.getElementById('book-price').value); const cover = document.getElementById('book-cover').value || 'https://placehold.co/300x450/333/FFF?text=Capa'; const synopsis = document.getElementById('book-synopsis').value; const coverSynopsis = document.getElementById('book-cover-synopsis').value;
+                const active = document.getElementById('book-active').checked; const isPromotion = document.getElementById('book-promo').checked; const linkAmazon = document.getElementById('link-amazon').value; const linkML = document.getElementById('link-ml').value; const linkShopee = document.getElementById('link-shopee').value; let promoPrice = null;
+                if(!title || isNaN(price) || price <= 0) return window.app.toast('Dados inválidos', 'error');
+                if (isPromotion) { promoPrice = parseFloat(document.getElementById('book-promo-price').value); if (isNaN(promoPrice) || promoPrice <= 0) return window.app.toast('Preço promocional inválido', 'error'); if (promoPrice >= price) return window.app.toast('Preço maior que o original', 'error'); }
+                const bookData = { id: isEdit ? id : Date.now().toString(), title, genre, price, cover, synopsis, coverSynopsis, active, isPromotion, promoPrice, linkAmazon, linkML, linkShopee };
+                if(isEdit) { const index = DB.books.findIndex(b => b.id === id); if (index !== -1) { DB.books[index] = bookData; window.app.toast('Livro atualizado!', 'success'); } } else { DB.books.unshift(bookData); window.app.toast('Novo livro cadastrado!', 'success'); }
                 initDashboard(); window.app.closeModal();
             },
 
+            // --- CRUD SERVIÇOS (PERSONALIZAÇÃO) ---
             deleteService: (id) => { window.app.openConfirmModal('Remover Serviço?', 'Este serviço não estará mais visível para contratação. Deseja continuar?', 'danger', 'Remover', () => { DB.services = DB.services.filter(s => s.id !== id); if(DB.services.length % adminState.itemsPerPage === 0 && adminState.services.page > 1) { adminState.services.page--; } initDashboard(); window.app.toast('Serviço removido.', 'success'); }); },
+            
             openServiceEditModal: (id = null) => {
-                const s = id ? DB.services.find(x => x.id === id) : { id: '', name: '', price: '', unit: '', description: '', active: true, isPromotion: false, promoPrice: '' };
+                // Se for novo ID, gera atributos aleatórios
+                let randomTheme = 'default';
+                let randomIcon = 'ph-star-four';
+                
+                if (!id) {
+                    const themes = ['orange', 'blue', 'purple', 'green'];
+                    const icons = ['ph-magic-wand', 'ph-pencil-circle', 'ph-rocket', 'ph-lightbulb', 'ph-crown'];
+                    randomTheme = themes[Math.floor(Math.random() * themes.length)];
+                    randomIcon = icons[Math.floor(Math.random() * icons.length)];
+                }
+
+                const s = id ? DB.services.find(x => x.id === id) : { 
+                    id: '', name: '', price: '', unit: '', description: '', 
+                    active: true, isPromotion: false, promoPrice: '',
+                    icon: randomIcon, theme: randomTheme // Usa o aleatório se for novo
+                };
                 const isEdit = !!id;
-                const toggleScript = `if(this.checked){document.getElementById('serv-promo-container').classList.remove('hidden');}else{document.getElementById('serv-promo-container').classList.add('hidden');document.getElementById('serv-promo-price').value='';}`;
-                const body = `<div class="space-y-4"><input type="hidden" id="service-id" value="${s.id || ''}"><div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200"><span class="text-xs font-bold text-gray-500 uppercase">Status do Serviço</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="service-active" class="sr-only peer" ${s.active ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label></div><div><label class="text-xs font-bold text-gray-500 uppercase">Nome</label><input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700"></div><div class="grid grid-cols-2 gap-4"><div><label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label><input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Unidade</label><input type="text" id="service-unit" value="${s.unit || ''}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div></div><div class="bg-blue-50 p-4 rounded-xl border border-blue-100"><div class="flex items-center justify-between mb-2"><span class="font-bold text-blue-800 text-sm">Preço Promocional?</span><label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="service-promo" class="sr-only peer" onchange="${toggleScript}" ${s.isPromotion ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div></label></div><div id="serv-promo-container" class="${s.isPromotion ? '' : 'hidden'} mt-2"><input type="number" step="0.01" id="serv-promo-price" value="${s.promoPrice || ''}" placeholder="Novo Valor" class="w-full bg-white border border-blue-200 rounded-lg p-2 form-input text-blue-900 font-bold"></div></div><div><label class="text-xs font-bold text-gray-500 uppercase">Descrição</label><textarea id="service-desc" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${s.description}</textarea></div></div>`;
+                
+                const promoToggle = `if(this.checked){document.getElementById('serv-promo-container').classList.remove('hidden');}else{document.getElementById('serv-promo-container').classList.add('hidden');document.getElementById('serv-promo-price').value='';}`;
+                const styleToggle = `if(this.checked){document.getElementById('serv-style-container').classList.remove('hidden');}else{document.getElementById('serv-style-container').classList.add('hidden');}`;
+
+                // Se estamos editando, o toggle de estilo começa aberto para facilitar
+                const showStyle = isEdit;
+
+                const body = `
+                    <div class="space-y-4 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                        <input type="hidden" id="service-id" value="${s.id || ''}">
+                        
+                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <span class="text-xs font-bold text-gray-500 uppercase">Status do Serviço</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="service-active" class="sr-only peer" ${s.active ? 'checked' : ''}>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Nome do Serviço</label>
+                            <input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label>
+                                <input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Unidade</label>
+                                <input type="text" id="service-unit" value="${s.unit || ''}" placeholder="Ex: p/ hora" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                            </div>
+                        </div>
+
+                        <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                             <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <span class="font-bold text-purple-800 text-sm block">Personalizar Aparência</span>
+                                    <span class="text-xs text-purple-600">Ícone e cores para destaque.</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="service-style-toggle" class="sr-only peer" onchange="${styleToggle}" ${showStyle ? 'checked' : ''}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                </label>
+                            </div>
+                            
+                            <div id="serv-style-container" class="${showStyle ? '' : 'hidden'} mt-4 grid grid-cols-2 gap-4 animate-fade-in border-t border-purple-200 pt-4">
+                                <div>
+                                    <label class="text-xs font-bold text-purple-800 uppercase mb-1 block">Ícone (Phosphor)</label>
+                                    <div class="relative">
+                                        <input type="text" id="service-icon" value="${s.icon}" placeholder="Ex: ph-pencil" class="w-full bg-white border border-purple-200 rounded-lg p-2 pl-9 form-input text-sm font-mono text-purple-900">
+                                        <i class="ph-bold ph-star absolute left-3 top-2.5 text-purple-300"></i>
+                                    </div>
+                                    <a href="https://phosphoricons.com/" target="_blank" class="text-[10px] text-purple-500 underline mt-1 block hover:text-purple-700">Lista de ícones</a>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-purple-800 uppercase mb-1 block">Tema de Cor</label>
+                                    <select id="service-theme" class="w-full bg-white border border-purple-200 rounded-lg p-2 form-input text-sm font-bold text-gray-600">
+                                        <option value="default" ${s.theme === 'default' ? 'selected' : ''}>Midnight (Padrão)</option>
+                                        <option value="orange" ${s.theme === 'orange' ? 'selected' : ''}>Sunset (Laranja)</option>
+                                        <option value="blue" ${s.theme === 'blue' ? 'selected' : ''}>Ocean (Azul)</option>
+                                        <option value="purple" ${s.theme === 'purple' ? 'selected' : ''}>Royal (Roxo)</option>
+                                        <option value="green" ${s.theme === 'green' ? 'selected' : ''}>Forest (Verde)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                             <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-blue-800 text-sm">Preço Promocional?</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="service-promo" class="sr-only peer" onchange="${promoToggle}" ${s.isPromotion ? 'checked' : ''}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            <div id="serv-promo-container" class="${s.isPromotion ? '' : 'hidden'} mt-2">
+                                <input type="number" step="0.01" id="serv-promo-price" value="${s.promoPrice || ''}" placeholder="Novo Valor" class="w-full bg-white border border-blue-200 rounded-lg p-2 form-input text-blue-900 font-bold">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Descrição</label>
+                            <textarea id="service-desc" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${s.description}</textarea>
+                        </div>
+                    </div>`;
+
                 const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500">Cancelar</button><button onclick="window.app.saveService(${isEdit})" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">Salvar</button>`;
                 window.app.openModalGeneric(isEdit ? "Editar Serviço" : "Novo Serviço", body, footer);
             },
+
             saveService: (isEdit) => {
-                const id = document.getElementById('service-id').value; const name = document.getElementById('service-name').value; const price = parseFloat(document.getElementById('service-price').value); const unit = document.getElementById('service-unit').value; const description = document.getElementById('service-desc').value; const active = document.getElementById('service-active').checked; const isPromotion = document.getElementById('service-promo').checked; let promoPrice = null;
+                const id = document.getElementById('service-id').value;
+                const name = document.getElementById('service-name').value;
+                const price = parseFloat(document.getElementById('service-price').value);
+                const unit = document.getElementById('service-unit').value;
+                const description = document.getElementById('service-desc').value;
+                const active = document.getElementById('service-active').checked;
+                const isPromotion = document.getElementById('service-promo').checked;
+                
+                // Pega os valores de personalização
+                const icon = document.getElementById('service-icon').value || 'ph-star-four';
+                const theme = document.getElementById('service-theme').value || 'default';
+
+                let promoPrice = null;
+
                 if(!name || isNaN(price) || price <= 0) return window.app.toast('Dados inválidos', 'error');
-                if (isPromotion) { promoPrice = parseFloat(document.getElementById('serv-promo-price').value); if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional inválido', 'error'); }
-                const data = { id: isEdit ? id : 'S' + Date.now(), name, price, unit, description, active, isPromotion, promoPrice };
-                if(isEdit) { const idx = DB.services.findIndex(s => s.id === id); if (idx !== -1) DB.services[idx] = data; } else { DB.services.push(data); }
-                window.app.toast('Serviço salvo!', 'success'); initDashboard(); window.app.closeModal();
+
+                if (isPromotion) {
+                    promoPrice = parseFloat(document.getElementById('serv-promo-price').value);
+                    if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional inválido', 'error');
+                }
+
+                const data = { 
+                    id: isEdit ? id : 'S' + Date.now(), 
+                    name, price, unit, description, active, 
+                    isPromotion, promoPrice,
+                    icon, theme // Salva os novos campos
+                };
+
+                if(isEdit) {
+                    const idx = DB.services.findIndex(s => s.id === id);
+                    if (idx !== -1) DB.services[idx] = data;
+                } else {
+                    DB.services.push(data);
+                }
+                
+                window.app.toast('Serviço salvo!', 'success');
+                initDashboard();
+                window.app.closeModal();
             },
 
             // AUTH & GERAL & PUBLIC
