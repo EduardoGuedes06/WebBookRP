@@ -320,39 +320,51 @@ const TEMPLATES = {
                 <div id="services-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto"></div>
             `,
             community: `
-                <div class="animate-fade-in">
-                    <div class="bg-primary rounded-[2rem] p-10 md:p-20 text-center text-white mb-16 relative overflow-hidden">
-                        <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                        <div class="relative z-10">
-                            <span class="bg-white/10 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block backdrop-blur-md">O Blog do Autor</span>
-                            <h2 class="text-4xl md:text-6xl font-serif font-bold mb-6">Bastidores & Café</h2>
-                            <p class="text-slate-300 max-w-2xl mx-auto text-lg leading-relaxed">
-                                Atualizações sobre novos lançamentos, dicas de escrita e discussões abertas com os leitores.
+                <div class="animate-fade-in pb-20">
+                    <div class="relative bg-primary rounded-[3rem] p-10 md:p-24 text-center text-white mb-20 overflow-hidden shadow-2xl">
+                        <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+                        <div class="absolute -top-24 -right-24 w-64 h-64 bg-accent/20 rounded-full blur-3xl"></div>
+                        <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/20 rounded-full blur-3xl"></div>
+                        
+                        <div class="relative z-10 max-w-3xl mx-auto">
+                            <span class="inline-block py-1 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold uppercase tracking-widest mb-6 text-accent">Hub de Conteúdo</span>
+                            <h2 class="text-5xl md:text-7xl font-serif font-bold mb-8 leading-tight">Bastidores & <br> <span class="italic text-transparent bg-clip-text bg-gradient-to-r from-accent to-orange-400">Café Quente.</span></h2>
+                            <p class="text-slate-300 text-lg md:text-xl leading-relaxed">
+                                Mergulhe no processo criativo, debata teorias e acesse conteúdos exclusivos para quem vive a literatura.
                             </p>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        <div class="lg:col-span-2">
-                            <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg mb-10">
-                                <h3 class="text-2xl font-bold text-primary font-serif mb-2"><i class="ph-fill ph-fire text-accent"></i> Discussão da Semana</h3>
-                                <p class="text-gray-600 mb-6">Teorias sobre o final de "O Código da Eternidade": O que realmente aconteceu no portal?</p>
-                                <div id="comments-section" class="space-y-6 mb-8 max-h-[400px] overflow-y-auto pr-2"></div>
-                                <div id="comment-input-area" class="border-t border-gray-100 pt-6"></div>
-                            </div>
-                            <h4 class="font-bold text-gray-400 uppercase text-xs tracking-widest mb-6">Artigos Recentes</h4>
-                            <div id="blog-feed" class="space-y-8"></div>
-                        </div>
-                        <div class="space-y-8">
-                            <div class="bg-white border border-gray-100 p-6 rounded-2xl shadow-sm">
-                                <h4 class="font-bold text-primary mb-6 flex items-center gap-2"><i class="ph-fill ph-chat-circle-text text-accent"></i> Últimos Comentários</h4>
-                                <div class="space-y-6">
-                                    <div class="flex gap-3"><img src="https://placehold.co/40x40/333/FFF?text=L" class="w-10 h-10 rounded-full"><div><p class="text-xs font-bold text-gray-900">Luana M.</p><p class="text-sm text-gray-600 mt-1">"O final do capítulo 12 me destruiu!"</p></div></div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 max-w-7xl mx-auto">
+                        <div class="lg:col-span-8 space-y-12" id="public-blog-feed"></div>
+
+                        <div class="lg:col-span-4 space-y-10">
+                            <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-xl relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-20 h-20 bg-accent/10 rounded-bl-full"></div>
+                                <h3 class="text-xl font-bold text-primary font-serif mb-2 flex items-center gap-2"><i class="ph-fill ph-fire text-accent"></i> Em Alta</h3>
+                                <p class="text-sm text-gray-500 mb-6 font-medium">O que a comunidade está debatendo esta semana.</p>
+                                
+                                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6">
+                                    <h4 class="font-bold text-gray-800 text-sm mb-2">"O final de 'Código da Eternidade' foi real?"</h4>
+                                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                                        <span><i class="ph-fill ph-chat-circle"></i> 45 coments</span>
+                                        <span>•</span>
+                                        <span>Há 2h</span>
+                                    </div>
                                 </div>
+                                
+                                <div id="comment-input-area"></div>
+                            </div>
+
+                            <div class="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+                                <h4 class="font-bold text-gray-800 mb-6 flex items-center gap-2 text-sm uppercase tracking-wide"><i class="ph-bold ph-chats text-blue-500"></i> Últimas Interações</h4>
+                                <div id="sidebar-comments" class="space-y-6"></div>
                             </div>
                         </div>
                     </div>
                 </div>
             `,
+
             about: `
                 <div class="animate-fade-in pb-20">
                     <div class="text-center mb-16 pt-10">
@@ -419,10 +431,11 @@ const TEMPLATES = {
                         </div>
                     </div>
 
-                    <div class="flex gap-6 border-b border-gray-200 mb-8">
-                        <button onclick="window.app.setAdminTab('main')" id="tab-main" class="pb-3 text-sm font-bold border-b-2 border-accent text-accent transition">Visão Geral & Cruds</button>
-                        <button onclick="window.app.setAdminTab('analytics')" id="tab-analytics" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition">Relatórios & Tráfego</button>
-                        <button onclick="window.app.setAdminTab('leads')" id="tab-leads" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition flex items-center gap-2">Solicitações <span id="badge-leads" class="bg-red-500 text-white text-[10px] px-1.5 rounded-full hidden">0</span></button>
+                    <div class="flex gap-6 border-b border-gray-200 mb-8 overflow-x-auto">
+                        <button onclick="window.app.setAdminTab('main')" id="tab-main" class="pb-3 text-sm font-bold border-b-2 border-accent text-accent transition whitespace-nowrap">Visão Geral & Cruds</button>
+                        <button onclick="window.app.setAdminTab('analytics')" id="tab-analytics" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap">Relatórios & Tráfego</button>
+                        <button onclick="window.app.setAdminTab('leads')" id="tab-leads" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition flex items-center gap-2 whitespace-nowrap">Solicitações <span id="badge-leads" class="bg-red-500 text-white text-[10px] px-1.5 rounded-full hidden">0</span></button>
+                        <button onclick="window.app.setAdminTab('community')" id="tab-community" class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap flex items-center gap-2"><i class="ph-bold ph-chats-circle"></i> Comunidade</button>
                     </div>
 
                     <div id="dashboard-content"></div>
@@ -489,13 +502,38 @@ const TEMPLATES = {
                 }
             ],
             posts: [
-                { id: 1, title: "Como venci o bloqueio criativo", date: "2 dias atrás", category: "Escrita", image: "https://placehold.co/600x300/1e293b/FFF?text=Bloqueio", likes: 142, comments: 23 },
-                { id: 2, title: "O futuro da Ficção no Brasil", date: "1 sem atrás", category: "Opinião", image: "https://placehold.co/600x300/d97706/FFF?text=SciFi", likes: 89, comments: 45 }
+                { 
+                    id: 1, 
+                    title: "Como venci o bloqueio criativo", 
+                    date: "10/12/2025", 
+                    category: "Escrita", 
+                    coverType: 'color', coverColor: '1e293b', coverText: "Bloqueio Criativo",
+                    coverTextColor: 'white', // <--- NOVO CAMPO
+                    image: "https://placehold.co/600x300/1e293b/FFF?text=Bloqueio+Criativo", 
+                    content: "O bloqueio criativo é o pesadelo de todo escritor...",
+                    link: "https://pomofocus.io",
+                    allowLikes: true, allowComments: true, status: 'published',
+                    likes: 142, likedBy: [],
+                    comments: [
+                        { id: 101, user: "Carlos M.", avatar: "https://placehold.co/40x40/333/FFF?text=C", text: "Ótima dica!", date: "Há 2 horas", likes: 5, likedBy: [], authorLike: true },
+                        { id: 102, user: "Ana Clara", avatar: "https://placehold.co/40x40/555/FFF?text=A", text: "Vou testar.", date: "Há 5 horas", likes: 2, likedBy: [], authorLike: false }
+                    ]
+                },
+                { 
+                    id: 2, 
+                    title: "O futuro da Ficção", 
+                    date: "12/12/2025", 
+                    category: "Opinião", 
+                    coverType: 'upload', coverColor: '', coverText: '',
+                    coverTextColor: 'black', // <--- NOVO CAMPO (Exemplo Preto)
+                    image: "https://placehold.co/600x300/d97706/FFF?text=Sci-Fi+BR", 
+                    content: "A ficção especulativa nacional tem crescido...",
+                    link: "",
+                    allowLikes: true, allowComments: true, status: 'published',
+                    likes: 89, likedBy: [],
+                    comments: []
+                }
             ],
-            comments: [
-                { id: 1, user: "Carlos M.", avatar: "https://placehold.co/40x40/333/FFF?text=C", text: "Achei o plot twist final genial!", date: "Há 2 horas" },
-                { id: 2, user: "Ana Clara", avatar: "https://placehold.co/40x40/555/FFF?text=A", text: "Alguém mais notou a referência no cap 4?", date: "Há 5 horas" }
-            ]
         };
 
         // BIBLIOTECA DE ÍCONES PARA O SELETOR
@@ -986,8 +1024,63 @@ const TEMPLATES = {
                             <button onclick="window.app.changeLeadsPage(1)" class="w-10 h-10 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page >= Math.ceil(totalGroups/adminState.itemsPerPage) ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
                         </div>
                     </div>`;
+            } else if (adminState.currentTab === 'community') {
+                const posts = DB.posts;
+                
+                content.innerHTML = `
+                    <div class="animate-fade-in">
+                        <div class="flex justify-between items-end mb-8">
+                            <div>
+                                <h3 class="text-2xl font-bold text-primary font-serif">Gestão de Comunidade</h3>
+                                <p class="text-gray-500 text-sm">Gerencie artigos, modere comentários e engaje com leitores.</p>
+                            </div>
+                            <button onclick="window.app.openPostModal()" class="bg-primary hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
+                                <i class="ph-bold ph-pen-nib"></i> Escrever Novo Artigo
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-250px)]">
+                            <div class="lg:col-span-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm">
+                                <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                    <span class="text-xs font-bold text-gray-400 uppercase">Seus Artigos (${posts.length})</span>
+                                </div>
+                                <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                                    ${posts.map(p => `
+                                        <div onclick="window.app.selectAdminPost(${p.id})" class="p-4 rounded-xl cursor-pointer transition border border-transparent hover:border-gray-200 hover:bg-gray-50 group ${window.app.selectedPostId === p.id ? 'bg-blue-50 border-blue-100 ring-1 ring-blue-200' : 'bg-white'}">
+                                            <div class="flex gap-3">
+                                                <img src="${p.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex justify-between items-start">
+                                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'} mb-1 inline-block">${p.status === 'published' ? 'Publicado' : 'Rascunho'}</span>
+                                                        <span class="text-[10px] text-gray-400">${p.date}</span>
+                                                    </div>
+                                                    <h4 class="font-bold text-gray-800 text-sm truncate leading-tight mb-1 group-hover:text-primary">${p.title}</h4>
+                                                    <div class="flex items-center gap-3 text-xs text-gray-400">
+                                                        <span class="flex items-center gap-1"><i class="ph-fill ph-heart text-red-400"></i> ${p.likes}</span>
+                                                        <span class="flex items-center gap-1"><i class="ph-fill ph-chat-circle text-blue-400"></i> ${p.comments.length}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="lg:col-span-2 bg-gray-50 border border-gray-200 rounded-2xl p-8 relative flex flex-col justify-center items-center text-center" id="admin-post-detail">
+                                <div class="text-gray-400">
+                                    <i class="ph-duotone ph-article text-6xl mb-4"></i>
+                                    <p>Selecione um artigo para gerenciar</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if(window.app.selectedPostId) {
+                    window.app.renderAdminPostDetail(window.app.selectedPostId);
+                }
             }
-        }
+    }
 
         function renderBooksTable() {
             // 1. Filtra e Ordena
@@ -1230,27 +1323,88 @@ const TEMPLATES = {
         }
 
         function initCommunity() {
-            const feed = document.getElementById('blog-feed');
-            const commentsSection = document.getElementById('comments-section');
-            const inputArea = document.getElementById('comment-input-area');
-            if(!feed) return;
-            feed.innerHTML = DB.posts.map(post => `
-                <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-xl transition duration-300 group">
-                    <div class="h-48 overflow-hidden relative"><img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700"><span class="absolute top-4 left-4 bg-white/90 backdrop-blur text-primary text-xs font-bold px-3 py-1 rounded-full uppercase">${post.category}</span></div>
-                    <div class="p-8"><div class="flex items-center gap-2 text-xs text-gray-400 mb-3"><i class="ph ph-calendar"></i> ${post.date}</div><h3 class="text-2xl font-bold text-primary mb-3 font-serif group-hover:text-accent transition">${post.title}</h3><p class="text-gray-600 mb-6 leading-relaxed">Lorem ipsum dolor sit amet...</p><div class="flex items-center justify-between border-t border-gray-100 pt-4"><button class="text-accent font-bold text-sm hover:underline">Ler Artigo</button><div class="flex gap-4 text-gray-400 text-sm"><span class="flex items-center gap-1"><i class="ph-fill ph-heart"></i> ${post.likes}</span><span class="flex items-center gap-1"><i class="ph-fill ph-chat-circle"></i> ${post.comments}</span></div></div></div>
-                </div>`).join('');
-            
-            const renderComments = () => {
-                commentsSection.innerHTML = DB.comments.map(c => `<div class="flex gap-4 animate-fade-in"><img src="${c.avatar}" class="w-10 h-10 rounded-full border border-gray-200"><div class="bg-gray-50 p-4 rounded-xl rounded-tl-none flex-1"><div class="flex justify-between items-center mb-1"><span class="font-bold text-sm text-primary">${c.user}</span><span class="text-xs text-gray-400">${c.date}</span></div><p class="text-gray-600 text-sm">${c.text}</p></div></div>`).join('');
-            };
-            renderComments();
+                    const feed = document.getElementById('public-blog-feed');
+                    const sidebarComments = document.getElementById('sidebar-comments');
+                    if(!feed) return;
 
-            if(user) {
-                inputArea.innerHTML = `<div class="flex gap-4 items-start"><img src="${user.avatar}" class="w-10 h-10 rounded-full border-2 border-accent"><div class="flex-1"><textarea id="new-comment" rows="2" placeholder="Participe da discussão..." class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-accent transition resize-none"></textarea><button onclick="window.app.postComment()" class="mt-2 bg-accent text-white px-6 py-2 rounded-lg text-xs font-bold hover:bg-accent-hover transition">Enviar</button></div></div>`;
-            } else {
-                inputArea.innerHTML = `<div class="text-center bg-gray-50 p-6 rounded-xl border border-gray-200 border-dashed"><p class="text-gray-500 text-sm mb-4">Faça login para participar da discussão.</p><button onclick="window.app.connectGoogle()" class="bg-white border border-gray-300 text-gray-700 px-6 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-gray-50 transition flex items-center justify-center gap-2 mx-auto"><img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5"> Conectar com Google</button></div>`;
-            }
-        }
+                    const publishedPosts = DB.posts.filter(p => p.status === 'published');
+                    
+                    feed.innerHTML = publishedPosts.map(post => {
+                        const userLiked = user && post.likedBy.includes(user.name);
+                        const isTextBlack = post.coverTextColor === 'black';
+
+                        // Configuração Dinâmica de Cores
+                        const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]';
+                        const metaColor = isTextBlack ? 'text-gray-700' : 'text-white/90';
+                        const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black/90 via-black/40 to-transparent';
+                        
+                        // Botão de Like ajustado para contraste
+                        const likeBtnBorder = isTextBlack ? 'border-gray-300 bg-white/50 hover:bg-white' : 'border-white/20 bg-white/10 hover:bg-white/20';
+                        const likeIconColor = userLiked ? 'text-red-500' : (isTextBlack ? 'text-gray-900' : 'text-white');
+
+                        const linkHTML = post.link ? `<a href="${post.link}" target="_blank" class="text-xs font-bold text-accent hover:underline mt-2 inline-flex items-center gap-1"><i class="ph-bold ph-link"></i> Acessar Link</a>` : '';
+
+                        return `
+                        <div class="group bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative mb-10">
+                            <div class="relative h-[350px] overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10"></div>
+                                
+                                <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                                
+                                <div class="absolute bottom-0 left-0 w-full p-8 z-20">
+                                    <div class="flex justify-between items-end">
+                                        <div>
+                                            <span class="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 inline-block shadow-sm">${post.category}</span>
+                                            <h3 class="text-3xl font-serif font-bold ${titleColor} mb-2 leading-tight animate-pulse-slow">${post.title}</h3>
+                                            <div class="flex items-center gap-4 ${metaColor} text-sm font-medium">
+                                                <span><i class="ph-fill ph-calendar"></i> ${post.date}</span>
+                                            </div>
+                                        </div>
+                                        ${post.allowLikes ? `
+                                        <button onclick="${user ? `window.app.togglePublicPostLike(${post.id})` : 'window.app.connectGoogle()'}" class="w-12 h-12 rounded-full flex items-center justify-center border ${likeBtnBorder} backdrop-blur-md transition transform hover:scale-110 shadow-lg">
+                                            <i class="ph-fill ph-heart text-2xl ${likeIconColor}"></i>
+                                        </button>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-8 pt-6">
+                                <p class="text-gray-600 leading-relaxed text-lg mb-4">${post.content}</p>
+                                ${linkHTML}
+                                <div class="border-t border-gray-100 mt-6 pt-6">
+                                    <div class="flex items-center gap-6 text-sm text-gray-400 mb-6">
+                                        <span class="flex items-center gap-2 ${userLiked ? 'text-red-500 font-bold' : ''}"><i class="ph-fill ph-heart"></i> ${post.likes} curtidas</span>
+                                        <span class="flex items-center gap-2"><i class="ph-fill ph-chat-circle"></i> ${post.comments.length} comentários</span>
+                                    </div>
+                                    <div class="space-y-4 mb-6">
+                                        ${post.comments.map(c => `
+                                            <div class="flex gap-3">
+                                                <img src="${c.avatar}" class="w-8 h-8 rounded-full">
+                                                <div class="flex-1">
+                                                    <div class="bg-gray-50 p-3 rounded-2xl rounded-tl-none relative">
+                                                        ${c.authorLike ? '<i class="ph-fill ph-star absolute -top-1 -right-1 text-accent bg-white rounded-full p-1 shadow-sm text-xs"></i>' : ''}
+                                                        <div class="flex justify-between items-baseline"><span class="font-bold text-xs text-gray-900">${c.user}</span><span class="text-[10px] text-gray-400">${c.date}</span></div>
+                                                        <p class="text-sm text-gray-600">${c.text}</p>
+                                                    </div>
+                                                    <div class="flex gap-3 mt-1 ml-2">
+                                                        <button onclick="${user ? `window.app.togglePublicCommentLike(${post.id}, ${c.id})` : 'window.app.connectGoogle()'}" class="text-[10px] font-bold text-gray-400 hover:text-red-500 flex items-center gap-1"><i class="ph-bold ph-heart"></i> ${c.likes || 0}</button>
+                                                        ${user && user.name === 'Ronaldo Pereira' ? `<button onclick="window.app.adminDeleteComment(${post.id}, ${c.id})" class="text-[10px] text-red-400 font-bold hover:text-red-600">Excluir</button>` : ''}
+                                                    </div>
+                                                </div>
+                                            </div>`).join('')}
+                                    </div>
+                                    ${post.allowComments ? (user ? `<div class="flex gap-3 items-start"><img src="${user.avatar}" class="w-8 h-8 rounded-full"><div class="flex-1 relative"><textarea id="comment-input-${post.id}" rows="1" placeholder="Comente..." class="w-full bg-gray-50 border-0 rounded-xl p-3 pr-12 text-sm focus:ring-2 focus:ring-accent resize-none"></textarea><button onclick="window.app.publicPostComment(${post.id})" class="absolute right-2 top-2 text-primary hover:text-accent p-1"><i class="ph-bold ph-paper-plane-right text-xl"></i></button></div></div>` : `<button onclick="window.app.connectGoogle()" class="w-full py-3 border border-gray-200 border-dashed rounded-xl text-xs font-bold text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-2"><i class="ph-bold ph-sign-in"></i> Faça login</button>`) : '<p class="text-center text-xs text-gray-400 italic">Comentários desativados.</p>'}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    }).join('');
+                    
+                    // Sidebar logic... (mantém igual ao anterior ou copie do bloco initCommunity completo que mandei antes se precisar)
+                    const allComments = [];
+                    DB.posts.forEach(p => p.comments.forEach(c => allComments.push({...c, postTitle: p.title})));
+                    sidebarComments.innerHTML = allComments.slice(0, 5).map(c => `<div class="flex gap-3 pb-4 border-b border-gray-50 last:border-0"><img src="${c.avatar}" class="w-8 h-8 rounded-full"><div><p class="text-xs text-gray-600"><span class="font-bold text-primary">${c.user}</span> comentou:</p><p class="text-xs italic text-gray-500 my-1 line-clamp-2">"${c.text}"</p><p class="text-[10px] text-accent font-bold truncate max-w-[200px]">${c.postTitle}</p></div></div>`).join('');
+                }
 
         function initLivros() {
                     const grid = document.getElementById('books-grid');
@@ -1596,6 +1750,272 @@ const TEMPLATES = {
                 a.click();
                 window.app.toast('Download do CSV iniciado!', 'success');
             },          
+
+            selectedPostId: null,
+
+            selectAdminPost: (id) => {
+                window.app.selectedPostId = id;
+                initDashboard();
+            },
+
+            togglePublicPostLike: (postId) => {
+                    const post = DB.posts.find(p => p.id === postId);
+                    if(!post) return;
+                    
+                    const userIndex = post.likedBy.indexOf(user.name);
+                    if(userIndex === -1) {
+                        post.likedBy.push(user.name);
+                        post.likes++;
+                    } else {
+                        post.likedBy.splice(userIndex, 1);
+                        post.likes--;
+                    }
+                    initCommunity();
+                },
+                
+            togglePublicCommentLike: (postId, commentId) => {
+                    const post = DB.posts.find(p => p.id === postId);
+                    const comment = post.comments.find(c => c.id === commentId);
+                    if(!comment) return;
+
+                    if(!comment.likedBy) comment.likedBy = [];
+                    
+                    const userIndex = comment.likedBy.indexOf(user.name);
+                    if(userIndex === -1) {
+                        comment.likedBy.push(user.name);
+                        comment.likes = (comment.likes || 0) + 1;
+                    } else {
+                        comment.likedBy.splice(userIndex, 1);
+                        comment.likes--;
+                    }
+                    initCommunity();
+                },
+
+            publicPostComment: (postId) => {
+                    const text = document.getElementById(`comment-input-${postId}`).value;
+                    if(!text.trim()) return;
+
+                    const post = DB.posts.find(p => p.id === postId);
+                    post.comments.push({
+                        id: Date.now(),
+                        user: user.name,
+                        avatar: user.avatar,
+                        text: text,
+                        date: "Agora mesmo",
+                        likes: 0,
+                        likedBy: [],
+                        authorLike: false
+                    });
+                    initCommunity();
+                },
+
+            adminDeleteComment: (postId, commentId) => {
+                    window.app.openConfirmModal('Excluir Comentário?', 'Isso sumirá da página pública.', 'danger', 'Excluir', () => {
+                        const post = DB.posts.find(p => p.id === postId);
+                        post.comments = post.comments.filter(c => c.id !== commentId);
+                        // Atualiza onde estiver (seja na home ou admin)
+                        if(document.getElementById('admin-post-detail')) window.app.renderAdminPostDetail(postId);
+                        if(document.getElementById('public-blog-feed')) initCommunity();
+                        window.app.toast('Comentário removido.', 'success');
+                    });
+                },
+                
+            adminReplyComment: (postId) => {
+                    // ... lógica similar ao publicPostComment mas forçando user admin ...
+                    // Simplificação: o admin usa a interface pública ou cria um campo no detalhe
+                },
+
+            renderAdminPostDetail: (id) => {
+                    const post = DB.posts.find(p => p.id === id);
+                    const container = document.getElementById('admin-post-detail');
+                    if(!container || !post) return;
+                    const isTextBlack = post.coverTextColor === 'black';
+                    const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-md';
+                    const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black/90 via-black/40 to-transparent';
+
+                    container.className = "lg:col-span-2 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm relative";
+                    container.innerHTML = `
+                        <div class="h-16 border-b border-gray-100 flex items-center justify-between px-6 bg-white shrink-0">
+                            <div class="flex items-center gap-2"><span class="text-xs font-bold text-gray-400 uppercase">Editando:</span><span class="font-bold text-primary truncate max-w-[200px]">${post.title}</span>${!post.allowComments ? '<span class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded ml-2">Coments Off</span>' : ''}</div>
+                            <div class="flex gap-2">
+                                <button onclick="window.app.openPostModal(${post.id})" class="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Editar"><i class="ph-bold ph-pencil-simple text-lg"></i></button>
+                                <button onclick="window.app.deletePost(${post.id})" class="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Excluir"><i class="ph-bold ph-trash text-lg"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="flex-1 overflow-y-auto custom-scrollbar p-8 bg-gray-50/50">
+                            <div class="max-w-2xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
+                                <div class="relative h-40 rounded-lg overflow-hidden mb-4 group">
+                                    <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10"></div>
+                                    <img src="${post.image}" class="w-full h-full object-cover">
+                                    <div class="absolute bottom-2 left-4 z-20">
+                                        <h2 class="text-xl font-serif font-bold ${titleColor} leading-tight">${post.title}</h2>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-gray-600 text-sm whitespace-pre-line">${post.content}</p>
+                                ${post.link ? `<div class="mt-4 p-2 bg-blue-50 border border-blue-100 rounded text-xs text-blue-700 truncate"><i class="ph-bold ph-link"></i> ${post.link}</div>` : ''}
+                            </div>
+
+                            <div class="max-w-2xl mx-auto">
+                                <h4 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="ph-fill ph-chats-circle text-accent"></i> Moderação (${post.comments.length})</h4>
+                                <div class="space-y-3">
+                                    ${post.comments.map(c => `
+                                        <div class="bg-white p-3 rounded-xl border ${c.authorLike ? 'border-accent/50 ring-1 ring-accent/10' : 'border-gray-200'} shadow-sm relative group">
+                                            <div class="flex gap-3">
+                                                <img src="${c.avatar}" class="w-8 h-8 rounded-full">
+                                                <div class="flex-1">
+                                                    <div class="flex justify-between"><span class="font-bold text-sm text-gray-800">${c.user}</span><span class="text-xs text-gray-400">${c.date}</span></div>
+                                                    <p class="text-sm text-gray-600 mt-1">${c.text}</p>
+                                                    <div class="flex gap-3 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                                                        <button onclick="window.app.toggleAuthorLike(${post.id}, ${c.id})" class="text-xs font-bold ${c.authorLike ? 'text-red-500' : 'text-gray-400 hover:text-accent'}"><i class="ph-bold ${c.authorLike ? 'ph-heart-break' : 'ph-star'}"></i> ${c.authorLike ? 'Tirar Destaque' : 'Destacar'}</button>
+                                                        <button onclick="window.app.adminDeleteComment(${post.id}, ${c.id})" class="text-xs font-bold text-gray-400 hover:text-red-500"><i class="ph-bold ph-trash"></i> Remover</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                },
+
+            openPostModal: (id = null) => {
+                const post = id ? DB.posts.find(p => p.id === id) : { 
+                    id: '', title: '', category: 'Geral', content: '', 
+                    coverType: 'color', coverColor: '1e293b', coverText: '', coverTextColor: 'white',
+                    image: '', link: '', allowComments: true, allowLikes: true, status: 'draft' 
+                };
+                const isEdit = !!id;
+                const tabScript = `document.querySelectorAll('.img-tab-btn').forEach(b => { b.classList.remove('text-accent', 'border-accent', 'bg-orange-50'); b.classList.add('text-gray-400', 'border-transparent'); }); event.target.classList.add('text-accent', 'border-accent', 'bg-orange-50'); event.target.classList.remove('text-gray-400', 'border-transparent'); document.querySelectorAll('.img-tab-content').forEach(c => c.classList.add('hidden')); document.getElementById(event.target.dataset.target).classList.remove('hidden'); document.getElementById('post-cover-type').value = event.target.dataset.type;`;
+
+                const body = `
+                    <div class="space-y-5 h-[65vh] overflow-y-auto pr-2 custom-scrollbar">
+                        <input type="hidden" id="post-id" value="${post.id || ''}">
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="col-span-2"><label class="text-xs font-bold text-gray-500 uppercase">Título</label><input type="text" id="post-title" value="${post.title}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-lg"></div>
+                            <div><label class="text-xs font-bold text-gray-500 uppercase">Categoria</label><input type="text" id="post-category" value="${post.category}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
+                        </div>
+
+                        <div class="bg-white border border-gray-200 rounded-xl overflow-hidden">
+                            <div class="flex border-b border-gray-100">
+                                <button onclick="${tabScript}" data-target="tab-color" data-type="color" class="img-tab-btn flex-1 py-3 text-xs font-bold uppercase border-b-2 transition ${post.coverType === 'color' ? 'text-accent border-accent bg-orange-50' : 'text-gray-400 border-transparent'}">Gerar Capa</button>
+                                <button onclick="${tabScript}" data-target="tab-upload" data-type="upload" class="img-tab-btn flex-1 py-3 text-xs font-bold uppercase border-b-2 transition ${post.coverType === 'upload' ? 'text-accent border-accent bg-orange-50' : 'text-gray-400 border-transparent'}">Upload</button>
+                            </div>
+                            <input type="hidden" id="post-cover-type" value="${post.coverType}">
+                            
+                            <div class="p-5 bg-gray-50 space-y-4">
+                                <div>
+                                    <label class="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Cor do Texto da Capa (Contraste)</label>
+                                    <select id="post-cover-text-color" class="w-full bg-white border border-gray-200 rounded-lg p-2 text-sm">
+                                        <option value="white" ${post.coverTextColor === 'white' ? 'selected' : ''}>Texto Branco (Para fundo escuro)</option>
+                                        <option value="black" ${post.coverTextColor === 'black' ? 'selected' : ''}>Texto Preto (Para fundo claro)</option>
+                                    </select>
+                                </div>
+
+                                <div id="tab-color" class="img-tab-content ${post.coverType === 'color' ? '' : 'hidden'} space-y-3">
+                                    <div class="flex gap-4 items-center">
+                                        <input type="color" id="post-cover-color" value="#${post.coverColor || '1e293b'}" class="h-10 w-10 rounded cursor-pointer border-0 p-0">
+                                        <div class="flex-1"><label class="text-[10px] font-bold text-gray-400 uppercase">Texto da Capa</label><input type="text" id="post-cover-text" value="${post.coverText || ''}" placeholder="Título Curto" class="w-full bg-white border border-gray-200 rounded-lg p-2 form-input"></div>
+                                    </div>
+                                </div>
+
+                                <div id="tab-upload" class="img-tab-content ${post.coverType === 'upload' ? '' : 'hidden'}">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-20 h-12 bg-gray-200 rounded overflow-hidden"><img id="preview-post-upload" src="${post.image}" class="w-full h-full object-cover"></div>
+                                        <div class="flex-1"><input type="file" accept="image/*" onchange="window.app.handleImageUpload(this, 'preview-post-upload', 'post-upload-data', 2/1)" class="text-xs w-full"><input type="hidden" id="post-upload-data" value="${post.image}"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div><label class="text-xs font-bold text-gray-500 uppercase">Conteúdo</label><textarea id="post-content" rows="6" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm leading-relaxed">${post.content}</textarea></div>
+                        <div><label class="text-xs font-bold text-gray-500 uppercase">Link Externo</label><input type="text" id="post-link" value="${post.link || ''}" placeholder="https://..." class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
+                        
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 grid grid-cols-2 gap-4">
+                            <div><label class="text-xs font-bold text-blue-800 uppercase block mb-2">Permissões</label><div class="space-y-2"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="post-allow-likes" class="accent-accent" ${post.allowLikes ? 'checked' : ''}> <span class="text-sm text-gray-700">Curtidas</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="post-allow-comments" class="accent-accent" ${post.allowComments ? 'checked' : ''}> <span class="text-sm text-gray-700">Comentários</span></label></div></div>
+                            <div><label class="text-xs font-bold text-blue-800 uppercase block mb-2">Visibilidade</label><select id="post-status" class="w-full bg-white border border-blue-200 rounded-lg p-2 text-sm font-bold text-blue-900"><option value="draft" ${post.status === 'draft' ? 'selected' : ''}>Rascunho</option><option value="published" ${post.status === 'published' ? 'selected' : ''}>Publicado</option></select></div>
+                        </div>
+                    </div>`;
+                const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500 font-bold">Cancelar</button><button onclick="window.app.savePost(${isEdit})" class="bg-primary text-white px-6 py-2 rounded-lg font-bold shadow-lg">Salvar Post</button>`;
+                window.app.openModalGeneric(isEdit ? "Editar Postagem" : "Nova Postagem", body, footer);
+            },
+
+            savePost: (isEdit) => {
+                const id = document.getElementById('post-id').value;
+                const title = document.getElementById('post-title').value;
+                const category = document.getElementById('post-category').value;
+                const content = document.getElementById('post-content').value;
+                const link = document.getElementById('post-link').value;
+                const status = document.getElementById('post-status').value;
+                const allowLikes = document.getElementById('post-allow-likes').checked;
+                const allowComments = document.getElementById('post-allow-comments').checked;
+
+                // Lógica da Imagem
+                const coverType = document.getElementById('post-cover-type').value;
+                const coverColor = document.getElementById('post-cover-color').value.replace('#', '');
+                const coverText = document.getElementById('post-cover-text').value || title;
+                const coverTextColor = document.getElementById('post-cover-text-color').value; // <--- PEGANDO O VALOR
+                const uploadData = document.getElementById('post-upload-data').value;
+                
+                let finalImage = '';
+                if(coverType === 'color') {
+                    // Ajusta a cor do texto do placeholder (se for preto, o placeholder API precisa saber, mas aqui vamos simplificar)
+                    // Para o placeholder.co, podemos mudar a cor do texto na URL
+                    const txtColorHex = coverTextColor === 'black' ? '000' : 'FFF';
+                    finalImage = `https://placehold.co/600x300/${coverColor}/${txtColorHex}?text=${encodeURIComponent(coverText)}`;
+                } else {
+                    finalImage = uploadData || 'https://placehold.co/600x300?text=Sem+Imagem';
+                }
+
+                if(!title) return window.app.toast('Título obrigatório', 'error');
+
+                const postData = {
+                    id: isEdit ? parseInt(id) : Date.now(),
+                    title, category, status, content, link,
+                    coverType, coverColor, coverText, coverTextColor, // <--- SALVANDO
+                    image: finalImage,
+                    allowLikes, allowComments,
+                    date: new Date().toLocaleDateString('pt-BR'),
+                    likes: isEdit ? (DB.posts.find(p => p.id == id)?.likes || 0) : 0,
+                    likedBy: isEdit ? (DB.posts.find(p => p.id == id)?.likedBy || []) : [],
+                    comments: isEdit ? (DB.posts.find(p => p.id == id)?.comments || []) : []
+                };
+
+                if(isEdit) {
+                    const idx = DB.posts.findIndex(p => p.id == id);
+                    if(idx !== -1) DB.posts[idx] = postData;
+                } else {
+                    DB.posts.unshift(postData);
+                }
+
+                window.app.toast('Post salvo com sucesso!', 'success');
+                window.app.closeModal();
+                if(window.app.selectedPostId === postData.id) window.app.renderAdminPostDetail(postData.id);
+                initDashboard();
+            },
+
+            deletePost: (id) => {
+                window.app.openConfirmModal('Excluir Artigo?', 'Esta ação não pode ser desfeita.', 'danger', 'Excluir', () => {
+                    DB.posts = DB.posts.filter(p => p.id !== id);
+                    window.app.selectedPostId = null;
+                    initDashboard();
+                    window.app.toast('Artigo excluído.', 'success');
+                });
+            },
+
+            toggleAuthorLike: (postId, commentId) => {
+                const post = DB.posts.find(p => p.id === postId);
+                if(post) {
+                    const comment = post.comments.find(c => c.id === commentId);
+                    if(comment) {
+                        comment.authorLike = !comment.authorLike;
+                        window.app.renderAdminPostDetail(postId);
+                        window.app.toast(comment.authorLike ? 'Comentário destacado!' : 'Destaque removido.', 'success');
+                    }
+                }
+            },
 
             // --- CRM: LEADS ---
             submitBudgetRequest: () => {
