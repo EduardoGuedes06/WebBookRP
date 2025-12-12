@@ -436,18 +436,14 @@ const TEMPLATES = {
         // 2. DADOS & ESTADO
         // ==========================================
         const DB = {
-
-        // Adicione isso dentro do DB, logo após 'comments: [...]'
-            leads: [
-                { id: 1, name: "Fernanda Costa", email: "fer.costa@email.com", service: "Mentoria Literária", desc: "Tenho um manuscrito de 300 páginas...", date: "12/12/2025", status: "pending" },
-                { id: 2, name: "Roberto Silva", email: "beto@email.com", service: "Design de Capa", desc: "Capa para Sci-Fi cyberpunk.", date: "11/12/2025", status: "archived" }
-            ],
+            leads: [],
             stats: {
                 totalVisits: 15420,
                 clicksAmazon: 842,
                 clicksML: 320,
                 clicksShopee: 510,
-                mostViewedBook: "O Código da Eternidade"
+                mostViewedBook: "O Código da Eternidade",
+                monthlyRevenue: [1200, 1500, 1100, 1800, 2200, 14502]
             },
             homeConfig: {
                     heroBookId: '1',
@@ -525,33 +521,57 @@ const TEMPLATES = {
         };
         // Gerador de Livros Mock   
         function generateBooks() {
-            const covers = ['1e293b', 'd97706', '475569', '0f766e', 'be123c', '4338ca'];
-            const genres = ['Ficção Científica', 'Fantasia', 'Thriller', 'Terror', 'Drama'];
-            
-            for(let i=1; i<=6; i++) {
-                const price = 29.90 + (i * 2);
-                DB.books.push({
-                    id: i.toString(),
-                    title: i === 1 ? 'O Código da Eternidade' : `Crônicas de Gelo e Fogo Vol.${i}`, // Título maior para testar efeito
-                    genre: genres[i % genres.length],
-                    price: price,
-                    active: true, 
-                    isPromotion: i % 2 === 0, 
-                    promoPrice: i % 2 === 0 ? (price * 0.7) : null,
-                    cover: `https://placehold.co/300x450/${covers[i % covers.length]}/FFF?text=Vol.${i}`,
-                    synopsis: "Sinopse padrão gerada pelo sistema para detalhamento...",
-                    // NOVO CAMPO:
-                    coverSynopsis: "Uma jornada épica que está conquistando o Brasil. Explore o impossível agora.",
-                    linkAmazon: '#', linkML: '#', linkShopee: '#'
-                });
-            }
+             const covers = ['1e293b', 'd97706', '475569', '0f766e', 'be123c', '4338ca'];
+             const genres = ['Ficção', 'Fantasia', 'Thriller'];
+             for(let i=1; i<=6; i++) {
+                DB.books.push({id: i.toString(), title: `Livro Vol.${i}`, genre: genres[i%3], price: 29.90+(i*2), active: true, isPromotion: i%2===0, promoPrice: 20.00, cover: `https://placehold.co/300x450/${covers[i%6]}/FFF`, synopsis: "Sinopse...", linkAmazon:'#', linkML:'#', linkShopee:'#'});
+             }
         }
         generateBooks();
 
+        function generateServices() {
+             DB.services = [
+                { id: 'S1', name: 'Design de Capa', price: 800, active: true, isPromotion: false, icon: 'ph-paint-brush-broad', theme: 'purple', description: 'Capa completa.' },
+                { id: 'S2', name: 'Revisão', price: 0.05, unit: 'p/ palavra', active: true, isPromotion: true, promoPrice: 0.03, icon: 'ph-text-aa', theme: 'blue', description: 'Revisão gramatical.' },
+                { id: 'S3', name: 'Mentoria', price: 500, active: false, icon: 'ph-student', theme: 'orange', description: 'Aulas particulares.' }
+             ];
+        }
+
+        function generateMockLeads() {
+            const names = ["Fernanda Costa", "Roberto Silva", "Ana Souza", "Carlos Lima", "Beatriz Melo"];
+            const emails = ["fer.costa@email.com", "beto@email.com", "ana.souza@email.com", "carlos@l.com", "bia@m.com"];
+            const services = ["Mentoria Literária", "Design de Capa", "Revisão Textual"];
+            
+            // Cria 45 leads (alguns repetidos para testar o agrupamento)
+            for(let i=0; i<45; i++) {
+                const randIndex = Math.floor(Math.random() * names.length); // Pega aleatório para gerar repetição
+                const daysAgo = Math.floor(Math.random() * 90); // Últimos 90 dias
+                const date = new Date();
+                date.setDate(date.getDate() - daysAgo);
+                
+                DB.leads.push({
+                    id: Date.now() + i,
+                    name: names[randIndex],
+                    email: emails[randIndex], // Mesmo email = mesma pessoa
+                    service: services[Math.floor(Math.random() * services.length)],
+                    desc: `Solicitação de teste número ${i}. Gostaria de saber mais sobre prazos.`,
+                    date: date.toLocaleDateString('pt-BR'), // Formato DD/MM/AAAA
+                    timestamp: date.getTime(), // Para ordenação
+                    status: Math.random() > 0.7 ? 'archived' : 'pending'
+                });
+            }
+            // Ordena por mais recente
+            DB.leads.sort((a, b) => b.timestamp - a.timestamp);
+        }        
+
+        generateServices();
+        generateMockLeads();
+
         const adminState = {
-            currentTab: 'main', // 'main' (SEU DASH ORIGINAL), 'analytics', 'leads'
+            currentTab: 'main',
             books: { page: 1, filter: '', sortKey: 'title', sortOrder: 'asc' }, 
             services: { page: 1, filter: '', sortKey: 'name', sortOrder: 'asc' },
+            leads: { page: 1, filterDays: 60 }, // <--- FALTAVA ISSO AQUI
             itemsPerPage: 5
         };
 
@@ -671,353 +691,440 @@ const TEMPLATES = {
         }
 
         function initDashboard() {
-                    const content = document.getElementById('dashboard-content');
-                    if(!content) return;
+            const content = document.getElementById('dashboard-content');
+            if(!content) return;
 
-                    // 1. Atualiza visual dos botões das abas
-                    ['main', 'analytics', 'leads'].forEach(t => {
-                        const btn = document.getElementById(`tab-${t}`);
-                        if(btn) {
-                            if(adminState.currentTab === t) btn.className = "pb-3 text-sm font-bold border-b-2 border-accent text-primary transition";
-                            else btn.className = "pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition";
-                        }
-                    });
-
-                    // Badge de Leads
-                    const pending = DB.leads.filter(l => l.status === 'pending').length;
-                    const badge = document.getElementById('badge-leads');
-                    if(badge) { badge.innerText = pending; badge.classList.toggle('hidden', pending === 0); }
-
-                    // 2. LÓGICA DE RENDERIZAÇÃO DAS ABAS
-                    if (adminState.currentTab === 'main') {
-                        content.innerHTML = `
-                            <div class="animate-fade-in">
-                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-                                    <div class="dashboard-card border-l-4 border-accent">
-                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Livros)</p>
-                                        <h3 class="text-3xl font-black text-primary">R$ 14.502</h3>
-                                    </div>
-                                    <div class="dashboard-card border-l-4 border-blue-500">
-                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Serviços)</p>
-                                        <h3 class="text-3xl font-black text-primary">R$ 5.200</h3>
-                                    </div>
-                                    <div class="dashboard-card">
-                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Leads Totais</p>
-                                        <h3 class="text-3xl font-black text-primary">1.205</h3>
-                                    </div>
-                                    <div class="dashboard-card">
-                                        <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Solicitações Pendentes</p>
-                                        <h3 class="text-3xl font-black text-accent">${pending}</h3>
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 gap-12">
-                                    
-                                    <div class="dashboard-card">
-                                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                                            <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-book text-accent"></i> Catálogo de Livros</h3></div>
-                                            <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
-                                                <input type="text" placeholder="Buscar livro..." oninput="window.app.setAdminFilter('books', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-accent">
-                                                <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
-                                            </div>
-                                        </div>
-                                        <div class="overflow-x-auto min-h-[300px]">
-                                            <table class="w-full text-left text-sm text-gray-600">
-                                                <thead class="bg-gray-50 text-gray-400 uppercase text-xs border-b border-gray-200">
-                                                    <tr>
-                                                        <th class="p-3">Capa</th>
-                                                        <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'title')">
-                                                            Título <i id="sort-books-title" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'price')">
-                                                            Preço <i id="sort-books-price" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'isPromotion')">
-                                                            Promoção <i id="sort-books-isPromotion" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'active')">
-                                                            Status <i id="sort-books-active" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 text-right">Ação</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="admin-books-table"></tbody>
-                                            </table>
-                                        </div>
-                                        <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4"><span class="text-xs text-gray-400" id="admin-books-info"></span><div class="flex gap-2" id="admin-books-pagination"></div></div>
-                                    </div>
-
-                                    <div class="dashboard-card border-t-4 border-blue-500">
-                                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                                            <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Meus Serviços</h3></div>
-                                            <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
-                                                <input type="text" placeholder="Buscar serviço..." oninput="window.app.setAdminFilter('services', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-blue-500">
-                                                <button onclick="window.app.openServiceEditModal()" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
-                                            </div>
-                                        </div>
-                                        <div class="overflow-x-auto min-h-[200px]">
-                                            <table class="w-full text-left text-sm text-gray-600">
-                                                <thead class="bg-blue-50 text-blue-400 uppercase text-xs border-b border-blue-100">
-                                                    <tr>
-                                                        <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'name')">
-                                                            Serviço <i id="sort-services-name" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'price')">
-                                                            Preço Base <i id="sort-services-price" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'isPromotion')">
-                                                            Promoção <i id="sort-services-isPromotion" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'active')">
-                                                            Status <i id="sort-services-active" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
-                                                        </th>
-                                                        <th class="p-3 text-right">Ação</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="admin-services-table"></tbody>
-                                            </table>
-                                        </div>
-                                        <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4"><span class="text-xs text-gray-400" id="admin-services-info"></span><div class="flex gap-2" id="admin-services-pagination"></div></div>
-                                    </div>
-                                </div>
-                            </div>`;
-                        
-                        // --- HELPER DE ORDENAÇÃO ---
-                        const sortList = (list, key, order) => {
-                            return list.sort((a, b) => {
-                                let valA = a[key]; let valB = b[key];
-                                if (typeof valA === 'string') valA = valA.toLowerCase();
-                                if (typeof valB === 'string') valB = valB.toLowerCase();
-                                if (valA < valB) return order === 'asc' ? -1 : 1;
-                                if (valA > valB) return order === 'asc' ? 1 : -1;
-                                return 0;
-                            });
-                        };
-                        
-                        // --- HELPER DE ÍCONES DE ORDENAÇÃO ---
-                        const updateIcons = (context, activeKey, activeOrder) => {
-                            const keys = context === 'books' ? ['title', 'price', 'isPromotion', 'active'] : ['name', 'price', 'isPromotion', 'active'];
-                            keys.forEach(k => {
-                                const el = document.getElementById(`sort-${context}-${k}`);
-                                if(el) {
-                                    if(k === activeKey) { el.className = `ph-bold ${activeOrder === 'asc' ? 'ph-caret-up' : 'ph-caret-down'} text-accent align-middle ml-1`; } 
-                                    else { el.className = `ph-bold ph-arrows-down-up text-gray-300 group-hover:text-gray-500 align-middle ml-1`; }
-                                }
-                            });
-                        };
-
-                        // --- RENDERIZAÇÃO DA TABELA DE LIVROS (CORRIGIDA) ---
-                        const renderBooks = () => {
-                            let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
-                            list = sortList(list, adminState.books.sortKey, adminState.books.sortOrder);
-                            updateIcons('books', adminState.books.sortKey, adminState.books.sortOrder);
-                            
-                            const start = (adminState.books.page - 1) * adminState.itemsPerPage;
-                            const paged = list.slice(start, start + adminState.itemsPerPage);
-                            const tbody = document.getElementById('admin-books-table');
-                            
-                            if(tbody) {
-                                if(paged.length === 0) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`;
-                                else {
-                                    tbody.innerHTML = paged.map(b => `
-                                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
-                                            <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
-                                            <td class="p-3 font-bold text-primary">${b.title}</td>
-                                            <td class="p-3 text-gray-500">
-                                                ${b.isPromotion && b.promoPrice ? 
-                                                    `<div class="flex flex-col"><span class="line-through text-xs text-gray-400">R$ ${b.price}</span><span class="text-green-600 font-bold">R$ ${b.promoPrice}</span></div>` : 
-                                                    `R$ ${b.price.toFixed(2)}`
-                                                }
-                                            </td>
-                                            <td class="p-3 text-center">
-                                                ${b.isPromotion ? 
-                                                    '<span class="text-[10px] bg-orange-50 text-orange-700 border border-orange-200 px-2 py-0.5 rounded font-bold">SIM</span>' : 
-                                                    '<span class="text-[10px] text-gray-300">-</span>'
-                                                }
-                                            </td>
-                                            <td class="p-3 text-center">
-                                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}">
-                                                    <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
-                                                    ${b.active ? 'Ativo' : 'Inativo'}
-                                                </span>
-                                            </td>
-                                            <td class="p-3 text-right">
-                                                <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                                                <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
-                                            </td>
-                                        </tr>`).join('');
-                                }
-                            }
-                            // Paginação Livros
-                            const pages = Math.ceil(list.length / adminState.itemsPerPage);
-                            document.getElementById('admin-books-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
-                            let nav = '';
-                            if(pages > 1) {
-                                nav += `<button onclick="window.app.changeAdminPage('books', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
-                                nav += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.books.page} / ${pages}</span>`;
-                                nav += `<button onclick="window.app.changeAdminPage('books', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === pages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
-                            }
-                            document.getElementById('admin-books-pagination').innerHTML = nav;
-                        };
-
-                        // --- RENDERIZAÇÃO DA TABELA DE SERVIÇOS (CORRIGIDA) ---
-                        const renderServices = () => {
-                            let list = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
-                            list = sortList(list, adminState.services.sortKey, adminState.services.sortOrder);
-                            updateIcons('services', adminState.services.sortKey, adminState.services.sortOrder);
-
-                            const start = (adminState.services.page - 1) * adminState.itemsPerPage;
-                            const paged = list.slice(start, start + adminState.itemsPerPage);
-                            const tbody = document.getElementById('admin-services-table');
-
-                            if(tbody) {
-                                if(paged.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>`;
-                                else {
-                                    tbody.innerHTML = paged.map(s => {
-                                        const theme = THEMES[s.theme || 'default'];
-                                        return `
-                                        <tr class="border-b ${theme.border} hover:bg-opacity-80 transition ${s.active ? theme.bg : 'opacity-60 bg-gray-50'}">
-                                            <td class="p-3">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center shadow-sm text-xl ${theme.text}">
-                                                        <i class="ph-fill ${s.icon || 'ph-star-four'}"></i>
-                                                    </div>
-                                                    <div>
-                                                        <div class="font-bold text-gray-800">${s.name}</div>
-                                                        <div class="text-xs ${theme.text} opacity-80 truncate max-w-[150px]">${s.description}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="p-3 font-mono text-sm ${theme.text}">
-                                                ${s.isPromotion && s.promoPrice ? 
-                                                    `<span class="line-through text-xs opacity-60 mr-1">R$ ${s.price}</span><span class="font-bold">R$ ${s.promoPrice}</span>` : 
-                                                    `R$ ${s.price.toFixed(2)}`
-                                                }
-                                                <span class="text-[10px] opacity-60 font-sans font-normal ml-1 block">${s.unit || ''}</span>
-                                            </td>
-                                            <td class="p-3 text-center">
-                                                ${s.isPromotion ? 
-                                                    '<span class="text-[10px] bg-white text-orange-600 border border-orange-200 px-2 py-0.5 rounded font-bold shadow-sm">SIM</span>' : 
-                                                    '<span class="text-[10px] text-gray-400">-</span>'
-                                                }
-                                            </td>
-                                            <td class="p-3 text-center">
-                                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full bg-white/60 border ${theme.border} text-gray-600">
-                                                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
-                                                    ${s.active ? 'Ativo' : 'Inativo'}
-                                                </span>
-                                            </td>
-                                            <td class="p-3 text-right flex justify-end gap-2">
-                                                <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                                                <button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
-                                            </td>
-                                        </tr>
-                                    `}).join('');
-                                }
-                            }
-                            // Paginação Serviços
-                            const pages = Math.ceil(list.length / adminState.itemsPerPage);
-                            document.getElementById('admin-services-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
-                            let nav = '';
-                            if(pages > 1) {
-                                nav += `<button onclick="window.app.changeAdminPage('services', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
-                                nav += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.services.page} / ${pages}</span>`;
-                                nav += `<button onclick="window.app.changeAdminPage('services', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === pages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
-                            }
-                            document.getElementById('admin-services-pagination').innerHTML = nav;
-                        };
-
-                        // Executa a renderização inicial
-                        renderBooks();
-                        renderServices();
-
-                    } else if (adminState.currentTab === 'analytics') {
-                        const total = DB.stats.clicksAmazon + DB.stats.clicksML + DB.stats.clicksShopee;
-                        content.innerHTML = `
-                            <div class="animate-fade-in grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                                    <h3 class="font-bold text-primary mb-6">Tráfego por Loja</h3>
-                                    <div class="space-y-4">
-                                        <div><div class="flex justify-between text-xs font-bold mb-1"><span>Amazon</span><span>${DB.stats.clicksAmazon}</span></div><div class="w-full bg-gray-100 h-2 rounded-full"><div class="bg-[#FF9900] h-2 rounded-full" style="width: ${(DB.stats.clicksAmazon/total*100)||0}%"></div></div></div>
-                                        <div><div class="flex justify-between text-xs font-bold mb-1"><span>Mercado Livre</span><span>${DB.stats.clicksML}</span></div><div class="w-full bg-gray-100 h-2 rounded-full"><div class="bg-[#FFE600] h-2 rounded-full" style="width: ${(DB.stats.clicksML/total*100)||0}%"></div></div></div>
-                                        <div><div class="flex justify-between text-xs font-bold mb-1"><span>Shopee</span><span>${DB.stats.clicksShopee}</span></div><div class="w-full bg-gray-100 h-2 rounded-full"><div class="bg-[#EE4D2D] h-2 rounded-full" style="width: ${(DB.stats.clicksShopee/total*100)||0}%"></div></div></div>
-                                    </div>
-                                </div>
-                                <div class="bg-primary p-8 rounded-2xl shadow-lg text-white">
-                                    <h3 class="font-serif text-2xl font-bold mb-4">Livro em Alta</h3>
-                                    <p class="text-4xl font-black text-accent mb-2">"${DB.stats.mostViewedBook}"</p>
-                                    <p class="text-slate-400 text-sm">Este livro recebeu 45% de todos os cliques esta semana.</p>
-                                </div>
-                            </div>`;
-
-                    } else if (adminState.currentTab === 'leads') {
-                        const list = DB.leads;
-                        content.innerHTML = `
-                            <div class="animate-fade-in bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                                <h3 class="font-bold text-lg text-primary mb-6">Pedidos de Orçamento</h3>
-                                <div class="space-y-4">
-                                    ${list.length ? list.map(l => `
-                                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-gray-50 rounded-xl border border-gray-100 ${l.status==='pending'?'border-l-4 border-l-red-500':''}">
-                                            <div>
-                                                <div class="flex items-center gap-2"><span class="font-bold text-gray-800">${l.name}</span> <span class="text-xs text-gray-400">(${l.email})</span></div>
-                                                <div class="text-xs font-bold text-accent uppercase mt-1">${l.service}</div>
-                                                <p class="text-sm text-gray-600 italic mt-2">"${l.desc}"</p>
-                                            </div>
-                                            <div class="mt-4 md:mt-0 flex gap-2">
-                                                <a href="mailto:${l.email}" class="text-xs font-bold bg-white border border-gray-200 px-3 py-2 rounded hover:text-primary transition">Responder</a>
-                                                ${l.status==='pending' ? `<button onclick="window.app.archiveLead(${l.id})" class="text-xs font-bold bg-green-100 text-green-700 px-3 py-2 rounded hover:bg-green-200 transition">Baixa</button>` : '<span class="text-xs text-gray-400 px-3 py-2">Arquivado</span>'}
-                                            </div>
-                                        </div>
-                                    `).join('') : '<p class="text-gray-400 p-4 text-center">Nenhuma solicitação.</p>'}
-                                </div>
-                            </div>`;
-                    }
+            // --- NAVEGAÇÃO DE ABAS ---
+            ['main', 'analytics', 'leads'].forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if(btn) {
+                    const isActive = adminState.currentTab === t;
+                    btn.className = isActive 
+                        ? "pb-3 text-sm font-bold border-b-2 border-accent text-primary transition" 
+                        : "pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition";
                 }
+            });
+
+            // Badge de Leads Pendentes
+            const pendingTotal = DB.leads.filter(l => l.status === 'pending').length;
+            const badge = document.getElementById('badge-leads');
+            if(badge) { badge.innerText = pendingTotal; badge.classList.toggle('hidden', pendingTotal === 0); }
+
+
+            // ============================================================
+            // ABA 1: VISÃO GERAL (CRUDs) - MANTIDA INTACTA COMO PEDIU
+            // ============================================================
+            if (adminState.currentTab === 'main') {
+                content.innerHTML = `
+                    <div class="animate-fade-in">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                            <div class="dashboard-card border-l-4 border-accent">
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Livros)</p>
+                                <h3 class="text-3xl font-black text-primary">R$ 14.502</h3>
+                            </div>
+                            <div class="dashboard-card border-l-4 border-blue-500">
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Serviços)</p>
+                                <h3 class="text-3xl font-black text-primary">R$ 5.200</h3>
+                            </div>
+                            <div class="dashboard-card">
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Leads Totais</p>
+                                <h3 class="text-3xl font-black text-primary">${DB.leads.length}</h3>
+                            </div>
+                            <div class="dashboard-card">
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Solicitações Pendentes</p>
+                                <h3 class="text-3xl font-black text-accent">${pendingTotal}</h3>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-12">
+                            <div class="dashboard-card" id="books-table-container"></div>
+                            <div class="dashboard-card border-t-4 border-blue-500" id="services-table-container"></div>
+                        </div>
+                    </div>`;
+                
+                // Renderiza as tabelas antigas (funções que já temos)
+                document.getElementById('books-table-container').innerHTML = getBooksTableHTML();
+                document.getElementById('services-table-container').innerHTML = getServicesTableHTML();
+                renderBooksTableRows(); // Preenche dados
+                renderServicesTableRows(); // Preenche dados
+
+
+            // ============================================================
+            // ABA 2: RELATÓRIOS & TRÁFEGO (RICO EM DETALHES)
+            // ============================================================
+            } else if (adminState.currentTab === 'analytics') {
+                const totalClicks = DB.stats.clicksAmazon + DB.stats.clicksML + DB.stats.clicksShopee;
+                const conversionRate = ((pendingTotal / DB.stats.totalVisits) * 100).toFixed(2);
+                
+                content.innerHTML = `
+                    <div class="animate-fade-in space-y-8">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-primary text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <p class="text-slate-400 text-xs font-bold uppercase mb-2">Tráfego Total</p>
+                                    <h3 class="text-4xl font-black text-accent">${DB.stats.totalVisits.toLocaleString()}</h3>
+                                    <p class="text-xs text-slate-400 mt-2 flex items-center gap-1"><i class="ph-bold ph-trend-up text-green-400"></i> +12% vs mês anterior</p>
+                                </div>
+                                <i class="ph-fill ph-globe-hemisphere-west absolute -right-4 -bottom-4 text-9xl text-white opacity-5"></i>
+                            </div>
+                            <div class="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
+                                <p class="text-gray-400 text-xs font-bold uppercase mb-2">Taxa de Conversão (Leads)</p>
+                                <h3 class="text-4xl font-black text-primary">${conversionRate}%</h3>
+                                <div class="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
+                                    <div class="bg-blue-500 h-full rounded-full" style="width: ${conversionRate*10}%"></div>
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-br from-purple-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
+                                <div class="relative z-10">
+                                    <p class="text-purple-200 text-xs font-bold uppercase mb-2">Receita Projetada</p>
+                                    <h3 class="text-4xl font-black">R$ 19.702</h3>
+                                    <p class="text-xs text-purple-200 mt-2">Baseado em leads e cliques</p>
+                                </div>
+                                <i class="ph-fill ph-chart-line-up absolute -right-4 -bottom-4 text-9xl text-white opacity-10"></i>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                            <div class="lg:col-span-2 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                                <div class="flex justify-between items-end mb-8">
+                                    <div>
+                                        <h3 class="font-bold text-lg text-primary">Performance Semestral</h3>
+                                        <p class="text-xs text-gray-400">Receita consolidada (Livros + Serviços)</p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <span class="flex items-center gap-1 text-xs font-bold text-gray-500"><span class="w-2 h-2 rounded-full bg-accent"></span> Livros</span>
+                                        <span class="flex items-center gap-1 text-xs font-bold text-gray-500"><span class="w-2 h-2 rounded-full bg-primary"></span> Serviços</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-end justify-between h-48 gap-4 px-2">
+                                    ${DB.stats.monthlyRevenue.map((val, i) => {
+                                        const h = Math.min(100, (val / 15000) * 100);
+                                        const months = ['Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                                        return `
+                                        <div class="flex-1 flex flex-col justify-end group cursor-pointer">
+                                            <div class="w-full bg-gray-100 rounded-t-lg relative overflow-hidden transition-all duration-500 group-hover:bg-gray-200" style="height: ${h}%">
+                                                <div class="absolute bottom-0 w-full bg-primary opacity-80" style="height: ${h*0.4}%"></div>
+                                                <div class="absolute bottom-[${h*0.4}%] w-full bg-accent opacity-90" style="height: ${h*0.6}%"></div>
+                                            </div>
+                                            <span class="text-[10px] font-bold text-gray-400 text-center mt-2 group-hover:text-primary">${months[i]}</span>
+                                        </div>`;
+                                    }).join('')}
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                                <h3 class="font-bold text-lg text-primary mb-6">Origem dos Cliques</h3>
+                                <div class="space-y-6">
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold mb-2">
+                                            <span class="flex items-center gap-2"><i class="ph-bold ph-amazon-logo text-[#FF9900]"></i> Amazon</span>
+                                            <span>${DB.stats.clicksAmazon}</span>
+                                        </div>
+                                        <div class="w-full bg-gray-50 h-2 rounded-full overflow-hidden"><div class="bg-[#FF9900] h-full rounded-full" style="width: ${(DB.stats.clicksAmazon/totalClicks*100)||0}%"></div></div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold mb-2">
+                                            <span class="flex items-center gap-2"><i class="ph-bold ph-shopping-bag-open text-[#FFE600]"></i> Mercado Livre</span>
+                                            <span>${DB.stats.clicksML}</span>
+                                        </div>
+                                        <div class="w-full bg-gray-50 h-2 rounded-full overflow-hidden"><div class="bg-[#FFE600] h-full rounded-full" style="width: ${(DB.stats.clicksML/totalClicks*100)||0}%"></div></div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs font-bold mb-2">
+                                            <span class="flex items-center gap-2"><i class="ph-bold ph-shopping-bag text-[#EE4D2D]"></i> Shopee</span>
+                                            <span>${DB.stats.clicksShopee}</span>
+                                        </div>
+                                        <div class="w-full bg-gray-50 h-2 rounded-full overflow-hidden"><div class="bg-[#EE4D2D] h-full rounded-full" style="width: ${(DB.stats.clicksShopee/totalClicks*100)||0}%"></div></div>
+                                    </div>
+                                </div>
+                                <div class="mt-8 pt-6 border-t border-gray-100">
+                                    <h4 class="text-xs font-bold text-gray-400 uppercase mb-3">Insights Rápidos</h4>
+                                    <p class="text-sm text-gray-600 leading-relaxed"><strong class="text-green-600">Dica:</strong> Seus leitores da Amazon convertem 2x mais que os da Shopee. Considere focar promoções lá.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`;
+
+
+            // ============================================================
+            // ABA 3: SOLICITAÇÕES (LEADS) - INTERATIVA E AGRUPADA
+            // ============================================================
+            } else if (adminState.currentTab === 'leads') {
+                // 1. Filtragem por Data
+                const now = new Date();
+                const cutoff = new Date();
+                cutoff.setDate(now.getDate() - adminState.leads.filterDays);
+                
+                let filteredLeads = DB.leads.filter(l => {
+                    const lDate = new Date(l.timestamp); // Usando timestamp para precisão
+                    return adminState.leads.filterDays === 'all' ? true : lDate >= cutoff;
+                });
+
+                // 2. Métricas da Aba
+                const countPending = filteredLeads.filter(l => l.status === 'pending').length;
+                const countArchived = filteredLeads.filter(l => l.status === 'archived').length;
+                const currentMonth = now.getMonth();
+                const countMonth = filteredLeads.filter(l => new Date(l.timestamp).getMonth() === currentMonth).length;
+
+                // 3. Lógica de Agrupamento (Por Email)
+                const groupedMap = new Map();
+                filteredLeads.forEach(lead => {
+                    if (!groupedMap.has(lead.email)) {
+                        groupedMap.set(lead.email, []);
+                    }
+                    groupedMap.get(lead.email).push(lead);
+                });
+                
+                // Converte mapa para array de grupos para poder paginar
+                const groupedArray = Array.from(groupedMap.values());
+                
+                // 4. Paginação dos GRUPOS
+                const totalGroups = groupedArray.length;
+                const startL = (adminState.leads.page - 1) * adminState.itemsPerPage;
+                const pagedGroups = groupedArray.slice(startL, startL + adminState.itemsPerPage);
+
+                // HTML da Lista
+                const listHTML = pagedGroups.map(group => {
+                    const mainLead = group[0]; // O mais recente (já ordenamos no DB)
+                    const count = group.length;
+                    const isMulti = count > 1;
+                    const statusColor = mainLead.status === 'pending' ? 'border-l-4 border-l-red-500' : 'border-l-4 border-l-green-500';
+                    const statusBadge = mainLead.status === 'pending' ? '<span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded">Pendente</span>' : '<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded">Baixado</span>';
+
+                    // Se tiver múltiplos, gera o HTML do "Accordion"
+                    let subItemsHTML = '';
+                    if (isMulti) {
+                        subItemsHTML = `
+                            <div id="group-${mainLead.email.replace(/[^a-zA-Z0-9]/g, '')}" class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3 bg-white/50">
+                                <p class="text-xs font-bold text-gray-400 uppercase">Histórico de Solicitações (${count})</p>
+                                ${group.map(sub => `
+                                    <div class="flex justify-between items-start text-xs bg-white p-2 rounded border border-gray-100">
+                                        <div>
+                                            <span class="font-bold text-primary">${sub.service}</span>
+                                            <span class="text-gray-400 ml-2">${sub.date}</span>
+                                            <p class="text-gray-600 mt-1 italic">"${sub.desc}"</p>
+                                        </div>
+                                        ${sub.status === 'pending' ? `<button onclick="window.app.archiveLead(${sub.id})" class="text-green-600 hover:underline">Dar Baixa</button>` : '<span class="text-gray-400">Ok</span>'}
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                            <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                                <div class="flex gap-4 items-start w-full">
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-500 text-sm flex-shrink-0">
+                                        ${mainLead.name.charAt(0)}
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <h4 class="font-bold text-gray-800">${mainLead.name}</h4>
+                                            <span class="text-xs text-gray-400 bg-gray-50 px-2 py-0.5 rounded">${mainLead.email}</span>
+                                            ${statusBadge}
+                                            ${isMulti ? `<span class="bg-accent text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 cursor-pointer hover:bg-accent-hover transition" onclick="document.getElementById('group-${mainLead.email.replace(/[^a-zA-Z0-9]/g, '')}').classList.toggle('hidden')"><i class="ph-bold ph-stack"></i> +${count-1} pedidos</span>` : ''}
+                                        </div>
+                                        <div class="mt-2">
+                                            <span class="text-xs font-bold text-primary uppercase tracking-wide">${mainLead.service}</span>
+                                            <span class="text-xs text-gray-400 mx-2">•</span>
+                                            <span class="text-xs text-gray-500"><i class="ph-fill ph-calendar"></i> ${mainLead.date}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100 italic">"${mainLead.desc}"</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col gap-2 min-w-[100px]">
+                                    <a href="mailto:${mainLead.email}" class="text-xs font-bold text-center bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg hover:border-primary hover:text-primary transition">Responder</a>
+                                    ${mainLead.status === 'pending' ? `<button onclick="window.app.archiveLead(${mainLead.id})" class="text-xs font-bold bg-green-50 text-green-700 border border-green-100 px-4 py-2 rounded-lg hover:bg-green-100 transition">Dar Baixa</button>` : ''}
+                                </div>
+                            </div>
+                            ${subItemsHTML}
+                        </div>
+                    `;
+                }).join('');
+
+                // Renderiza a Aba Leads
+                content.innerHTML = `
+                    <div class="animate-fade-in">
+                        <div class="grid grid-cols-3 gap-4 mb-8">
+                            <div class="bg-red-50 border border-red-100 p-4 rounded-xl flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600"><i class="ph-fill ph-warning-circle text-xl"></i></div>
+                                <div><p class="text-xs font-bold text-red-400 uppercase">Pendentes</p><h3 class="text-2xl font-black text-red-700">${countPending}</h3></div>
+                            </div>
+                            <div class="bg-green-50 border border-green-100 p-4 rounded-xl flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600"><i class="ph-fill ph-check-circle text-xl"></i></div>
+                                <div><p class="text-xs font-bold text-green-400 uppercase">Resolvidos</p><h3 class="text-2xl font-black text-green-700">${countArchived}</h3></div>
+                            </div>
+                            <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><i class="ph-fill ph-calendar-plus text-xl"></i></div>
+                                <div><p class="text-xs font-bold text-blue-400 uppercase">Novos (Mês)</p><h3 class="text-2xl font-black text-blue-700">${countMonth}</h3></div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-bold text-gray-500"><i class="ph-bold ph-funnel"></i> Filtrar:</span>
+                                <select onchange="window.app.filterLeads(this.value)" class="bg-gray-50 border border-gray-200 text-sm font-bold text-primary rounded-lg p-2 focus:outline-none focus:border-accent">
+                                    <option value="30" ${adminState.leads.filterDays == 30 ? 'selected' : ''}>Últimos 30 dias</option>
+                                    <option value="60" ${adminState.leads.filterDays == 60 ? 'selected' : ''}>Últimos 60 dias (Padrão)</option>
+                                    <option value="90" ${adminState.leads.filterDays == 90 ? 'selected' : ''}>Últimos 90 dias</option>
+                                    <option value="all" ${adminState.leads.filterDays == 'all' ? 'selected' : ''}>Todo o Período</option>
+                                </select>
+                            </div>
+                            <button onclick="window.app.exportLeads()" class="flex items-center gap-2 bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-black transition shadow-lg">
+                                <i class="ph-bold ph-export"></i> Exportar CSV
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            ${listHTML || '<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">Nenhuma solicitação encontrada neste período.</div>'}
+                        </div>
+
+                        <div class="flex justify-center items-center gap-3 mt-8">
+                            <button onclick="window.app.changeLeadsPage(-1)" class="w-10 h-10 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
+                            <span class="text-xs font-bold text-gray-500">Página ${adminState.leads.page} de ${Math.ceil(totalGroups/adminState.itemsPerPage)}</span>
+                            <button onclick="window.app.changeLeadsPage(1)" class="w-10 h-10 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page >= Math.ceil(totalGroups/adminState.itemsPerPage) ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
+                        </div>
+                    </div>`;
+            }
+        }
 
         function renderBooksTable() {
+            // 1. Filtra e Ordena
             let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
             list.sort((a, b) => {
                 let vA = a[adminState.books.sortKey], vB = b[adminState.books.sortKey];
                 if (typeof vA === 'string') vA = vA.toLowerCase(); if (typeof vB === 'string') vB = vB.toLowerCase();
                 if (vA < vB) return adminState.books.sortOrder === 'asc' ? -1 : 1; if (vA > vB) return adminState.books.sortOrder === 'asc' ? 1 : -1; return 0;
             });
+
+            // 2. Pagina
             const start = (adminState.books.page - 1) * adminState.itemsPerPage;
             const paged = list.slice(start, start + adminState.itemsPerPage);
+
+            // 3. Injeta no HTML (COM O DESIGN RECUPERADO)
             const tbody = document.getElementById('admin-books-table');
             if (tbody) {
-                tbody.innerHTML = paged.length ? paged.map(b => `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td class="p-3"><img src="${b.cover}" class="w-8 h-12 object-cover rounded"></td>
-                        <td class="p-3 font-bold text-primary">${b.title}</td>
-                        <td class="p-3">R$ ${b.price.toFixed(2)}</td>
-                        <td class="p-3 text-center text-xs">${b.isPromotion ? '✅' : '-'}</td>
-                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${b.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
-                        <td class="p-3 text-right"><button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
-                    </tr>`).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum livro encontrado.</td></tr>';
+                if(paged.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`;
+                } else {
+                    tbody.innerHTML = paged.map(b => `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
+                            <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
+                            <td class="p-3 font-bold text-primary">${b.title}</td>
+                            <td class="p-3 text-gray-500">
+                                ${b.isPromotion && b.promoPrice ? 
+                                    `<div class="flex flex-col"><span class="line-through text-xs text-gray-400">R$ ${b.price.toFixed(2)}</span><span class="text-green-600 font-bold">R$ ${b.promoPrice.toFixed(2)}</span></div>` : 
+                                    `R$ ${b.price.toFixed(2)}`
+                                }
+                            </td>
+                            <td class="p-3 text-center">
+                                ${b.isPromotion ? 
+                                    '<span class="text-[10px] bg-orange-50 text-orange-700 border border-orange-200 px-2 py-0.5 rounded font-bold">SIM</span>' : 
+                                    '<span class="text-[10px] text-gray-300">-</span>'
+                                }
+                            </td>
+                            <td class="p-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}">
+                                    <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
+                                    ${b.active ? 'Ativo' : 'Inativo'}
+                                </span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                                <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                            </td>
+                        </tr>`).join('');
+                }
                 document.getElementById('admin-books-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
             }
         }
 
         function renderServicesTable() {
+            // 1. Filtro e Ordenação
             let list = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
             list.sort((a, b) => {
                 let vA = a[adminState.services.sortKey], vB = b[adminState.services.sortKey];
                 if (typeof vA === 'string') vA = vA.toLowerCase(); if (typeof vB === 'string') vB = vB.toLowerCase();
                 if (vA < vB) return adminState.services.sortOrder === 'asc' ? -1 : 1; if (vA > vB) return adminState.services.sortOrder === 'asc' ? 1 : -1; return 0;
             });
+
+            // 2. Paginação
             const start = (adminState.services.page - 1) * adminState.itemsPerPage;
             const paged = list.slice(start, start + adminState.itemsPerPage);
             const tbody = document.getElementById('admin-services-table');
+
             if (tbody) {
-                tbody.innerHTML = paged.length ? paged.map(s => `
-                    <tr class="border-b border-blue-100 hover:bg-blue-50 transition">
-                        <td class="p-3 font-bold text-gray-700 flex items-center gap-2"><i class="ph-fill ${s.icon} text-blue-500"></i> ${s.name}</td>
-                        <td class="p-3">R$ ${s.price}</td>
-                        <td class="p-3 text-center text-xs">${s.isPromotion ? '✅' : '-'}</td>
-                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${s.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
-                        <td class="p-3 text-right"><button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
-                    </tr>`).join('') : '<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>';
+                if(paged.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>`;
+                } else {
+                    tbody.innerHTML = paged.map(s => {
+                        // RECUPERA O TEMA (Roxo, Laranja, Azul...) PARA USAR NAS CORES
+                        const theme = THEMES[s.theme || 'default'];
+                        
+                        return `
+                        <tr class="border-b ${theme.border} ${s.active ? theme.bg : 'bg-gray-50 opacity-60'} hover:brightness-95 transition">
+                            
+                            <td class="p-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center shadow-sm text-xl ${theme.text}">
+                                        <i class="ph-fill ${s.icon || 'ph-star-four'}"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-gray-800">${s.name}</div>
+                                        <div class="text-xs ${theme.text} opacity-80 truncate max-w-[150px]">${s.description}</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td class="p-3 font-mono text-sm ${theme.text}">
+                                <div class="flex flex-col">
+                                    ${s.isPromotion && s.promoPrice ? 
+                                        `<span class="line-through text-xs opacity-50">R$ ${s.price.toFixed(2)}</span>
+                                         <span class="font-bold">R$ ${s.promoPrice.toFixed(2)}</span>` 
+                                        : 
+                                        `<span class="font-bold">R$ ${s.price.toFixed(2)}</span>`
+                                    }
+                                    ${s.unit ? `<span class="text-[10px] opacity-70 font-sans font-normal uppercase tracking-wide">${s.unit}</span>` : ''}
+                                </div>
+                            </td>
+
+                            <td class="p-3 text-center">
+                                ${s.isPromotion ? 
+                                    `<span class="text-[10px] bg-white border ${theme.border} ${theme.text} px-2 py-1 rounded-lg font-bold shadow-sm">SIM</span>` : 
+                                    '<span class="text-gray-300">-</span>'
+                                }
+                            </td>
+
+                            <td class="p-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full bg-white/50 border ${theme.border} ${theme.text}">
+                                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
+                                    ${s.active ? 'Ativo' : 'Inativo'}
+                                </span>
+                            </td>
+
+                            <td class="p-3 text-right">
+                                <div class="flex justify-end gap-2 items-center h-full">
+                                    <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-600 hover:bg-white p-2 rounded-full transition shadow-sm"><i class="ph-bold ph-pencil-simple"></i></button>
+                                    <button onclick="window.app.deleteService('${s.id}')" class="text-red-500 hover:bg-white p-2 rounded-full transition shadow-sm"><i class="ph-bold ph-trash"></i></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `}).join('');
+                }
+                
+                // Atualiza Info da Paginação
                 document.getElementById('admin-services-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
+                
+                // Renderiza Botões de Paginação
+                let nav = '';
+                const pages = Math.ceil(list.length / adminState.itemsPerPage);
+                if(pages > 1) {
+                     nav += `<button onclick="window.app.changeAdminPage('services', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
+                     nav += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.services.page} / ${pages}</span>`;
+                     nav += `<button onclick="window.app.changeAdminPage('services', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === pages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
+                }
+                document.getElementById('admin-services-pagination').innerHTML = nav;
             }
         }
 
@@ -1262,6 +1369,81 @@ const TEMPLATES = {
                 `).join('');
             }
         }
+  
+        function getBooksTableHTML() {
+            return `
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-book text-accent"></i> Catálogo de Livros</h3></div>
+                    <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                        <input type="text" placeholder="Buscar livro..." oninput="window.app.setAdminFilter('books', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-accent">
+                        <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto min-h-[300px]">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50 text-gray-400 uppercase text-xs border-b border-gray-200">
+                            <tr>
+                                <th class="p-3">Capa</th>
+                                <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'title')">
+                                    Título <i id="sort-books-title" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'price')">
+                                    Preço <i id="sort-books-price" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'isPromotion')">
+                                    Promoção <i id="sort-books-isPromotion" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 text-center cursor-pointer hover:text-primary transition select-none group" onclick="window.app.sortData('books', 'active')">
+                                    Status <i id="sort-books-active" class="ph-bold ph-arrows-down-up text-gray-300 group-hover:text-primary ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-books-table"></tbody>
+                    </table>
+                </div>
+                <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4"><span class="text-xs text-gray-400" id="admin-books-info">Mostrando 0 de 0</span><div class="flex gap-2" id="admin-books-pagination"></div></div>
+            `;
+        }
+
+        function getServicesTableHTML() {
+            return `
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Meus Serviços</h3></div>
+                    <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                        <input type="text" placeholder="Buscar serviço..." oninput="window.app.setAdminFilter('services', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-blue-500">
+                        <button onclick="window.app.openServiceEditModal()" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto min-h-[200px]">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-blue-50 text-blue-400 uppercase text-xs border-b border-blue-100">
+                            <tr>
+                                <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'name')">
+                                    Serviço <i id="sort-services-name" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'price')">
+                                    Preço Base <i id="sort-services-price" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'isPromotion')">
+                                    Promoção <i id="sort-services-isPromotion" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition select-none group" onclick="window.app.sortData('services', 'active')">
+                                    Status <i id="sort-services-active" class="ph-bold ph-arrows-down-up text-blue-300 group-hover:text-blue-700 ml-1 align-middle"></i>
+                                </th>
+                                <th class="p-3 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-services-table"></tbody>
+                    </table>
+                </div>
+                <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4"><span class="text-xs text-gray-400" id="admin-services-info">Mostrando 0 de 0</span><div class="flex gap-2" id="admin-services-pagination"></div></div>
+            `;
+        }
+
+        // Renomeie suas funções antigas renderBooksTable -> renderBooksTableRows para evitar conflito e chame elas no initDashboard (Main Tab)
+        function renderBooksTableRows() { /* ...seu código antigo de renderizar TRs... */ renderBooksTable(); } 
+        function renderServicesTableRows() { /* ...seu código antigo de renderizar TRs... */ renderServicesTable(); }        
 
         // --- FUNÇÕES QUE FAZEM AS TABELAS FUNCIONAREM ---
         function renderBooksTable() {
@@ -1269,66 +1451,52 @@ const TEMPLATES = {
             let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
             list.sort((a, b) => {
                 let vA = a[adminState.books.sortKey], vB = b[adminState.books.sortKey];
-                if (typeof vA === 'string') vA = vA.toLowerCase();
-                if (typeof vB === 'string') vB = vB.toLowerCase();
-                if (vA < vB) return adminState.books.sortOrder === 'asc' ? -1 : 1;
-                if (vA > vB) return adminState.books.sortOrder === 'asc' ? 1 : -1;
-                return 0;
+                if (typeof vA === 'string') vA = vA.toLowerCase(); if (typeof vB === 'string') vB = vB.toLowerCase();
+                if (vA < vB) return adminState.books.sortOrder === 'asc' ? -1 : 1; if (vA > vB) return adminState.books.sortOrder === 'asc' ? 1 : -1; return 0;
             });
 
             // 2. Pagina
             const start = (adminState.books.page - 1) * adminState.itemsPerPage;
             const paged = list.slice(start, start + adminState.itemsPerPage);
 
-            // 3. Injeta no HTML
+            // 3. Injeta no HTML (COM O DESIGN RICO RECUPERADO)
             const tbody = document.getElementById('admin-books-table');
             if (tbody) {
-                tbody.innerHTML = paged.length ? paged.map(b => `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td class="p-3"><img src="${b.cover}" class="w-8 h-12 object-cover rounded"></td>
-                        <td class="p-3 font-bold text-primary">${b.title}</td>
-                        <td class="p-3">R$ ${b.price.toFixed(2)}</td>
-                        <td class="p-3 text-center text-xs">${b.isPromotion ? '✅' : '-'}</td>
-                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${b.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
-                        <td class="p-3 text-right"><button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
-                    </tr>
-                `).join('') : '<tr><td colspan="6" class="p-4 text-center text-gray-400">Nenhum livro encontrado.</td></tr>';
-                
-                // Atualiza Info da Paginação
+                if(paged.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`;
+                } else {
+                    tbody.innerHTML = paged.map(b => `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
+                            <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
+                            <td class="p-3 font-bold text-primary">${b.title}</td>
+                            <td class="p-3 text-gray-500">
+                                ${b.isPromotion && b.promoPrice ? 
+                                    `<div class="flex flex-col"><span class="line-through text-xs text-gray-400">R$ ${b.price.toFixed(2)}</span><span class="text-green-600 font-bold">R$ ${b.promoPrice.toFixed(2)}</span></div>` : 
+                                    `R$ ${b.price.toFixed(2)}`
+                                }
+                            </td>
+                            <td class="p-3 text-center">
+                                ${b.isPromotion ? 
+                                    '<span class="text-[10px] bg-orange-50 text-orange-700 border border-orange-200 px-2 py-0.5 rounded font-bold">SIM</span>' : 
+                                    '<span class="text-[10px] text-gray-300">-</span>'
+                                }
+                            </td>
+                            <td class="p-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}">
+                                    <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
+                                    ${b.active ? 'Ativo' : 'Inativo'}
+                                </span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                                <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                            </td>
+                        </tr>`).join('');
+                }
                 document.getElementById('admin-books-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
             }
         }
-
-        function renderServicesTable() {
-            let list = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
-            list.sort((a, b) => {
-                let vA = a[adminState.services.sortKey], vB = b[adminState.services.sortKey];
-                if (typeof vA === 'string') vA = vA.toLowerCase();
-                if (typeof vB === 'string') vB = vB.toLowerCase();
-                if (vA < vB) return adminState.services.sortOrder === 'asc' ? -1 : 1;
-                if (vA > vB) return adminState.services.sortOrder === 'asc' ? 1 : -1;
-                return 0;
-            });
-
-            const start = (adminState.services.page - 1) * adminState.itemsPerPage;
-            const paged = list.slice(start, start + adminState.itemsPerPage);
-
-            const tbody = document.getElementById('admin-services-table');
-            if (tbody) {
-                tbody.innerHTML = paged.length ? paged.map(s => `
-                    <tr class="border-b border-blue-100 hover:bg-blue-50 transition">
-                        <td class="p-3 font-bold text-gray-700 flex items-center gap-2"><i class="ph-fill ${s.icon} text-blue-500"></i> ${s.name}</td>
-                        <td class="p-3">R$ ${s.price}</td>
-                        <td class="p-3 text-center text-xs">${s.isPromotion ? '✅' : '-'}</td>
-                        <td class="p-3 text-center"><span class="w-2 h-2 rounded-full inline-block ${s.active ? 'bg-green-500' : 'bg-gray-300'}"></span></td>
-                        <td class="p-3 text-right"><button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full"><i class="ph-bold ph-trash"></i></button></td>
-                    </tr>
-                `).join('') : '<tr><td colspan="5" class="p-4 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>';
-
-                document.getElementById('admin-services-info').innerText = `Mostrando ${paged.length} de ${list.length}`;
-            }
-        }        
-
+        
         function initHeaderLogic() { const btn = document.getElementById('menu-button'); const menu = document.getElementById('mobile-menu'); if(btn && menu) { btn.onclick = (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); }; document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.add('hidden'); }); } const header = document.getElementById('header-container'); window.addEventListener('scroll', () => { if(window.scrollY > 10) { header.classList.add('glass-header'); header.classList.remove('py-4'); header.classList.add('py-2'); } else { header.classList.remove('glass-header'); header.classList.remove('py-2'); header.classList.add('py-4'); } }); }
 
         // ==========================================
@@ -1403,7 +1571,31 @@ const TEMPLATES = {
                 initDashboard(); // Re-renderiza o painel
             },
 
-            
+            filterLeads: (days) => {
+                adminState.leads.filterDays = days === 'all' ? 'all' : parseInt(days);
+                adminState.leads.page = 1; // Reseta para pág 1 ao filtrar
+                initDashboard();
+            },
+            changeLeadsPage: (dir) => {
+                adminState.leads.page += dir;
+                initDashboard();
+                document.getElementById('dashboard-content').scrollIntoView({ behavior: 'smooth' });
+            },
+            exportLeads: () => {
+                // Lógica simples de exportação CSV
+                let csv = "ID,Nome,Email,Serviço,Data,Status,Descrição\n";
+                DB.leads.forEach(l => {
+                    csv += `${l.id},"${l.name}","${l.email}","${l.service}","${l.date}",${l.status},"${l.desc.replace(/"/g, '""')}"\n`;
+                });
+                
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `leads_export_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();
+                window.app.toast('Download do CSV iniciado!', 'success');
+            },          
 
             // --- CRM: LEADS ---
             submitBudgetRequest: () => {
