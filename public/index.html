@@ -425,8 +425,8 @@ const TEMPLATES = {
                             <p class="text-gray-500">Gestão completa de Produtos e Serviços.</p>
                         </div>
                         <div class="flex gap-3 w-full md:w-auto">
-                            <button onclick="window.app.openAboutConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-primary px-5 py-2.5 rounded-lg hover:border-accent hover:text-accent transition font-bold text-sm shadow-sm"><i class="ph-bold ph-user-gear"></i> Bio</button>
-                            <button onclick="window.app.openHomeConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-slate-800 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition font-bold text-sm"><i class="ph-bold ph-house-line"></i> Home</button>
+                            <button onclick="window.app.openAboutConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-white border border-gray-200 text-primary px-5 py-2.5 rounded-lg hover:border-accent hover:text-accent transition font-bold text-sm shadow-sm"><i class="ph-bold ph-user-gear"></i> Editar Bio</button>
+                            <button onclick="window.app.openHomeConfigModal()" class="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-slate-800 text-white px-5 py-2.5 rounded-lg hover:shadow-lg hover:-translate-y-0.5 transition font-bold text-sm"><i class="ph-bold ph-house-line"></i> Personalizar Home</button>
                             
                             <button onclick="window.app.setAdminTab('config')" class="flex items-center justify-center w-10 h-10 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 hover:text-primary transition" title="Configurações do Sistema"><i class="ph-bold ph-gear"></i></button>
                             
@@ -630,9 +630,10 @@ const TEMPLATES = {
             currentTab: 'main', 
             books: { page: 1, filter: '', sortKey: 'title', sortOrder: 'asc' }, 
             services: { page: 1, filter: '', sortKey: 'name', sortOrder: 'asc' },
+            // Garantindo que propriedades de filtro existam
             leads: { page: 1, filterDays: 60, statusFilter: 'all', subTab: 'all', sortOrder: 'desc', searchTerm: '' }, 
             postComments: { page: 1, filterText: '', filterDate: 'all', itemsPerPage: 5 },
-            leadModal: { page: 1, itemsPerPage: 5, filterStatus: 'all' }, // <--- NOVO ESTADO DO MODAL
+            leadModal: { page: 1, itemsPerPage: 5, filterStatus: 'all' },
             itemsPerPage: 5
         };
         
@@ -760,21 +761,21 @@ const TEMPLATES = {
             const content = document.getElementById('dashboard-content');
             if (!content) return;
 
-                ['main', 'analytics', 'leads', 'community'].forEach(t => {
+            // Gerenciamento de classes das abas (Visual da navegação)
+            ['main', 'analytics', 'leads', 'community', 'config'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 if (btn) {
                     const isActive = adminState.currentTab === t;
-                    btn.className = isActive
-                        ? "pb-3 text-sm font-bold border-b-2 border-accent text-primary transition whitespace-nowrap"
-                        : "pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap";
+                    // Se o botão for 'leads' ou 'community', adiciona flex para o ícone alinhar
+                    const extraClasses = (t === 'leads' || t === 'community') ? " flex items-center gap-2" : "";
                     
-                    // Se for a aba de leads, mantém o badge visível/estilizado
-                    if(t === 'leads') btn.className += " flex items-center gap-2"; 
-                    if(t === 'community') btn.className += " flex items-center gap-2";
+                    btn.className = isActive
+                        ? "pb-3 text-sm font-bold border-b-2 border-accent text-primary transition whitespace-nowrap" + extraClasses
+                        : "pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap" + extraClasses;
                 }
             });
 
-            // Badge de Leads Pendentes
+            // Badge Vermelho de Leads Pendentes
             const pendingTotal = DB.leads.filter(l => l.status === 'pending').length;
             const badge = document.getElementById('badge-leads');
             if (badge) {
@@ -783,26 +784,30 @@ const TEMPLATES = {
             }
 
             // ============================================================
-            // ABA 1: VISÃO GERAL (MAIN)
+            // ABA 1: VISÃO GERAL (DADOS REAIS CONECTADOS)
             // ============================================================
             if (adminState.currentTab === 'main') {
+                const totalBooks = DB.books.length;
+                const totalServices = DB.services.filter(s => s.active).length;
+                const totalLeads = DB.leads.length;
+
                 content.innerHTML = `
                     <div class="animate-fade-in">
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                             <div class="dashboard-card border-l-4 border-accent">
-                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Livros)</p>
-                                <h3 class="text-3xl font-black text-primary">R$ 14.502</h3>
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Livros Publicados</p>
+                                <h3 class="text-3xl font-black text-primary">${totalBooks}</h3>
                             </div>
                             <div class="dashboard-card border-l-4 border-blue-500">
-                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Faturamento (Serviços)</p>
-                                <h3 class="text-3xl font-black text-primary">R$ 5.200</h3>
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Serviços Ativos</p>
+                                <h3 class="text-3xl font-black text-primary">${totalServices}</h3>
                             </div>
                             <div class="dashboard-card">
-                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Leads Totais</p>
-                                <h3 class="text-3xl font-black text-primary">${DB.leads.length}</h3>
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Total de Pedidos</p>
+                                <h3 class="text-3xl font-black text-primary">${totalLeads}</h3>
                             </div>
                             <div class="dashboard-card">
-                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Solicitações Pendentes</p>
+                                <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Pendências</p>
                                 <h3 class="text-3xl font-black text-accent">${pendingTotal}</h3>
                             </div>
                         </div>
@@ -818,40 +823,74 @@ const TEMPLATES = {
                 renderServicesTableRows();
 
             // ============================================================
-            // ABA 2: RELATÓRIOS (ANALYTICS)
+            // ABA 2: RELATÓRIOS (CÁLCULOS DINÂMICOS)
             // ============================================================
             } else if (adminState.currentTab === 'analytics') {
+                // 1. Cliques Totais
                 const totalClicks = DB.stats.clicksAmazon + DB.stats.clicksML + DB.stats.clicksShopee;
-                const conversionRate = DB.stats.totalVisits > 0 ? ((pendingTotal / DB.stats.totalVisits) * 100).toFixed(2) : 0;
                 
+                // 2. Ranking de Serviços (Top 3)
+                const serviceCounts = {};
+                DB.leads.forEach(l => { serviceCounts[l.service] = (serviceCounts[l.service] || 0) + 1; });
+                const sortedServices = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+                // 3. Funil de Status
+                const statusCounts = { pending: 0, working: 0, finished: 0 };
+                DB.leads.forEach(l => {
+                    if(statusCounts[l.status] !== undefined) statusCounts[l.status]++;
+                });
+
                 content.innerHTML = `
                     <div class="animate-fade-in space-y-8">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-2xl font-bold text-primary font-serif">Performance do Autor</h3>
+                            <button onclick="window.app.exportMetricsCsv()" class="bg-white border border-gray-200 text-gray-700 hover:text-primary px-4 py-2 rounded-lg text-xs font-bold shadow-sm flex items-center gap-2 transition hover:bg-gray-50">
+                                <i class="ph-bold ph-download-simple"></i> Exportar CSV
+                            </button>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="bg-primary text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                                 <div class="relative z-10">
-                                    <p class="text-slate-400 text-xs font-bold uppercase mb-2">Tráfego Total</p>
-                                    <h3 class="text-4xl font-black text-accent">${DB.stats.totalVisits.toLocaleString()}</h3>
-                                    <p class="text-xs text-slate-400 mt-2 flex items-center gap-1"><i class="ph-bold ph-trend-up text-green-400"></i> +12% vs mês anterior</p>
+                                    <p class="text-slate-400 text-xs font-bold uppercase mb-2">Interesse de Compra</p>
+                                    <h3 class="text-4xl font-black text-accent">${totalClicks}</h3>
+                                    <p class="text-xs text-slate-400 mt-2">Cliques em links externos</p>
                                 </div>
-                                <i class="ph-fill ph-globe-hemisphere-west absolute -right-4 -bottom-4 text-9xl text-white opacity-5"></i>
+                                <i class="ph-fill ph-cursor-click absolute -right-4 -bottom-4 text-9xl text-white opacity-5"></i>
                             </div>
+
                             <div class="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
-                                <p class="text-gray-400 text-xs font-bold uppercase mb-2">Taxa de Conversão</p>
-                                <h3 class="text-4xl font-black text-primary">${conversionRate}%</h3>
-                                <div class="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
-                                    <div class="bg-blue-500 h-full rounded-full" style="width: ${conversionRate * 10}%"></div>
+                                <p class="text-gray-400 text-xs font-bold uppercase mb-4">Funil de Atendimento</p>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between text-xs font-bold text-gray-600"><span>Pendentes</span> <span>${statusCounts.pending}</span></div>
+                                    <div class="w-full bg-gray-100 h-1.5 rounded-full mb-2"><div class="bg-yellow-400 h-full rounded-full" style="width: ${(statusCounts.pending/DB.leads.length*100)||0}%"></div></div>
+                                    
+                                    <div class="flex justify-between text-xs font-bold text-gray-600"><span>Em Produção</span> <span>${statusCounts.working}</span></div>
+                                    <div class="w-full bg-gray-100 h-1.5 rounded-full mb-2"><div class="bg-blue-500 h-full rounded-full" style="width: ${(statusCounts.working/DB.leads.length*100)||0}%"></div></div>
+
+                                    <div class="flex justify-between text-xs font-bold text-gray-600"><span>Finalizados</span> <span>${statusCounts.finished}</span></div>
+                                    <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-green-500 h-full rounded-full" style="width: ${(statusCounts.finished/DB.leads.length*100)||0}%"></div></div>
                                 </div>
                             </div>
+
                             <div class="bg-gradient-to-br from-purple-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                                 <div class="relative z-10">
-                                    <p class="text-purple-200 text-xs font-bold uppercase mb-2">Receita Projetada</p>
-                                    <h3 class="text-4xl font-black">R$ 19.702</h3>
+                                    <p class="text-purple-200 text-xs font-bold uppercase mb-4">Serviços + Populares</p>
+                                    <ul class="space-y-3">
+                                        ${sortedServices.map((s, i) => `
+                                            <li class="flex items-center justify-between text-sm font-bold border-b border-white/10 pb-2">
+                                                <span>${i+1}. ${s[0]}</span>
+                                                <span class="bg-white/20 px-2 py-0.5 rounded text-xs">${s[1]}</span>
+                                            </li>
+                                        `).join('') || '<li class="text-xs opacity-50">Sem dados suficientes.</li>'}
+                                    </ul>
                                 </div>
-                                <i class="ph-fill ph-chart-line-up absolute -right-4 -bottom-4 text-9xl text-white opacity-10"></i>
+                                <i class="ph-fill ph-chart-bar absolute -right-4 -bottom-4 text-9xl text-white opacity-10"></i>
                             </div>
                         </div>
+
                         <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-                            <h3 class="font-bold text-lg text-primary mb-6">Origem dos Cliques</h3>
+                            <h3 class="font-bold text-lg text-primary mb-6">Origem do Tráfego (Links)</h3>
                             <div class="space-y-6">
                                 <div><div class="flex justify-between text-xs font-bold mb-2"><span>Amazon</span><span>${DB.stats.clicksAmazon}</span></div><div class="w-full bg-gray-50 h-2 rounded-full"><div class="bg-[#FF9900] h-full rounded-full" style="width: ${(DB.stats.clicksAmazon/totalClicks*100)||0}%"></div></div></div>
                                 <div><div class="flex justify-between text-xs font-bold mb-2"><span>Mercado Livre</span><span>${DB.stats.clicksML}</span></div><div class="w-full bg-gray-50 h-2 rounded-full"><div class="bg-[#FFE600] h-full rounded-full" style="width: ${(DB.stats.clicksML/totalClicks*100)||0}%"></div></div></div>
@@ -861,14 +900,20 @@ const TEMPLATES = {
                     </div>`;
 
             // ============================================================
-            // ABA 3: SOLICITAÇÕES (CRM)
+            // ABA 3: SOLICITAÇÕES (CRM AVANÇADO)
             // ============================================================
             } else if (adminState.currentTab === 'leads') {
                 const now = new Date();
                 const cutoff = new Date();
                 cutoff.setDate(now.getDate() - adminState.leads.filterDays);
                 
-                // 1. Agrupamento (Map)
+                // --- NOVOS KPIs DO TOPO ---
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+                const kpiNew = DB.leads.filter(l => l.timestamp >= startOfMonth).length;
+                const kpiResolved = DB.leads.filter(l => l.status === 'finished').length;
+                const kpiPending = DB.leads.filter(l => l.status === 'pending').length;
+
+                // 1. Agrupamento por Email (Cliente)
                 const groupedMap = new Map();
                 DB.leads.forEach(lead => {
                     if (!groupedMap.has(lead.email)) {
@@ -888,7 +933,7 @@ const TEMPLATES = {
                     else group.stats.pending++;
                 });
 
-                // 2. Filtros
+                // 2. Filtragem
                 let filteredGroups = Array.from(groupedMap.values()).filter(g => {
                     const hasRecent = adminState.leads.filterDays === 'all' || g.items.some(i => new Date(i.timestamp) >= cutoff);
                     if (!hasRecent) return false;
@@ -899,28 +944,25 @@ const TEMPLATES = {
 
                     const search = (adminState.leads.searchTerm || '').toLowerCase();
                     if (search) {
-                        const match = g.clientName.toLowerCase().includes(search) || 
-                                      g.email.toLowerCase().includes(search) || 
-                                      g.items.some(i => i.id.toString().includes(search));
-                        if (!match) return false;
+                        return g.clientName.toLowerCase().includes(search) || 
+                            g.email.toLowerCase().includes(search) || 
+                            g.items.some(i => i.id.toString().includes(search));
                     }
                     return true;
                 });
                 
-                // 3. Ordenação (NOVO RECURSO)
+                // 3. Ordenação
                 filteredGroups.sort((a, b) => {
-                    // Pega a data do pedido mais recente de cada cliente para ordenar o grupo
                     const dateA = Math.max(...a.items.map(i => i.timestamp));
                     const dateB = Math.max(...b.items.map(i => i.timestamp));
                     return adminState.leads.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
                 });
 
-                // Paginação
+                // 4. Paginação e Renderização
                 const totalGroupsCount = filteredGroups.length;
                 const startL = (adminState.leads.page - 1) * adminState.itemsPerPage;
                 const pagedGroups = filteredGroups.slice(startL, startL + adminState.itemsPerPage);
 
-                // Renderiza Lista
                 const listHTML = pagedGroups.map(group => {
                     const latestLead = group.items[0]; 
                     const isFullyResolved = group.stats.total === group.stats.resolved;
@@ -949,6 +991,21 @@ const TEMPLATES = {
 
                 content.innerHTML = `
                     <div class="animate-fade-in">
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <div class="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center shadow-sm">
+                                <span class="text-3xl font-black text-accent">${kpiPending}</span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">Pendentes</span>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center shadow-sm">
+                                <span class="text-3xl font-black text-green-600">${kpiResolved}</span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">Resolvidos</span>
+                            </div>
+                            <div class="bg-white border border-gray-200 rounded-xl p-4 flex flex-col items-center justify-center shadow-sm">
+                                <span class="text-3xl font-black text-blue-600">+${kpiNew}</span>
+                                <span class="text-[10px] font-bold text-gray-400 uppercase">Novos (Mês)</span>
+                            </div>
+                        </div>
+
                         <div class="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col xl:flex-row justify-between items-center gap-4">
                             <div class="flex p-1 bg-gray-100 rounded-lg shrink-0 overflow-x-auto">
                                 <button onclick="window.app.setLeadSubTab('all')" class="px-4 py-2 rounded-md text-xs font-bold transition whitespace-nowrap ${adminState.leads.subTab === 'all' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Visão Geral</button>
@@ -979,7 +1036,7 @@ const TEMPLATES = {
                     </div>`;
 
             // ============================================================
-            // ABA 4: COMUNIDADE (BLOG)
+            // ABA 4: COMUNIDADE (CORRIGIDO - VOLTOU A FUNCIONAR)
             // ============================================================
             } else if (adminState.currentTab === 'community') {
                 const posts = DB.posts;
@@ -1007,7 +1064,7 @@ const TEMPLATES = {
                 if(window.app.selectedPostId) window.app.renderAdminPostDetail(window.app.selectedPostId);
 
             // ============================================================
-            // ABA 5: CONFIGURAÇÕES (NOVO)
+            // ABA 5: CONFIGURAÇÕES
             // ============================================================
             } else if (adminState.currentTab === 'config') {
                 const conf = DB.systemConfig;
@@ -1028,7 +1085,7 @@ const TEMPLATES = {
                     </div>`;
             }
         }
-
+        
         function renderBooksTable() {
             // 1. Filtra e Ordena
             let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
@@ -1683,11 +1740,13 @@ const TEMPLATES = {
                 adminState.leads.page = 1; // Reseta para pág 1 ao filtrar
                 initDashboard();
             },
+            
             changeLeadsPage: (dir) => {
                 adminState.leads.page += dir;
                 initDashboard();
                 document.getElementById('dashboard-content').scrollIntoView({ behavior: 'smooth' });
             },
+            
             exportLeads: () => {
                 // Lógica simples de exportação CSV
                 let csv = "ID,Nome,Email,Serviço,Data,Status,Descrição\n";
@@ -1709,12 +1768,42 @@ const TEMPLATES = {
                 adminState.leads.page = 1;
                 initDashboard();
             },
+            
             setLeadStatusFilter: (status) => {
                 adminState.leads.statusFilter = status;
                 adminState.leads.page = 1;
                 initDashboard();
             },
             
+            exportMetricsCsv: () => {
+                const totalClicks = DB.stats.clicksAmazon + DB.stats.clicksML + DB.stats.clicksShopee;
+                const serviceCounts = {};
+                DB.leads.forEach(l => { serviceCounts[l.service] = (serviceCounts[l.service] || 0) + 1; });
+                const statusCounts = { pending: 0, working: 0, finished: 0, cancelled: 0 };
+                DB.leads.forEach(l => { if(statusCounts[l.status] !== undefined) statusCounts[l.status]++; });
+
+                let csv = "METRICA,VALOR\n";
+                csv += `Total Cliques Amazon,${DB.stats.clicksAmazon}\n`;
+                csv += `Total Cliques ML,${DB.stats.clicksML}\n`;
+                csv += `Total Cliques Shopee,${DB.stats.clicksShopee}\n`;
+                csv += `TOTAL GERAL CLIQUES,${totalClicks}\n\n`;
+                
+                csv += "SERVICO,QUANTIDADE\n";
+                Object.entries(serviceCounts).forEach(([k,v]) => csv += `"${k}",${v}\n`);
+                csv += "\n";
+                
+                csv += "STATUS,QUANTIDADE\n";
+                Object.entries(statusCounts).forEach(([k,v]) => csv += `"${k}",${v}\n`);
+
+                const blob = new Blob([csv], { type: 'text/csv' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `relatorio_analytics_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();
+                window.app.toast('Download do Relatório iniciado!', 'success');
+            },
+
             setLeadSearch: (term) => { adminState.leads.searchTerm = term; adminState.leads.page = 1; initDashboard(); },
             setLeadSort: (order) => { adminState.leads.sortOrder = order; initDashboard(); },
             modalFilter: (status, email) => { adminState.leadModal.filterStatus = status; adminState.leadModal.page = 1; window.app.openLeadModal(email); },
