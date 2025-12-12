@@ -592,20 +592,24 @@ const TEMPLATES = {
             const names = ["Fernanda Costa", "Roberto Silva", "Ana Souza", "Carlos Lima", "Beatriz Melo"];
             const emails = ["fer.costa@email.com", "beto@email.com", "ana.souza@email.com", "carlos@l.com", "bia@m.com"];
             const services = ["Mentoria Literária", "Design de Capa", "Revisão Textual"];
+            // Preços base para simular "Informações Reais"
+            const prices = { "Mentoria Literária": 500, "Design de Capa": 800, "Revisão Textual": 350 }; 
             const statuses = ['pending', 'analyzing', 'working', 'finished', 'cancelled'];
             
             for(let i=0; i<45; i++) {
                 const randIndex = Math.floor(Math.random() * names.length);
+                const sName = services[Math.floor(Math.random() * services.length)];
                 const daysAgo = Math.floor(Math.random() * 90);
                 const date = new Date();
                 date.setDate(date.getDate() - daysAgo);
                 
                 DB.leads.push({
-                    id: Date.now() + i,
+                    id: 1765571805000 + i, // ID estilo pedido real
                     name: names[randIndex],
                     email: emails[randIndex],
-                    service: services[Math.floor(Math.random() * services.length)],
-                    desc: `Solicitação nº ${i}. Gostaria de um orçamento.`,
+                    service: sName,
+                    value: prices[sName], // Valor real inserido
+                    desc: `Solicitação nº ${i}. Gostaria de um orçamento detalhado para meu livro de 300 páginas.`,
                     date: date.toLocaleDateString('pt-BR'),
                     timestamp: date.getTime(),
                     status: statuses[Math.floor(Math.random() * statuses.length)],
@@ -620,11 +624,12 @@ const TEMPLATES = {
         generateMockLeads();
 
         const adminState = {
-            currentTab: 'main',
+            currentTab: 'main', 
             books: { page: 1, filter: '', sortKey: 'title', sortOrder: 'asc' }, 
             services: { page: 1, filter: '', sortKey: 'name', sortOrder: 'asc' },
-            leads: { page: 1, filterDays: 60, statusFilter: 'all', subTab: 'all' }, 
+            leads: { page: 1, filterDays: 60, statusFilter: 'all', subTab: 'all', sortOrder: 'desc', searchTerm: '' }, 
             postComments: { page: 1, filterText: '', filterDate: 'all', itemsPerPage: 5 },
+            leadModal: { page: 1, itemsPerPage: 5, filterStatus: 'all' }, // <--- NOVO ESTADO DO MODAL
             itemsPerPage: 5
         };
         
@@ -750,27 +755,32 @@ const TEMPLATES = {
 
         function initDashboard() {
             const content = document.getElementById('dashboard-content');
-            if(!content) return;
+            if (!content) return;
 
-            // --- NAVEGAÇÃO DE ABAS ---
-            ['main', 'analytics', 'leads'].forEach(t => {
+                ['main', 'analytics', 'leads', 'community'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
-                if(btn) {
+                if (btn) {
                     const isActive = adminState.currentTab === t;
-                    btn.className = isActive 
-                        ? "pb-3 text-sm font-bold border-b-2 border-accent text-primary transition" 
-                        : "pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition";
+                    btn.className = isActive
+                        ? "pb-3 text-sm font-bold border-b-2 border-accent text-primary transition whitespace-nowrap"
+                        : "pb-3 text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-primary transition whitespace-nowrap";
+                    
+                    // Se for a aba de leads, mantém o badge visível/estilizado
+                    if(t === 'leads') btn.className += " flex items-center gap-2"; 
+                    if(t === 'community') btn.className += " flex items-center gap-2";
                 }
             });
 
             // Badge de Leads Pendentes
             const pendingTotal = DB.leads.filter(l => l.status === 'pending').length;
             const badge = document.getElementById('badge-leads');
-            if(badge) { badge.innerText = pendingTotal; badge.classList.toggle('hidden', pendingTotal === 0); }
-
+            if (badge) {
+                badge.innerText = pendingTotal;
+                badge.classList.toggle('hidden', pendingTotal === 0);
+            }
 
             // ============================================================
-            // ABA 1: VISÃO GERAL (CRUDs) - MANTIDA INTACTA COMO PEDIU
+            // ABA 1: VISÃO GERAL (MAIN)
             // ============================================================
             if (adminState.currentTab === 'main') {
                 content.innerHTML = `
@@ -793,26 +803,24 @@ const TEMPLATES = {
                                 <h3 class="text-3xl font-black text-accent">${pendingTotal}</h3>
                             </div>
                         </div>
-
                         <div class="grid grid-cols-1 gap-12">
                             <div class="dashboard-card" id="books-table-container"></div>
                             <div class="dashboard-card border-t-4 border-blue-500" id="services-table-container"></div>
                         </div>
                     </div>`;
                 
-                // Renderiza as tabelas antigas (funções que já temos)
                 document.getElementById('books-table-container').innerHTML = getBooksTableHTML();
                 document.getElementById('services-table-container').innerHTML = getServicesTableHTML();
-                renderBooksTableRows(); // Preenche dados
-                renderServicesTableRows(); // Preenche dados
-
+                renderBooksTableRows();
+                renderServicesTableRows();
 
             // ============================================================
-            // ABA 2: RELATÓRIOS & TRÁFEGO (RICO EM DETALHES)
+            // ABA 2: RELATÓRIOS (ANALYTICS)
             // ============================================================
             } else if (adminState.currentTab === 'analytics') {
                 const totalClicks = DB.stats.clicksAmazon + DB.stats.clicksML + DB.stats.clicksShopee;
-                const conversionRate = ((pendingTotal / DB.stats.totalVisits) * 100).toFixed(2);       
+                const conversionRate = DB.stats.totalVisits > 0 ? ((pendingTotal / DB.stats.totalVisits) * 100).toFixed(2) : 0;
+                
                 content.innerHTML = `
                     <div class="animate-fade-in space-y-8">
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -825,345 +833,199 @@ const TEMPLATES = {
                                 <i class="ph-fill ph-globe-hemisphere-west absolute -right-4 -bottom-4 text-9xl text-white opacity-5"></i>
                             </div>
                             <div class="bg-white border border-gray-200 p-6 rounded-2xl shadow-sm">
-                                <p class="text-gray-400 text-xs font-bold uppercase mb-2">Taxa de Conversão (Leads)</p>
+                                <p class="text-gray-400 text-xs font-bold uppercase mb-2">Taxa de Conversão</p>
                                 <h3 class="text-4xl font-black text-primary">${conversionRate}%</h3>
                                 <div class="w-full bg-gray-100 h-1.5 rounded-full mt-3 overflow-hidden">
-                                    <div class="bg-blue-500 h-full rounded-full" style="width: ${conversionRate*10}%"></div>
+                                    <div class="bg-blue-500 h-full rounded-full" style="width: ${conversionRate * 10}%"></div>
                                 </div>
                             </div>
                             <div class="bg-gradient-to-br from-purple-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg relative overflow-hidden">
                                 <div class="relative z-10">
                                     <p class="text-purple-200 text-xs font-bold uppercase mb-2">Receita Projetada</p>
                                     <h3 class="text-4xl font-black">R$ 19.702</h3>
-                                    <p class="text-xs text-purple-200 mt-2">Baseado em leads e cliques</p>
                                 </div>
                                 <i class="ph-fill ph-chart-line-up absolute -right-4 -bottom-4 text-9xl text-white opacity-10"></i>
                             </div>
                         </div>
-
-                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                            <div class="lg:col-span-2 bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-                                <div class="flex justify-between items-end mb-8">
-                                    <div>
-                                        <h3 class="font-bold text-lg text-primary">Performance Semestral</h3>
-                                        <p class="text-xs text-gray-400">Receita consolidada (Livros + Serviços)</p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <span class="flex items-center gap-1 text-xs font-bold text-gray-500"><span class="w-2 h-2 rounded-full bg-accent"></span> Livros</span>
-                                        <span class="flex items-center gap-1 text-xs font-bold text-gray-500"><span class="w-2 h-2 rounded-full bg-primary"></span> Serviços</span>
-                                    </div>
-                                </div>
-                                <div class="flex items-end justify-between h-48 gap-4 px-2">
-                                    ${DB.stats.monthlyRevenue.map((val, i) => {
-                                        const h = Math.min(100, (val / 15000) * 100);
-                                        const months = ['Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                                        return `
-                                        <div class="flex-1 flex flex-col justify-end group cursor-pointer">
-                                            <div class="w-full bg-gray-100 rounded-t-lg relative overflow-hidden transition-all duration-500 group-hover:bg-gray-200" style="height: ${h}%">
-                                                <div class="absolute bottom-0 w-full bg-primary opacity-80" style="height: ${h*0.4}%"></div>
-                                                <div class="absolute bottom-[${h*0.4}%] w-full bg-accent opacity-90" style="height: ${h*0.6}%"></div>
-                                            </div>
-                                            <span class="text-[10px] font-bold text-gray-400 text-center mt-2 group-hover:text-primary">${months[i]}</span>
-                                        </div>`;
-                                    }).join('')}
-                                </div>
-                            </div>
-
-                            <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
-                                <h3 class="font-bold text-lg text-primary mb-6">Origem dos Cliques</h3>
-                                <div class="space-y-6">
-                                    <div>
-                                        <div class="flex justify-between text-xs font-bold mb-2">
-                                            <span class="flex items-center gap-2"><i class="ph-bold ph-amazon-logo text-[#FF9900]"></i> Amazon</span>
-                                            <span>${DB.stats.clicksAmazon}</span>
-                                        </div>
-                                        <div class="w-full bg-gray-50 h-2 rounded-full overflow-hidden"><div class="bg-[#FF9900] h-full rounded-full" style="width: ${(DB.stats.clicksAmazon/totalClicks*100)||0}%"></div></div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-xs font-bold mb-2">
-                                            <span class="flex items-center gap-2"><i class="ph-bold ph-shopping-bag-open text-[#FFE600]"></i> Mercado Livre</span>
-                                            <span>${DB.stats.clicksML}</span>
-                                        </div>
-                                        <div class="w-full bg-gray-50 h-2 rounded-full overflow-hidden"><div class="bg-[#FFE600] h-full rounded-full" style="width: ${(DB.stats.clicksML/totalClicks*100)||0}%"></div></div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-xs font-bold mb-2">
-                                            <span class="flex items-center gap-2"><i class="ph-bold ph-shopping-bag text-[#EE4D2D]"></i> Shopee</span>
-                                            <span>${DB.stats.clicksShopee}</span>
-                                        </div>
-                                        <div class="w-full bg-gray-50 h-2 rounded-full overflow-hidden"><div class="bg-[#EE4D2D] h-full rounded-full" style="width: ${(DB.stats.clicksShopee/totalClicks*100)||0}%"></div></div>
-                                    </div>
-                                </div>
-                                <div class="mt-8 pt-6 border-t border-gray-100">
-                                    <h4 class="text-xs font-bold text-gray-400 uppercase mb-3">Insights Rápidos</h4>
-                                    <p class="text-sm text-gray-600 leading-relaxed"><strong class="text-green-600">Dica:</strong> Seus leitores da Amazon convertem 2x mais que os da Shopee. Considere focar promoções lá.</p>
-                                </div>
+                        <div class="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm">
+                            <h3 class="font-bold text-lg text-primary mb-6">Origem dos Cliques</h3>
+                            <div class="space-y-6">
+                                <div><div class="flex justify-between text-xs font-bold mb-2"><span>Amazon</span><span>${DB.stats.clicksAmazon}</span></div><div class="w-full bg-gray-50 h-2 rounded-full"><div class="bg-[#FF9900] h-full rounded-full" style="width: ${(DB.stats.clicksAmazon/totalClicks*100)||0}%"></div></div></div>
+                                <div><div class="flex justify-between text-xs font-bold mb-2"><span>Mercado Livre</span><span>${DB.stats.clicksML}</span></div><div class="w-full bg-gray-50 h-2 rounded-full"><div class="bg-[#FFE600] h-full rounded-full" style="width: ${(DB.stats.clicksML/totalClicks*100)||0}%"></div></div></div>
+                                <div><div class="flex justify-between text-xs font-bold mb-2"><span>Shopee</span><span>${DB.stats.clicksShopee}</span></div><div class="w-full bg-gray-50 h-2 rounded-full"><div class="bg-[#EE4D2D] h-full rounded-full" style="width: ${(DB.stats.clicksShopee/totalClicks*100)||0}%"></div></div></div>
                             </div>
                         </div>
                     </div>`;
+
+            // ============================================================
+            // ABA 3: SOLICITAÇÕES (CRM)
+            // ============================================================
             } else if (adminState.currentTab === 'leads') {
-                            // 1. Filtragem Base (Data)
-                            const now = new Date();
-                            const cutoff = new Date();
-                            cutoff.setDate(now.getDate() - adminState.leads.filterDays);
-                            
-                            let filteredLeads = DB.leads.filter(l => {
-                                const lDate = new Date(l.timestamp);
-                                const dateMatch = adminState.leads.filterDays === 'all' ? true : lDate >= cutoff;
-                                
-                                // Filtro da Sub-Aba (Atuando vs Todos)
-                                if (adminState.leads.subTab === 'active') {
-                                    return dateMatch && (l.status === 'working' || l.status === 'analyzing');
-                                }
-                                
-                                // Filtro de Status Específico (Dropdown)
-                                if (adminState.leads.statusFilter !== 'all') {
-                                    return dateMatch && l.status === adminState.leads.statusFilter;
-                                }
-                                
-                                return dateMatch;
-                            });
+                const now = new Date();
+                const cutoff = new Date();
+                cutoff.setDate(now.getDate() - adminState.leads.filterDays);
+                
+                // 1. Agrupamento (Map)
+                const groupedMap = new Map();
+                DB.leads.forEach(lead => {
+                    if (!groupedMap.has(lead.email)) {
+                        groupedMap.set(lead.email, {
+                            clientName: lead.name,
+                            email: lead.email,
+                            items: [],
+                            stats: { total: 0, resolved: 0, active: 0, pending: 0 }
+                        });
+                    }
+                    const group = groupedMap.get(lead.email);
+                    group.items.push(lead);
+                    
+                    group.stats.total++;
+                    if (['finished', 'cancelled'].includes(lead.status)) group.stats.resolved++;
+                    else if (['working', 'analyzing'].includes(lead.status)) group.stats.active++;
+                    else group.stats.pending++;
+                });
 
-                            // KPIs
-                            const countPending = DB.leads.filter(l => l.status === 'pending').length;
-                            const countWorking = DB.leads.filter(l => l.status === 'working').length;
-                            const countFinished = DB.leads.filter(l => l.status === 'finished').length;
+                // 2. Filtros
+                let filteredGroups = Array.from(groupedMap.values()).filter(g => {
+                    const hasRecent = adminState.leads.filterDays === 'all' || g.items.some(i => new Date(i.timestamp) >= cutoff);
+                    if (!hasRecent) return false;
 
-                            // Agrupamento por Email (Para mostrar na lista)
-                            const groupedMap = new Map();
-                            filteredLeads.forEach(lead => {
-                                if (!groupedMap.has(lead.email)) groupedMap.set(lead.email, []);
-                                groupedMap.get(lead.email).push(lead);
-                            });
-                            const groupedArray = Array.from(groupedMap.values());
-                            
-                            // Paginação
-                            const totalGroups = groupedArray.length;
-                            const startL = (adminState.leads.page - 1) * adminState.itemsPerPage;
-                            const pagedGroups = groupedArray.slice(startL, startL + adminState.itemsPerPage);
+                    const tab = adminState.leads.subTab;
+                    if (tab === 'active' && g.stats.active === 0 && g.stats.pending === 0) return false;
+                    if (tab === 'finished' && (g.stats.active > 0 || g.stats.pending > 0)) return false;
 
-                            // Helper de Cores de Status
-                            const getStatusStyle = (status) => {
-                                const map = {
-                                    'pending': { color: 'bg-red-100 text-red-700', label: 'Pendente' },
-                                    'analyzing': { color: 'bg-yellow-100 text-yellow-700', label: 'Em Análise' },
-                                    'working': { color: 'bg-blue-100 text-blue-700', label: 'Atuando' },
-                                    'finished': { color: 'bg-green-100 text-green-700', label: 'Finalizado' },
-                                    'cancelled': { color: 'bg-gray-100 text-gray-500', label: 'Cancelado' }
-                                };
-                                return map[status] || map['pending'];
-                            };
+                    const search = (adminState.leads.searchTerm || '').toLowerCase();
+                    if (search) {
+                        const match = g.clientName.toLowerCase().includes(search) || 
+                                      g.email.toLowerCase().includes(search) || 
+                                      g.items.some(i => i.id.toString().includes(search));
+                        if (!match) return false;
+                    }
+                    return true;
+                });
+                
+                // 3. Ordenação (NOVO RECURSO)
+                filteredGroups.sort((a, b) => {
+                    // Pega a data do pedido mais recente de cada cliente para ordenar o grupo
+                    const dateA = Math.max(...a.items.map(i => i.timestamp));
+                    const dateB = Math.max(...b.items.map(i => i.timestamp));
+                    return adminState.leads.sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+                });
 
-                            const listHTML = pagedGroups.map(group => {
-                                const mainLead = group[0];
-                                const count = group.length;
-                                const st = getStatusStyle(mainLead.status);
-                                
-                                return `
-                                    <div onclick="window.app.openLeadModal('${mainLead.email}')" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow cursor-pointer group">
-                                        <div class="flex justify-between items-start">
-                                            <div class="flex gap-4 items-start">
-                                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center font-bold text-gray-500 text-sm">
-                                                    ${mainLead.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <div class="flex items-center gap-2">
-                                                        <h4 class="font-bold text-gray-800 group-hover:text-primary transition">${mainLead.name}</h4>
-                                                        ${count > 1 ? `<span class="bg-gray-800 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">+${count-1} pedidos</span>` : ''}
-                                                    </div>
-                                                    <span class="text-xs text-gray-400">${mainLead.email}</span>
-                                                    <div class="mt-2 flex items-center gap-2">
-                                                        <span class="text-[10px] font-bold uppercase ${st.color} px-2 py-0.5 rounded">${st.label}</span>
-                                                        <span class="text-xs text-gray-500">• ${mainLead.service}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="text-right">
-                                                <span class="text-xs text-gray-400 block">${mainLead.date}</span>
-                                                <i class="ph-bold ph-caret-right text-gray-300 mt-4 group-hover:text-accent transition"></i>
-                                            </div>
-                                        </div>
+                // Paginação
+                const totalGroupsCount = filteredGroups.length;
+                const startL = (adminState.leads.page - 1) * adminState.itemsPerPage;
+                const pagedGroups = filteredGroups.slice(startL, startL + adminState.itemsPerPage);
+
+                // Renderiza Lista
+                const listHTML = pagedGroups.map(group => {
+                    const latestLead = group.items[0]; 
+                    const isFullyResolved = group.stats.total === group.stats.resolved;
+                    const progress = (group.stats.resolved / group.stats.total) * 100;
+                    
+                    let borderClass = 'border-l-4 border-blue-500';
+                    if(isFullyResolved) borderClass = 'border-l-4 border-green-500 bg-green-50/20';
+                    else if(group.stats.pending > 0 && group.stats.active === 0) borderClass = 'border-l-4 border-red-500';
+
+                    return `
+                        <div onclick="window.app.openLeadModal('${group.email}')" class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-all cursor-pointer group relative ${borderClass}">
+                            ${isFullyResolved ? '<div class="absolute top-4 right-4 text-green-500"><i class="ph-fill ph-check-circle text-2xl"></i></div>' : ''}
+                            <div class="flex flex-col md:flex-row gap-4 items-start">
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-slate-700 flex items-center justify-center font-bold text-white text-lg shrink-0">${group.clientName.charAt(0)}</div>
+                                <div class="flex-1 w-full">
+                                    <h4 class="font-bold text-gray-800 text-lg group-hover:text-primary transition flex items-center gap-2">${group.clientName} <span class="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded border border-gray-200">ID Ref: #${latestLead.id}</span></h4>
+                                    <span class="text-xs text-gray-400 font-mono">${group.email}</span>
+                                    <div class="mt-4">
+                                        <div class="flex justify-between text-xs mb-1 font-bold"><span class="${isFullyResolved ? 'text-green-600' : 'text-gray-500'}">${isFullyResolved ? 'Resolvido' : `${group.stats.active} Atuando • ${group.stats.pending} Pendentes`}</span><span class="text-gray-400">${group.stats.resolved}/${group.stats.total}</span></div>
+                                        <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden"><div class="h-full ${isFullyResolved ? 'bg-green-500' : 'bg-blue-500'} transition-all duration-500" style="width: ${progress}%"></div></div>
                                     </div>
-                                `;
-                            }).join('');
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
 
-                            content.innerHTML = `
-                                <div class="animate-fade-in">
-                                    <div class="grid grid-cols-3 gap-4 mb-8">
-                                        <div class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 shadow-sm">
-                                            <div class="w-10 h-10 rounded-full bg-red-50 text-red-600 flex items-center justify-center"><i class="ph-fill ph-warning-circle text-xl"></i></div>
-                                            <div><p class="text-xs font-bold text-gray-400 uppercase">Pendentes</p><h3 class="text-2xl font-black text-gray-800">${countPending}</h3></div>
-                                        </div>
-                                        <div class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 shadow-sm">
-                                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="ph-fill ph-gear-fine text-xl"></i></div>
-                                            <div><p class="text-xs font-bold text-gray-400 uppercase">Em Atuação</p><h3 class="text-2xl font-black text-gray-800">${countWorking}</h3></div>
-                                        </div>
-                                        <div class="bg-white border border-gray-200 p-4 rounded-xl flex items-center gap-4 shadow-sm">
-                                            <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center"><i class="ph-fill ph-check-circle text-xl"></i></div>
-                                            <div><p class="text-xs font-bold text-gray-400 uppercase">Finalizados</p><h3 class="text-2xl font-black text-gray-800">${countFinished}</h3></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                                        <div class="flex p-1 bg-gray-100 rounded-lg">
-                                            <button onclick="window.app.setLeadSubTab('all')" class="px-4 py-1.5 rounded-md text-xs font-bold transition ${adminState.leads.subTab === 'all' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Todas</button>
-                                            <button onclick="window.app.setLeadSubTab('active')" class="px-4 py-1.5 rounded-md text-xs font-bold transition ${adminState.leads.subTab === 'active' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Em Atuação</button>
-                                        </div>
-                                        
-                                        <div class="flex gap-2">
-                                            <select onchange="window.app.setLeadStatusFilter(this.value)" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg p-2 outline-none">
-                                                <option value="all">Todos Status</option>
-                                                <option value="pending">Pendentes</option>
-                                                <option value="analyzing">Em Análise</option>
-                                                <option value="working">Atuando</option>
-                                                <option value="finished">Finalizados</option>
-                                                <option value="cancelled">Cancelados</option>
-                                            </select>
-                                            <select onchange="window.app.filterLeads(this.value)" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg p-2 outline-none">
-                                                <option value="30" ${adminState.leads.filterDays == 30 ? 'selected' : ''}>30 Dias</option>
-                                                <option value="60" ${adminState.leads.filterDays == 60 ? 'selected' : ''}>60 Dias</option>
-                                                <option value="all" ${adminState.leads.filterDays == 'all' ? 'selected' : ''}>Tudo</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-3">
-                                        ${listHTML || '<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">Nenhum registro encontrado.</div>'}
-                                    </div>
-
-                                    <div class="flex justify-center items-center gap-3 mt-8">
-                                        <button onclick="window.app.changeLeadsPage(-1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
-                                        <span class="text-xs font-bold text-gray-500">Pág ${adminState.leads.page}</span>
-                                        <button onclick="window.app.changeLeadsPage(1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page >= Math.ceil(totalGroups/adminState.itemsPerPage) ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
-                                    </div>
-                                </div>`;
-                } else if (adminState.currentTab === 'config') {
-                const conf = DB.systemConfig;
                 content.innerHTML = `
-                    <div class="animate-fade-in max-w-4xl mx-auto">
-                        <div class="mb-8">
-                            <h3 class="text-2xl font-bold text-primary font-serif">Configurações do Sistema</h3>
-                            <p class="text-gray-500 text-sm">Ajustes globais da plataforma e preferências.</p>
+                    <div class="animate-fade-in">
+                        <div class="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-6 flex flex-col xl:flex-row justify-between items-center gap-4">
+                            <div class="flex p-1 bg-gray-100 rounded-lg shrink-0 overflow-x-auto">
+                                <button onclick="window.app.setLeadSubTab('all')" class="px-4 py-2 rounded-md text-xs font-bold transition whitespace-nowrap ${adminState.leads.subTab === 'all' ? 'bg-white text-primary shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Visão Geral</button>
+                                <button onclick="window.app.setLeadSubTab('active')" class="px-4 py-2 rounded-md text-xs font-bold transition whitespace-nowrap ${adminState.leads.subTab === 'active' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Em Atuação</button>
+                                <button onclick="window.app.setLeadSubTab('finished')" class="px-4 py-2 rounded-md text-xs font-bold transition whitespace-nowrap ${adminState.leads.subTab === 'finished' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">Finalizados</button>
+                            </div>
+                            <div class="flex gap-2 w-full xl:w-auto">
+                                <div class="relative flex-1 xl:w-64">
+                                    <i class="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 text-xs"></i>
+                                    <input type="text" placeholder="Buscar ID, Nome ou Email..." oninput="window.app.setLeadSearch(this.value)" value="${adminState.leads.searchTerm || ''}" class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-8 p-2 text-xs focus:outline-none focus:border-accent font-bold text-gray-700">
+                                </div>
+                                <select onchange="window.app.setLeadSort(this.value)" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg p-2 outline-none">
+                                    <option value="desc" ${adminState.leads.sortOrder === 'desc' ? 'selected' : ''}>Mais Recentes</option>
+                                    <option value="asc" ${adminState.leads.sortOrder === 'asc' ? 'selected' : ''}>Mais Antigos</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                                <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Fluxo de Trabalho</h4>
-                                
-                                <div class="space-y-6">
-                                    <div>
-                                        <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Limite de Projetos Simultâneos</label>
-                                        <div class="flex items-center gap-4">
-                                            <input type="range" min="1" max="20" value="${conf.maxActiveProjects}" oninput="document.getElementById('range-val').innerText = this.value" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
-                                            <span id="range-val" class="font-bold text-xl text-blue-600 w-8 text-center">${conf.maxActiveProjects}</span>
-                                        </div>
-                                        <p class="text-[10px] text-gray-400 mt-1">Define o alerta de sobrecarga no dashboard.</p>
-                                    </div>
-
-                                    <div class="flex items-center justify-between">
-                                        <div>
-                                            <span class="text-sm font-bold text-gray-700 block">Resposta Automática</span>
-                                            <span class="text-xs text-gray-400">Enviar e-mail de recebimento ao lead?</span>
-                                        </div>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" ${conf.autoReply ? 'checked' : ''} class="sr-only peer">
-                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                                <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-gear text-gray-500"></i> Preferências</h4>
-                                
-                                <div class="space-y-4">
-                                    <div>
-                                        <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Moeda Padrão</label>
-                                        <select class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm font-bold text-gray-700">
-                                            <option value="BRL" selected>BRL (R$)</option>
-                                            <option value="USD">USD ($)</option>
-                                            <option value="EUR">EUR (€)</option>
-                                        </select>
-                                    </div>
-
-                                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
-                                        <div>
-                                            <span class="text-sm font-bold text-gray-700 block">Notificações no Painel</span>
-                                            <span class="text-xs text-gray-400">Alertas de novos leads e comentários.</span>
-                                        </div>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" ${conf.enableNotifications ? 'checked' : ''} class="sr-only peer">
-                                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="space-y-4">
+                            ${listHTML || '<div class="text-center py-16 bg-gray-50 rounded-2xl border border-dashed border-gray-200"><p class="text-gray-500 font-bold">Nenhum cliente encontrado.</p></div>'}
                         </div>
                         
-                        <div class="mt-8 text-right">
-                            <button onclick="window.app.toast('Configurações salvas!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition">Salvar Alterações</button>
+                        <div class="flex justify-center items-center gap-3 mt-8">
+                            <button onclick="window.app.changeLeadsPage(-1)" class="w-10 h-10 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
+                            <span class="text-xs font-bold text-gray-500">Pág ${adminState.leads.page} de ${Math.ceil(totalGroupsCount/adminState.itemsPerPage) || 1}</span>
+                            <button onclick="window.app.changeLeadsPage(1)" class="w-10 h-10 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${adminState.leads.page >= Math.ceil(totalGroupsCount/adminState.itemsPerPage) ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
                         </div>
-                    </div>
-                `;
+                    </div>`;
+
+            // ============================================================
+            // ABA 4: COMUNIDADE (BLOG)
+            // ============================================================
             } else if (adminState.currentTab === 'community') {
                 const posts = DB.posts;
-                
                 content.innerHTML = `
                     <div class="animate-fade-in">
                         <div class="flex justify-between items-end mb-8">
-                            <div>
-                                <h3 class="text-2xl font-bold text-primary font-serif">Gestão de Comunidade</h3>
-                                <p class="text-gray-500 text-sm">Gerencie artigos, modere comentários e engaje com leitores.</p>
-                            </div>
-                            <button onclick="window.app.openPostModal()" class="bg-primary hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center gap-2">
-                                <i class="ph-bold ph-pen-nib"></i> Escrever Novo Artigo
-                            </button>
+                            <div><h3 class="text-2xl font-bold text-primary font-serif">Gestão de Comunidade</h3><p class="text-gray-500 text-sm">Gerencie artigos e comentários.</p></div>
+                            <button onclick="window.app.openPostModal()" class="bg-primary hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center gap-2"><i class="ph-bold ph-pen-nib"></i> Escrever Novo</button>
                         </div>
-
                         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[calc(100vh-250px)]">
                             <div class="lg:col-span-1 bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden shadow-sm">
-                                <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                                    <span class="text-xs font-bold text-gray-400 uppercase">Seus Artigos (${posts.length})</span>
-                                </div>
+                                <div class="p-4 border-b border-gray-100 bg-gray-50"><span class="text-xs font-bold text-gray-400 uppercase">Seus Artigos (${posts.length})</span></div>
                                 <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
                                     ${posts.map(p => `
                                         <div onclick="window.app.selectAdminPost(${p.id})" class="p-4 rounded-xl cursor-pointer transition border border-transparent hover:border-gray-200 hover:bg-gray-50 group ${window.app.selectedPostId === p.id ? 'bg-blue-50 border-blue-100 ring-1 ring-blue-200' : 'bg-white'}">
-                                            <div class="flex gap-3">
-                                                <img src="${p.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0">
-                                                <div class="flex-1 min-w-0">
-                                                    <div class="flex justify-between items-start">
-                                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${p.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'} mb-1 inline-block">${p.status === 'published' ? 'Publicado' : 'Rascunho'}</span>
-                                                        <span class="text-[10px] text-gray-400">${p.date}</span>
-                                                    </div>
-                                                    <h4 class="font-bold text-gray-800 text-sm truncate leading-tight mb-1 group-hover:text-primary">${p.title}</h4>
-                                                    <div class="flex items-center gap-3 text-xs text-gray-400">
-                                                        <span class="flex items-center gap-1"><i class="ph-fill ph-heart text-red-400"></i> ${p.likes}</span>
-                                                        <span class="flex items-center gap-1"><i class="ph-fill ph-chat-circle text-blue-400"></i> ${p.comments.length}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
+                                            <div class="flex gap-3"><img src="${p.image}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0"><div class="flex-1 min-w-0"><h4 class="font-bold text-gray-800 text-sm truncate mb-1">${p.title}</h4><span class="text-[10px] text-gray-400">${p.date} • ${p.likes} Likes</span></div></div>
+                                        </div>`).join('')}
                                 </div>
                             </div>
-
                             <div class="lg:col-span-2 bg-gray-50 border border-gray-200 rounded-2xl p-8 relative flex flex-col justify-center items-center text-center" id="admin-post-detail">
-                                <div class="text-gray-400">
-                                    <i class="ph-duotone ph-article text-6xl mb-4"></i>
-                                    <p>Selecione um artigo para gerenciar</p>
-                                </div>
+                                <div class="text-gray-400"><i class="ph-duotone ph-article text-6xl mb-4"></i><p>Selecione um artigo.</p></div>
                             </div>
                         </div>
-                    </div>
-                `;
-                
-                // Se houver um post selecionado, carrega os detalhes
-                if(window.app.selectedPostId) {
-                    window.app.renderAdminPostDetail(window.app.selectedPostId);
-                }
+                    </div>`;
+                if(window.app.selectedPostId) window.app.renderAdminPostDetail(window.app.selectedPostId);
+
+            // ============================================================
+            // ABA 5: CONFIGURAÇÕES (NOVO)
+            // ============================================================
+            } else if (adminState.currentTab === 'config') {
+                const conf = DB.systemConfig;
+                content.innerHTML = `
+                    <div class="animate-fade-in max-w-4xl mx-auto">
+                        <div class="mb-8"><h3 class="text-2xl font-bold text-primary font-serif">Configurações do Sistema</h3><p class="text-gray-500 text-sm">Ajustes globais.</p></div>
+                        <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-8">
+                            <h4 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Fluxo de Trabalho</h4>
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Limite de Projetos</label>
+                                    <div class="flex items-center gap-4"><input type="range" min="1" max="20" value="${conf.maxActiveProjects}" oninput="document.getElementById('range-val').innerText = this.value" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"><span id="range-val" class="font-bold text-xl text-blue-600 w-8 text-center">${conf.maxActiveProjects}</span></div>
+                                </div>
+                                <div class="flex items-center justify-between"><div><span class="text-sm font-bold text-gray-700 block">Resposta Automática</span><span class="text-xs text-gray-400">Enviar e-mail ao lead?</span></div><input type="checkbox" ${conf.autoReply ? 'checked' : ''} class="accent-blue-600 w-5 h-5"></div>
+                            </div>
+                        </div>
+                        <div class="text-right"><button onclick="window.app.toast('Configurações salvas!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition">Salvar Alterações</button></div>
+                    </div>`;
             }
         }
-        
+
         function renderBooksTable() {
             // 1. Filtra e Ordena
             let list = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
@@ -1850,80 +1712,112 @@ const TEMPLATES = {
                 initDashboard();
             },
             
+            setLeadSearch: (term) => { adminState.leads.searchTerm = term; adminState.leads.page = 1; initDashboard(); },
+            setLeadSort: (order) => { adminState.leads.sortOrder = order; initDashboard(); },
+            modalFilter: (status, email) => { adminState.leadModal.filterStatus = status; adminState.leadModal.page = 1; window.app.openLeadModal(email); },
+            modalPage: (dir, email) => { adminState.leadModal.page += dir; window.app.openLeadModal(email); },
+            
             openLeadModal: (email) => {
-                // Pega TODOS os leads desse email
                 const leads = DB.leads.filter(l => l.email === email);
                 if(leads.length === 0) return;
-                const mainLead = leads[0]; // Dados cadastrais do mais recente
+                const mainLead = leads[0];
 
-                // Função auxiliar para cor do status no modal
+                // Filtro Interno e Paginação
+                let displayedLeads = leads.filter(l => adminState.leadModal.filterStatus === 'all' || l.status === adminState.leadModal.filterStatus);
+                displayedLeads.sort((a, b) => b.timestamp - a.timestamp);
+                
+                const totalPages = Math.ceil(displayedLeads.length / adminState.leadModal.itemsPerPage);
+                const start = (adminState.leadModal.page - 1) * adminState.leadModal.itemsPerPage;
+                const paged = displayedLeads.slice(start, start + adminState.leadModal.itemsPerPage);
+
                 const getStatusColor = (s) => {
-                    if(s === 'pending') return 'bg-red-100 text-red-700';
-                    if(s === 'working') return 'bg-blue-100 text-blue-700';
-                    if(s === 'finished') return 'bg-green-100 text-green-700';
-                    return 'bg-gray-100 text-gray-600';
+                    if(s === 'pending') return 'bg-red-50 text-red-700 border-red-200';
+                    if(s === 'analyzing') return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                    if(s === 'working') return 'bg-blue-50 text-blue-700 border-blue-200';
+                    if(s === 'finished') return 'bg-green-50 text-green-700 border-green-200';
+                    return 'bg-gray-50 text-gray-500 border-gray-200';
+                };
+                
+                // Helper para o fundo do card
+                const getCardBg = (s) => {
+                    if(s === 'working') return 'bg-blue-50/50 border-blue-200';
+                    if(s === 'finished') return 'bg-green-50/50 border-green-200';
+                    if(s === 'cancelled') return 'bg-gray-50/50 border-gray-200 opacity-75';
+                    return 'bg-white border-gray-200';
                 };
 
                 const body = `
-                    <div class="h-[70vh] flex flex-col">
-                        <div class="flex items-start gap-4 mb-6 pb-6 border-b border-gray-100">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-slate-800 flex items-center justify-center text-white text-2xl font-bold">
-                                ${mainLead.name.charAt(0)}
+                    <div class="h-[75vh] flex flex-col bg-gray-50 -m-8">
+                        <div class="bg-white p-8 border-b border-gray-200 flex justify-between items-start">
+                            <div class="flex items-center gap-4">
+                                <div class="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-3xl font-serif">${mainLead.name.charAt(0)}</div>
+                                <div><h3 class="text-2xl font-bold text-gray-800">${mainLead.name}</h3><p class="text-gray-500 text-sm">${mainLead.email}</p></div>
                             </div>
-                            <div>
-                                <h3 class="text-2xl font-bold text-gray-800">${mainLead.name}</h3>
-                                <p class="text-gray-500 text-sm flex items-center gap-2"><i class="ph-bold ph-envelope"></i> ${mainLead.email}</p>
-                                <p class="text-xs text-gray-400 mt-1">Cliente desde: ${leads[leads.length-1].date}</p>
+                            <div class="flex gap-2">
+                                <select onchange="window.app.modalFilter(this.value, '${email}')" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg p-2 outline-none">
+                                    <option value="all" ${adminState.leadModal.filterStatus === 'all' ? 'selected' : ''}>Todos</option>
+                                    <option value="pending" ${adminState.leadModal.filterStatus === 'pending' ? 'selected' : ''}>Pendentes</option>
+                                    <option value="working" ${adminState.leadModal.filterStatus === 'working' ? 'selected' : ''}>Atuando</option>
+                                    <option value="finished" ${adminState.leadModal.filterStatus === 'finished' ? 'selected' : ''}>Finalizados</option>
+                                </select>
                             </div>
                         </div>
 
-                        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-4 pr-2">
-                            ${leads.map(lead => `
-                                <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 transition hover:border-accent">
-                                    <div class="flex justify-between items-start mb-3">
-                                        <div>
-                                            <span class="text-xs font-bold uppercase text-primary tracking-wide">${lead.service}</span>
-                                            <span class="text-xs text-gray-400 ml-2">${lead.date}</span>
+                        <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
+                            ${paged.map(lead => `
+                                <div id="card-lead-${lead.id}" class="border rounded-xl p-5 shadow-sm transition duration-300 relative overflow-hidden ${getCardBg(lead.status)}">
+                                    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <span class="bg-primary/10 text-primary text-xs font-mono px-2 py-0.5 rounded font-bold">#${lead.id}</span>
+                                                <h4 class="font-bold text-gray-800 text-sm uppercase tracking-wide">${lead.service}</h4>
+                                                <span class="text-xs text-gray-500 border-l pl-2 border-gray-300">R$ ${lead.value || 'Sob Consulta'}</span>
+                                            </div>
+                                            <span class="text-xs text-gray-400 flex items-center gap-1 mb-3"><i class="ph-bold ph-calendar"></i> Registrado em: ${lead.date}</span>
+                                            
+                                            <div class="bg-white/60 p-3 rounded-lg border border-gray-200/50 text-sm text-gray-600 italic mb-3">"${lead.desc}"</div>
                                         </div>
-                                        
-                                        <select onchange="window.app.updateLeadStatus(${lead.id}, this.value)" class="text-[10px] font-bold uppercase rounded py-1 px-2 border border-gray-300 focus:border-accent outline-none ${getStatusColor(lead.status)}">
-                                            <option value="pending" ${lead.status === 'pending' ? 'selected' : ''}>Pendente</option>
-                                            <option value="analyzing" ${lead.status === 'analyzing' ? 'selected' : ''}>Em Análise</option>
-                                            <option value="working" ${lead.status === 'working' ? 'selected' : ''}>Atuando</option>
-                                            <option value="finished" ${lead.status === 'finished' ? 'selected' : ''}>Finalizado</option>
-                                            <option value="cancelled" ${lead.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
-                                        </select>
-                                    </div>
-                                    <p class="text-sm text-gray-600 italic bg-white p-3 rounded-lg border border-gray-100">"${lead.desc}"</p>
-                                    
-                                    <div class="mt-3">
-                                        <textarea placeholder="Anotações internas..." onchange="window.app.saveLeadNote(${lead.id}, this.value)" class="w-full text-xs bg-transparent border-b border-gray-300 focus:border-accent outline-none h-8 resize-none text-gray-500">${lead.notes || ''}</textarea>
+
+                                        <div class="flex flex-col items-end gap-2">
+                                            <div id="status-badge-${lead.id}" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${getStatusColor(lead.status)}">
+                                                ${lead.status}
+                                            </div>
+                                            
+                                            <button onclick="window.app.openAnalysisModal(${lead.id}, '${email}')" class="bg-primary hover:bg-slate-800 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md transition flex items-center gap-2">
+                                                <i class="ph-bold ph-magnifying-glass"></i> Análise
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             `).join('')}
+                            
+                            ${paged.length === 0 ? '<p class="text-center text-gray-400 py-4">Nenhum pedido encontrado.</p>' : ''}
                         </div>
+
+                        ${totalPages > 1 ? `
+                        <div class="bg-white p-4 border-t border-gray-200 flex justify-center items-center gap-3">
+                            <button onclick="window.app.modalPage(-1, '${email}')" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.leadModal.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
+                            <span class="text-xs font-bold text-gray-500">Pág ${adminState.leadModal.page}/${totalPages}</span>
+                            <button onclick="window.app.modalPage(1, '${email}')" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.leadModal.page === totalPages ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
+                        </div>` : ''}
                     </div>
                 `;
-                
-                // Botões de Ação em Massa (Footer)
-                const footer = `
-                    <div class="flex justify-between w-full">
-                        <button onclick="window.app.closeModal()" class="text-gray-500 font-bold text-sm px-4">Fechar</button>
-                        <div class="flex gap-2">
-                             <a href="mailto:${mainLead.email}" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50">Enviar E-mail</a>
-                        </div>
-                    </div>
-                `;
-                
-                window.app.openModalGeneric("Gestão do Cliente", body, footer);
+                window.app.openModalGeneric(" ", body, ""); 
             },
 
-            updateLeadStatus: (id, newStatus) => {
+            setLeadSearch: (term) => {
+                adminState.leads.searchTerm = term;
+                adminState.leads.page = 1;
+                initDashboard();
+            },            
+
+            updateLeadStatus: (id, newStatus, email) => {
                 const lead = DB.leads.find(l => l.id === id);
                 if(lead) {
                     lead.status = newStatus;
-                    window.app.toast(`Status atualizado para: ${newStatus}`, 'success');
-                    initDashboard(); // Atualiza a lista de fundo
+                    window.app.toast(`Status alterado para: ${newStatus.toUpperCase()}`, 'success');
+                    initDashboard(); 
+                    window.app.openAnalysisModal(id, email);
                 }
             },
             
@@ -1931,7 +1825,49 @@ const TEMPLATES = {
                 const lead = DB.leads.find(l => l.id === id);
                 if(lead) lead.notes = note;
             },            
+            
+            openAnalysisModal: (id, email) => {
+                const lead = DB.leads.find(l => l.id === id);
+                if(!lead) return;
 
+                const body = `
+                    <div class="h-[75vh] flex flex-col bg-gray-50 -m-8">
+                        <div class="bg-white p-6 border-b border-gray-200 flex items-center justify-between">
+                            <button onclick="window.app.openLeadModal('${email}')" class="text-gray-500 hover:text-primary font-bold text-sm flex items-center gap-2"><i class="ph-bold ph-arrow-left"></i> Voltar para Lista</button>
+                            <div class="text-right">
+                                <h3 class="text-lg font-bold text-gray-800">Análise do Pedido #${lead.id}</h3>
+                                <p class="text-xs text-gray-400">${lead.service} - R$ ${lead.value}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="p-8 max-w-3xl mx-auto w-full space-y-6">
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <label class="text-xs font-bold text-gray-500 uppercase block mb-3">Status do Pedido</label>
+                                <div class="grid grid-cols-5 gap-2">
+                                    ${['pending', 'analyzing', 'working', 'finished', 'cancelled'].map(s => `
+                                        <button onclick="window.app.updateLeadStatus(${lead.id}, '${s}', '${email}')" 
+                                            class="py-3 rounded-lg text-[10px] font-bold uppercase border-2 transition ${lead.status === s ? 'border-primary bg-primary text-white' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-300'}">
+                                            ${s}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Solicitação Original</label>
+                                <p class="text-gray-700 italic bg-gray-50 p-4 rounded-lg border border-gray-100 leading-relaxed">"${lead.desc}"</p>
+                            </div>
+
+                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+                                <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Anotações Internas & Progresso</label>
+                                <textarea rows="6" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 focus:outline-none focus:border-accent resize-none" onchange="window.app.saveLeadNote(${lead.id}, this.value)">${lead.notes || ''}</textarea>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                window.app.openModalGeneric(" ", body, ""); 
+            },
+            
             selectedPostId: null,
 
             selectAdminPost: (id) => {
