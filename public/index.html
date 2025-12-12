@@ -417,14 +417,21 @@
                     <div class="grid grid-cols-1 gap-12">
                         
                         <div class="dashboard-card">
-                            <div class="flex justify-between items-center mb-6">
+                            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                                 <div>
                                     <h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-book text-accent"></i> Catálogo de Livros</h3>
-                                    <p class="text-xs text-gray-400">Gerencie suas obras publicadas.</p>
                                 </div>
-                                <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2"><i class="ph-bold ph-plus"></i> Novo Livro</button>
+                                <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                                    <select onchange="window.app.setAdminFilter('books', 'status', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 focus:outline-none focus:border-accent">
+                                        <option value="all">Todos os Status</option>
+                                        <option value="active">Ativos</option>
+                                        <option value="inactive">Inativos</option>
+                                    </select>
+                                    <input type="text" placeholder="Buscar livro..." oninput="window.app.setAdminFilter('books', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-accent">
+                                    <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
+                                </div>
                             </div>
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto min-h-[300px]">
                                 <table class="w-full text-left text-sm text-gray-600">
                                     <thead class="bg-gray-50 text-gray-400 uppercase text-xs">
                                         <tr>
@@ -439,17 +446,23 @@
                                     <tbody id="admin-books-table"></tbody>
                                 </table>
                             </div>
+                            <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
+                                <span class="text-xs text-gray-400" id="admin-books-info">Mostrando 0 de 0</span>
+                                <div class="flex gap-2" id="admin-books-pagination"></div>
+                            </div>
                         </div>
 
                         <div class="dashboard-card border-t-4 border-blue-500">
-                            <div class="flex justify-between items-center mb-6">
+                            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                                 <div>
                                     <h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Meus Serviços</h3>
-                                    <p class="text-xs text-gray-400">Configure mentorias, revisões e consultorias.</p>
                                 </div>
-                                <button onclick="window.app.openServiceEditModal()" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2"><i class="ph-bold ph-plus"></i> Novo Serviço</button>
+                                <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                                    <input type="text" placeholder="Buscar serviço..." oninput="window.app.setAdminFilter('services', 'filter', this.value)" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-blue-500">
+                                    <button onclick="window.app.openServiceEditModal()" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
+                                </div>
                             </div>
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto min-h-[200px]">
                                 <table class="w-full text-left text-sm text-gray-600">
                                     <thead class="bg-blue-50 text-blue-400 uppercase text-xs">
                                         <tr>
@@ -462,6 +475,10 @@
                                     </thead>
                                     <tbody id="admin-services-table"></tbody>
                                 </table>
+                            </div>
+                            <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
+                                <span class="text-xs text-gray-400" id="admin-services-info">Mostrando 0 de 0</span>
+                                <div class="flex gap-2" id="admin-services-pagination"></div>
                             </div>
                         </div>
 
@@ -515,6 +532,12 @@
             }
         }
         generateBooks();
+
+        const adminState = {
+            books: { page: 1, filter: '', status: 'all' }, // status: all, active, inactive
+            services: { page: 1, filter: '' },
+            itemsPerPage: 5
+        }
 
         // ESTADO GLOBAL SIMPLIFICADO
         let favorites = JSON.parse(localStorage.getItem('user_favorites')) || []; 
@@ -631,62 +654,114 @@
         }
 
         function initDashboard() {
-            // 1. Tabela de Livros
+            // ================= LÓGICA DE LIVROS =================
+            let filteredBooks = DB.books.filter(b => {
+                const matchText = b.title.toLowerCase().includes(adminState.books.filter.toLowerCase());
+                const matchStatus = adminState.books.status === 'all' 
+                    ? true 
+                    : (adminState.books.status === 'active' ? b.active : !b.active);
+                return matchText && matchStatus;
+            });
+
+            const totalBooks = filteredBooks.length;
+            const startB = (adminState.books.page - 1) * adminState.itemsPerPage;
+            const endB = startB + adminState.itemsPerPage;
+            const pagedBooks = filteredBooks.slice(startB, endB);
+
+            // Render Tabela Livros
             const booksBody = document.getElementById('admin-books-table');
             if(booksBody) {
-                booksBody.innerHTML = DB.books.map(b => `
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
-                        <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
-                        <td class="p-3 font-bold text-primary">${b.title}</td>
-                        <td class="p-3 text-gray-500">
-                            ${b.isPromotion && b.promoPrice ? `<span class="line-through text-xs">R$ ${b.price}</span><br><span class="text-green-600 font-bold">R$ ${b.promoPrice}</span>` : `R$ ${b.price.toFixed(2)}`}
-                        </td>
-                        <td class="p-3 text-center">
-                            ${b.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">ATIVA</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
-                        </td>
-                        <td class="p-3 text-center">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
-                                <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-500'}"></span>
-                                ${b.active ? 'Ativo' : 'Inativo'}
-                            </span>
-                        </td>
-                        <td class="p-3 text-right">
-                            <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                            <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
+                if(pagedBooks.length === 0) {
+                    booksBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`;
+                } else {
+                    booksBody.innerHTML = pagedBooks.map(b => `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
+                            <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
+                            <td class="p-3 font-bold text-primary">${b.title}</td>
+                            <td class="p-3 text-gray-500">
+                                ${b.isPromotion && b.promoPrice ? `<span class="line-through text-xs">R$ ${b.price}</span><br><span class="text-green-600 font-bold">R$ ${b.promoPrice}</span>` : `R$ ${b.price.toFixed(2)}`}
+                            </td>
+                            <td class="p-3 text-center">
+                                ${b.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">ATIVA</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
+                            </td>
+                            <td class="p-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
+                                    <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-500'}"></span>
+                                    ${b.active ? 'Ativo' : 'Inativo'}
+                                </span>
+                            </td>
+                            <td class="p-3 text-right">
+                                <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                                <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
             }
 
-            // 2. Tabela de Serviços
+            // Render Paginação Livros
+            const bookPages = Math.ceil(totalBooks / adminState.itemsPerPage);
+            document.getElementById('admin-books-info').innerText = `Mostrando ${pagedBooks.length} de ${totalBooks}`;
+            let bookNavHTML = '';
+            if(bookPages > 1) {
+                bookNavHTML += `<button onclick="window.app.changeAdminPage('books', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
+                bookNavHTML += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.books.page} / ${bookPages}</span>`;
+                bookNavHTML += `<button onclick="window.app.changeAdminPage('books', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.books.page === bookPages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
+            }
+            document.getElementById('admin-books-pagination').innerHTML = bookNavHTML;
+
+
+            // ================= LÓGICA DE SERVIÇOS =================
+            let filteredServices = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
+            
+            const totalServices = filteredServices.length;
+            const startS = (adminState.services.page - 1) * adminState.itemsPerPage;
+            const endS = startS + adminState.itemsPerPage;
+            const pagedServices = filteredServices.slice(startS, endS);
+
             const servicesBody = document.getElementById('admin-services-table');
             if(servicesBody) {
-                servicesBody.innerHTML = DB.services.map(s => `
-                    <tr class="border-b border-gray-100 hover:bg-blue-50/30 transition ${s.active ? '' : 'opacity-60 bg-gray-50'}">
-                        <td class="p-3">
-                            <div class="font-bold text-gray-800">${s.name}</div>
-                            <div class="text-xs text-gray-400 truncate max-w-[150px]">${s.description}</div>
-                        </td>
-                        <td class="p-3 font-mono text-blue-600">
-                             ${s.isPromotion && s.promoPrice ? `<span class="line-through text-xs text-gray-400">R$ ${s.price}</span> <span class="font-bold">R$ ${s.promoPrice}</span>` : `R$ ${s.price.toFixed(2)}`}
-                             <span class="text-[10px] text-gray-400 font-sans font-normal">${s.unit || ''}</span>
-                        </td>
-                        <td class="p-3 text-center">
-                            ${s.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">ATIVA</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
-                        </td>
-                        <td class="p-3 text-center">
-                             <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${s.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
-                                <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-500'}"></span>
-                                ${s.active ? 'Ativo' : 'Inativo'}
-                            </span>
-                        </td>
-                        <td class="p-3 text-right flex justify-end gap-2">
-                            <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                            <button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
-                        </td>
-                    </tr>
-                `).join('');
+                if(pagedServices.length === 0) {
+                    servicesBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>`;
+                } else {
+                    servicesBody.innerHTML = pagedServices.map(s => `
+                        <tr class="border-b border-gray-100 hover:bg-blue-50/30 transition ${s.active ? '' : 'opacity-60 bg-gray-50'}">
+                            <td class="p-3">
+                                <div class="font-bold text-gray-800">${s.name}</div>
+                                <div class="text-xs text-gray-400 truncate max-w-[150px]">${s.description}</div>
+                            </td>
+                            <td class="p-3 font-mono text-blue-600">
+                                ${s.isPromotion && s.promoPrice ? `<span class="line-through text-xs text-gray-400">R$ ${s.price}</span> <span class="font-bold">R$ ${s.promoPrice}</span>` : `R$ ${s.price.toFixed(2)}`}
+                                <span class="text-[10px] text-gray-400 font-sans font-normal">${s.unit || ''}</span>
+                            </td>
+                            <td class="p-3 text-center">
+                                ${s.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">ATIVA</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
+                            </td>
+                            <td class="p-3 text-center">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${s.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
+                                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-500'}"></span>
+                                    ${s.active ? 'Ativo' : 'Inativo'}
+                                </span>
+                            </td>
+                            <td class="p-3 text-right flex justify-end gap-2">
+                                <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                                <button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
             }
+
+            // Render Paginação Serviços
+            const servicePages = Math.ceil(totalServices / adminState.itemsPerPage);
+            document.getElementById('admin-services-info').innerText = `Mostrando ${pagedServices.length} de ${totalServices}`;
+            let servNavHTML = '';
+            if(servicePages > 1) {
+                servNavHTML += `<button onclick="window.app.changeAdminPage('services', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === 1 ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-left"></i></button>`;
+                servNavHTML += `<span class="text-xs font-bold px-2 self-center">Pág ${adminState.services.page} / ${servicePages}</span>`;
+                servNavHTML += `<button onclick="window.app.changeAdminPage('services', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.services.page === servicePages ? 'disabled opacity-50' : ''}><i class="ph-bold ph-caret-right"></i></button>`;
+            }
+            document.getElementById('admin-services-pagination').innerHTML = servNavHTML;
         }
 
         
@@ -795,10 +870,23 @@
         // ==========================================
         // 4. API PÚBLICA
         // ==========================================
-        window.app = {
+window.app = {
             toast: (msg, type) => showToast(msg, type),
+            
+            // Navegação Pública
             changePage: (n) => { currentPage = n; initLivros(); document.getElementById('books-grid').scrollIntoView({ behavior: 'smooth', block: 'start' }); },
             
+            // Navegação Admin (NOVO)
+            setAdminFilter: (context, key, value) => {
+                adminState[context][key] = value;
+                adminState[context].page = 1; // Reseta para pág 1 ao filtrar
+                initDashboard();
+            },
+            changeAdminPage: (context, direction) => {
+                adminState[context].page += direction;
+                initDashboard();
+            },
+
             toggleFavorite: (id) => {
                 if (favorites.includes(id)) {
                     favorites = favorites.filter(favId => favId !== id);
@@ -811,18 +899,19 @@
                 if (window.location.hash.includes('livros')) initLivros();
             },
 
-            // ADMIN CRUD
-// ATUALIZE A FUNÇÃO openBookModal e saveBook
-            
+            // --- ADMIN CRUD ---
+
             openBookModal: (id = null) => {
-                const book = id ? DB.books.find(b => b.id === id) : { 
+                // (MANTENHA A IMPLEMENTAÇÃO EXISTENTE DE openBookModal QUE ENVIEI NA RESPOSTA ANTERIOR)
+                // Para economizar espaço aqui, estou assumindo que você já tem o código do modal que enviei
+                // Se precisar dele novamente, me avise.
+                 const book = id ? DB.books.find(b => b.id === id) : { 
                     id: '', title: '', genre: 'Ficção', price: '', promoPrice: '', cover: '', 
-                    synopsis: '', isPromotion: false, active: true, // Padrão Ativo
+                    synopsis: '', isPromotion: false, active: true, 
                     linkAmazon: '', linkML: '', linkShopee: '' 
                 };
                 
                 const isEdit = !!id;
-                // Script toggle promo
                 const toggleScript = `if(this.checked){document.getElementById('promo-input-container').classList.remove('hidden');document.getElementById('book-promo-price').focus();}else{document.getElementById('promo-input-container').classList.add('hidden');document.getElementById('book-promo-price').value='';}`;
 
                 const body = `
@@ -904,6 +993,7 @@
                 window.app.openModalGeneric(isEdit ? "Editar Livro" : "Cadastrar Novo Livro", body, footer);
             },
 
+            // UNIFICADO: Correção do Bug de Múltiplas Declarações
             saveBook: (isEdit) => {
                 const id = document.getElementById('book-id').value;
                 const title = document.getElementById('book-title').value;
@@ -912,26 +1002,25 @@
                 const cover = document.getElementById('book-cover').value || 'https://placehold.co/300x450/333/FFF?text=Capa';
                 const synopsis = document.getElementById('book-synopsis').value;
                 
-                // Novos Campos
-                const active = document.getElementById('book-active').checked; // Captura Ativo/Inativo
+                const active = document.getElementById('book-active').checked;
                 const isPromotion = document.getElementById('book-promo').checked;
-                let promoPrice = null;
-
                 const linkAmazon = document.getElementById('link-amazon').value;
                 const linkML = document.getElementById('link-ml').value;
                 const linkShopee = document.getElementById('link-shopee').value;
+
+                let promoPrice = null;
 
                 if(!title || isNaN(price) || price <= 0) return window.app.toast('Dados inválidos', 'error');
 
                 if (isPromotion) {
                     promoPrice = parseFloat(document.getElementById('book-promo-price').value);
-                    if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional inválido', 'error');
+                    if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional deve ser menor que o original.', 'error');
                 }
 
                 const bookData = {
                     id: isEdit ? id : Date.now().toString(),
                     title, genre, price, cover, synopsis, 
-                    active, isPromotion, promoPrice, // Salva o status
+                    active, isPromotion, promoPrice, 
                     linkAmazon, linkML, linkShopee
                 };
 
@@ -950,7 +1039,109 @@
                 window.app.closeModal();
             },
 
-            saveBook: (isEdit) => {
+            deleteBook: (id) => {
+                if(confirm('Tem certeza que deseja excluir este livro?')) {
+                    DB.books = DB.books.filter(b => b.id !== id);
+                    // Checagem de segurança de paginação
+                    if(DB.books.length % adminState.itemsPerPage === 0 && adminState.books.page > 1) {
+                         adminState.books.page--;
+                    }
+                    initDashboard();
+                    window.app.toast('Livro excluído.', 'success');
+                }
+            },
+
+            openServiceEditModal: (id = null) => {
+                // (MANTENHA A IMPLEMENTAÇÃO EXISTENTE DE openServiceEditModal QUE ENVIEI ANTES)
+                const s = id ? DB.services.find(x => x.id === id) : { 
+                    id: '', name: '', price: '', unit: '', description: '', 
+                    active: true, isPromotion: false, promoPrice: '' 
+                };
+                const isEdit = !!id;
+                const toggleScript = `if(this.checked){document.getElementById('serv-promo-container').classList.remove('hidden');}else{document.getElementById('serv-promo-container').classList.add('hidden');document.getElementById('serv-promo-price').value='';}`;
+                const body = `
+                    <div class="space-y-4">
+                        <input type="hidden" id="service-id" value="${s.id || ''}">
+                        
+                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
+                            <span class="text-xs font-bold text-gray-500 uppercase">Status do Serviço</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="service-active" class="sr-only peer" ${s.active ? 'checked' : ''}>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Nome</label>
+                            <input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label>
+                                <input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase">Unidade</label>
+                                <input type="text" id="service-unit" value="${s.unit || ''}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                             <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-blue-800 text-sm">Preço Promocional?</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="service-promo" class="sr-only peer" onchange="${toggleScript}" ${s.isPromotion ? 'checked' : ''}>
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                </label>
+                            </div>
+                            <div id="serv-promo-container" class="${s.isPromotion ? '' : 'hidden'} mt-2">
+                                <input type="number" step="0.01" id="serv-promo-price" value="${s.promoPrice || ''}" placeholder="Novo Valor" class="w-full bg-white border border-blue-200 rounded-lg p-2 form-input text-blue-900 font-bold">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-gray-500 uppercase">Descrição</label>
+                            <textarea id="service-desc" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${s.description}</textarea>
+                        </div>
+                    </div>`;
+
+                const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500">Cancelar</button><button onclick="window.app.saveService(${isEdit})" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">Salvar</button>`;
+                window.app.openModalGeneric(isEdit ? "Editar Serviço" : "Novo Serviço", body, footer);
+            },
+
+            saveService: (isEdit) => {
+                const id = document.getElementById('service-id').value;
+                const name = document.getElementById('service-name').value;
+                const price = parseFloat(document.getElementById('service-price').value);
+                const unit = document.getElementById('service-unit').value;
+                const description = document.getElementById('service-desc').value;
+                const active = document.getElementById('service-active').checked;
+                const isPromotion = document.getElementById('service-promo').checked;
+                let promoPrice = null;
+
+                if(!name || isNaN(price) || price <= 0) return window.app.toast('Dados inválidos', 'error');
+
+                if (isPromotion) {
+                    promoPrice = parseFloat(document.getElementById('serv-promo-price').value);
+                    if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional inválido', 'error');
+                }
+
+                const data = { id: isEdit ? id : 'S' + Date.now(), name, price, unit, description, active, isPromotion, promoPrice };
+
+                if(isEdit) {
+                    const idx = DB.services.findIndex(s => s.id === id);
+                    if (idx !== -1) DB.services[idx] = data;
+                } else {
+                    DB.services.push(data);
+                }
+                
+                window.app.toast('Serviço salvo!', 'success');
+                initDashboard();
+                window.app.closeModal();
+            },
+
+                        saveBook: (isEdit) => {
                 const id = document.getElementById('book-id').value;
                 const title = document.getElementById('book-title').value;
                 const genre = document.getElementById('book-genre').value;
@@ -1065,170 +1256,26 @@
                 initDashboard();
                 window.app.closeModal();
             },
-            deleteBook: (id) => {
-                if(confirm('Tem certeza que deseja excluir este livro?')) {
-                    DB.books = DB.books.filter(b => b.id !== id);
-                    initDashboard();
-                    window.app.toast('Livro excluído.', 'success');
-                }
-            },
-
-            // Adicione isso junto com as outras funções do window.app
-            mockServiceAction: () => {
-                window.app.toast('Gestão de Serviços em breve!', 'success');
-            },
-
-            // === CRUD DE SERVIÇOS ===
-            
-            // ATUALIZE AS FUNÇÕES openServiceEditModal e saveService
-            
-            openServiceEditModal: (id = null) => {
-                const s = id ? DB.services.find(x => x.id === id) : { 
-                    id: '', name: '', price: '', unit: '', description: '', 
-                    active: true, isPromotion: false, promoPrice: '' 
-                };
-                const isEdit = !!id;
-                
-                // Script toggle promo (reutilizado)
-                const toggleScript = `if(this.checked){document.getElementById('serv-promo-container').classList.remove('hidden');}else{document.getElementById('serv-promo-container').classList.add('hidden');document.getElementById('serv-promo-price').value='';}`;
-
-                const body = `
-                    <div class="space-y-4">
-                        <input type="hidden" id="service-id" value="${s.id || ''}">
-                        
-                        <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
-                            <span class="text-xs font-bold text-gray-500 uppercase">Status do Serviço</span>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="service-active" class="sr-only peer" ${s.active ? 'checked' : ''}>
-                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                            </label>
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase">Nome</label>
-                            <input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label>
-                                <input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
-                            </div>
-                            <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase">Unidade</label>
-                                <input type="text" id="service-unit" value="${s.unit || ''}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
-                            </div>
-                        </div>
-
-                        <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
-                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-bold text-blue-800 text-sm">Preço Promocional?</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="service-promo" class="sr-only peer" onchange="${toggleScript}" ${s.isPromotion ? 'checked' : ''}>
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                                </label>
-                            </div>
-                            <div id="serv-promo-container" class="${s.isPromotion ? '' : 'hidden'} mt-2">
-                                <input type="number" step="0.01" id="serv-promo-price" value="${s.promoPrice || ''}" placeholder="Novo Valor" class="w-full bg-white border border-blue-200 rounded-lg p-2 form-input text-blue-900 font-bold">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase">Descrição</label>
-                            <textarea id="service-desc" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${s.description}</textarea>
-                        </div>
-                    </div>`;
-
-                const footer = `<button onclick="window.app.closeModal()" class="px-4 py-2 text-gray-500">Cancelar</button><button onclick="window.app.saveService(${isEdit})" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">Salvar</button>`;
-                window.app.openModalGeneric(isEdit ? "Editar Serviço" : "Novo Serviço", body, footer);
-            },
-
-            saveService: (isEdit) => {
-                const id = document.getElementById('service-id').value;
-                const name = document.getElementById('service-name').value;
-                const price = parseFloat(document.getElementById('service-price').value);
-                const unit = document.getElementById('service-unit').value;
-                const description = document.getElementById('service-desc').value;
-                const active = document.getElementById('service-active').checked;
-                const isPromotion = document.getElementById('service-promo').checked;
-                let promoPrice = null;
-
-                if(!name || isNaN(price) || price <= 0) return window.app.toast('Dados inválidos', 'error');
-
-                if (isPromotion) {
-                    promoPrice = parseFloat(document.getElementById('serv-promo-price').value);
-                    if (isNaN(promoPrice) || promoPrice <= 0 || promoPrice >= price) return window.app.toast('Preço promocional inválido', 'error');
-                }
-
-                const data = { id: isEdit ? id : 'S' + Date.now(), name, price, unit, description, active, isPromotion, promoPrice };
-
-                if(isEdit) {
-                    const idx = DB.services.findIndex(s => s.id === id);
-                    if (idx !== -1) DB.services[idx] = data;
-                } else {
-                    DB.services.push(data);
-                }
-                
-                window.app.toast('Serviço salvo!', 'success');
-                initDashboard();
-                window.app.closeModal();
-            },
-
-            saveService: (isEdit) => {
-                const id = document.getElementById('service-id').value;
-                const name = document.getElementById('service-name').value;
-                const price = parseFloat(document.getElementById('service-price').value);
-                const unit = document.getElementById('service-unit').value;
-                const description = document.getElementById('service-desc').value;
-
-                if(!name || isNaN(price) || price <= 0) {
-                    return window.app.toast('Nome e Preço são obrigatórios!', 'error');
-                }
-
-                const serviceData = {
-                    id: isEdit ? id : 'S' + Date.now().toString(), // Gera ID único
-                    name, price, unit, description
-                };
-
-                if(isEdit) {
-                    const index = DB.services.findIndex(s => s.id === id);
-                    if (index !== -1) {
-                        DB.services[index] = serviceData;
-                        window.app.toast('Serviço atualizado!', 'success');
-                    }
-                } else {
-                    DB.services.push(serviceData); // Adiciona ao final
-                    window.app.toast('Serviço criado!', 'success');
-                }
-
-                initDashboard();
-                window.app.closeModal();
-            },
 
             deleteService: (id) => {
                 if(confirm('Tem certeza que deseja excluir este serviço?')) {
                     DB.services = DB.services.filter(s => s.id !== id);
+                    if(DB.services.length % adminState.itemsPerPage === 0 && adminState.services.page > 1) {
+                         adminState.services.page--;
+                    }
                     initDashboard();
                     window.app.toast('Serviço excluído.', 'success');
                 }
             },
 
-            // AUTH & COMMUNITY
+            // AUTH & GERAL
             connectGoogle: () => { user = { name: "Visitante", avatar: "https://placehold.co/40x40/d97706/FFF?text=Eu" }; localStorage.setItem('user', JSON.stringify(user)); initCommunity(); window.app.toast('Conectado como Visitante', 'success'); },
             postComment: () => { const text = document.getElementById('new-comment').value; if(text.trim()) { DB.comments.unshift({ id: Date.now(), user: user.name, avatar: user.avatar, text: text, date: "Agora mesmo" }); initCommunity(); window.app.toast('Comentário publicado!', 'success'); } },
             handleLogin: () => { const e = document.getElementById('email').value; const p = document.getElementById('password').value; if(e === 'admin@ronaldo.com' && p === 'admin') { isAdmin = true; localStorage.setItem('isAdmin', 'true'); window.location.hash = '#/painel'; router(); window.app.toast('Bem-vindo, Chefe!', 'success'); } else { window.app.toast('Credenciais inválidas', 'error'); } },
             logout: () => { isAdmin = false; localStorage.removeItem('isAdmin'); window.location.hash = '#/'; router(); },
-
-            // MODAIS
             openModalGeneric: (title, bodyHTML, footerHTML) => { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = bodyHTML; document.getElementById('modal-footer').innerHTML = footerHTML; const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('opacity-0', 'scale-95'); }, 10); },
             closeModal: () => { const modal = document.getElementById('modal-overlay'); const content = document.getElementById('modal-content'); modal.classList.add('opacity-0'); content.classList.add('opacity-0', 'scale-95'); setTimeout(() => modal.classList.add('hidden'), 300); },
-            
-            openServiceModal: (id) => {
-                const s = DB.services.find(x => x.id === id);
-                const body = `<div class="space-y-6 animate-fade-in"><div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden"><div class="absolute right-0 top-0 w-20 h-20 bg-accent/5 rounded-full -mr-5 -mt-5"></div><h4 class="text-lg font-bold text-gray-900 mb-2">${s.name}</h4><p class="text-gray-600 text-sm leading-relaxed mb-4">${s.description}</p><div class="flex items-end justify-between border-t border-gray-100 pt-4"><div><p class="text-xs text-gray-400 uppercase font-bold">Investimento</p><p class="text-2xl font-black text-primary">R$ ${s.price.toFixed(2)}</p></div><span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">${s.unit || 'Preço Fixo'}</span></div></div><div class="space-y-3"><p class="text-sm font-bold text-gray-700 uppercase tracking-wide">Seus Dados</p><input type="text" placeholder="Nome Completo" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><input type="email" placeholder="E-mail Profissional" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><textarea placeholder="Conte um pouco sobre seu projeto..." rows="3" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"></textarea></div></div>`;
-                const footer = `<button onclick="window.app.closeModal()" class="px-5 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.closeModal(); window.app.toast('Solicitação enviada!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-2 rounded-full font-bold shadow-lg transition">Enviar Proposta</button>`;
-                window.app.openModalGeneric("Solicitar Orçamento", body, footer);
-            }
+            openServiceModal: (id) => { const s = DB.services.find(x => x.id === id); const body = `<div class="space-y-6 animate-fade-in"><div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden"><div class="absolute right-0 top-0 w-20 h-20 bg-accent/5 rounded-full -mr-5 -mt-5"></div><h4 class="text-lg font-bold text-gray-900 mb-2">${s.name}</h4><p class="text-gray-600 text-sm leading-relaxed mb-4">${s.description}</p><div class="flex items-end justify-between border-t border-gray-100 pt-4"><div><p class="text-xs text-gray-400 uppercase font-bold">Investimento</p><p class="text-2xl font-black text-primary">R$ ${s.price.toFixed(2)}</p></div><span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">${s.unit || 'Preço Fixo'}</span></div></div><div class="space-y-3"><p class="text-sm font-bold text-gray-700 uppercase tracking-wide">Seus Dados</p><input type="text" placeholder="Nome Completo" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><input type="email" placeholder="E-mail Profissional" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><textarea placeholder="Conte um pouco sobre seu projeto..." rows="3" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"></textarea></div></div>`; const footer = `<button onclick="window.app.closeModal()" class="px-5 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.closeModal(); window.app.toast('Solicitação enviada!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-2 rounded-full font-bold shadow-lg transition">Enviar Proposta</button>`; window.app.openModalGeneric("Solicitar Orçamento", body, footer); }
         };
 
         window.addEventListener('hashchange', router);
