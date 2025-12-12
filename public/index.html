@@ -550,6 +550,27 @@
             ]
         };
 
+        // BIBLIOTECA DE ÍCONES PARA O SELETOR
+        const ICON_LIBRARY = [
+            'ph-pencil-simple', 'ph-pen-nib', 'ph-book-open', 'ph-book-bookmark', 'ph-notebook',
+            'ph-magic-wand', 'ph-sparkle', 'ph-star', 'ph-crown', 'ph-medal',
+            'ph-lightbulb', 'ph-lightning', 'ph-fire', 'ph-rocket', 'ph-airplane-tilt',
+            'ph-chat-circle-text', 'ph-quotes', 'ph-translate', 'ph-microphone', 'ph-video-camera',
+            'ph-user', 'ph-users', 'ph-student', 'ph-chalkboard-teacher', 'ph-briefcase',
+            'ph-paint-brush', 'ph-palette', 'ph-image', 'ph-camera', 'ph-crop',
+            'ph-check-circle', 'ph-shield-check', 'ph-lock-key', 'ph-key', 'ph-fingerprint',
+            'ph-chart-line-up', 'ph-target', 'ph-trophy', 'ph-money', 'ph-credit-card'
+        ];
+
+        // DEFINIÇÃO DE TEMAS (Visualmente agradáveis e acessíveis)
+        const THEMES = {
+            'default': { name: 'Midnight', bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', dot: 'bg-slate-800' },
+            'orange':  { name: 'Sunset',   bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', dot: 'bg-orange-500' },
+            'blue':    { name: 'Ocean',    bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-800',   dot: 'bg-blue-600' },
+            'purple':  { name: 'Royal',    bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800', dot: 'bg-purple-600' },
+            'green':   { name: 'Forest',   bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-800', dot: 'bg-emerald-600' },
+            'red':     { name: 'Passion',  bg: 'bg-rose-50',    border: 'border-rose-200',    text: 'text-rose-800',    dot: 'bg-rose-600' },
+        };
         // Gerador de Livros Mock   
         function generateBooks() {
             const covers = ['1e293b', 'd97706', '475569', '0f766e', 'be123c', '4338ca'];
@@ -698,78 +719,48 @@
         function initDashboard() {
             const sortList = (list, key, order) => {
                 return list.sort((a, b) => {
-                    let valA = a[key];
-                    let valB = b[key];
-                    // Tratar textos para não diferenciar maiúsculas
+                    let valA = a[key]; let valB = b[key];
                     if (typeof valA === 'string') valA = valA.toLowerCase();
                     if (typeof valB === 'string') valB = valB.toLowerCase();
-                    
                     if (valA < valB) return order === 'asc' ? -1 : 1;
                     if (valA > valB) return order === 'asc' ? 1 : -1;
                     return 0;
                 });
             };
-
-            // Helper para atualizar ícones visuais
             const updateIcons = (context, activeKey, activeOrder) => {
                 const keys = context === 'books' ? ['title', 'price', 'isPromotion', 'active'] : ['name', 'price', 'isPromotion', 'active'];
                 keys.forEach(k => {
                     const el = document.getElementById(`sort-${context}-${k}`);
                     if(el) {
-                        if(k === activeKey) {
-                            el.className = `ph-bold ${activeOrder === 'asc' ? 'ph-caret-up' : 'ph-caret-down'} text-accent align-middle ml-1`;
-                        } else {
-                            el.className = `ph-bold ph-arrows-down-up text-gray-300 group-hover:text-gray-500 align-middle ml-1`;
-                        }
+                        if(k === activeKey) { el.className = `ph-bold ${activeOrder === 'asc' ? 'ph-caret-up' : 'ph-caret-down'} text-accent align-middle ml-1`; } 
+                        else { el.className = `ph-bold ph-arrows-down-up text-gray-300 group-hover:text-gray-500 align-middle ml-1`; }
                     }
                 });
             };
 
-            // ================= LÓGICA DE LIVROS =================
-            // 1. Filtrar (Busca de Texto)
+            // LÓGICA LIVROS (MANTIDA IGUAL AO SEU ÚLTIMO CÓDIGO)
             let filteredBooks = DB.books.filter(b => b.title.toLowerCase().includes(adminState.books.filter.toLowerCase()));
-            
-            // 2. Ordenar
             filteredBooks = sortList(filteredBooks, adminState.books.sortKey, adminState.books.sortOrder);
             updateIcons('books', adminState.books.sortKey, adminState.books.sortOrder);
-
-            // 3. Paginar
             const totalBooks = filteredBooks.length;
             const startB = (adminState.books.page - 1) * adminState.itemsPerPage;
             const pagedBooks = filteredBooks.slice(startB, startB + adminState.itemsPerPage);
-
-            // Render Tabela Livros
             const booksBody = document.getElementById('admin-books-table');
             if(booksBody) {
-                if(pagedBooks.length === 0) {
-                    booksBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`;
-                } else {
+                if(pagedBooks.length === 0) { booksBody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>`; } 
+                else {
                     booksBody.innerHTML = pagedBooks.map(b => `
                         <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
                             <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
                             <td class="p-3 font-bold text-primary">${b.title}</td>
-                            <td class="p-3 text-gray-500">
-                                ${b.isPromotion && b.promoPrice ? `<span class="line-through text-xs">R$ ${b.price}</span><br><span class="text-green-600 font-bold">R$ ${b.promoPrice}</span>` : `R$ ${b.price.toFixed(2)}`}
-                            </td>
-                            <td class="p-3 text-center">
-                                ${b.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">SIM</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
-                            </td>
-                            <td class="p-3 text-center">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
-                                    <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-500'}"></span>
-                                    ${b.active ? 'Ativo' : 'Inativo'}
-                                </span>
-                            </td>
-                            <td class="p-3 text-right">
-                                <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                                <button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
-                            </td>
-                        </tr>
-                    `).join('');
+                            <td class="p-3 text-gray-500">${b.isPromotion && b.promoPrice ? `<span class="line-through text-xs">R$ ${b.price}</span><br><span class="text-green-600 font-bold">R$ ${b.promoPrice}</span>` : `R$ ${b.price.toFixed(2)}`}</td>
+                            <td class="p-3 text-center">${b.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">SIM</span>' : '<span class="text-[10px] text-gray-300">-</span>'}</td>
+                            <td class="p-3 text-center"><span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}"><span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-500'}"></span>${b.active ? 'Ativo' : 'Inativo'}</span></td>
+                            <td class="p-3 text-right"><button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button><button onclick="window.app.deleteBook('${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button></td>
+                        </tr>`).join('');
                 }
             }
-
-            // Render Paginação Livros
+            // Paginação Livros (Mantida)
             const bookPages = Math.ceil(totalBooks / adminState.itemsPerPage);
             document.getElementById('admin-books-info').innerText = `Mostrando ${pagedBooks.length} de ${totalBooks}`;
             let bookNavHTML = '';
@@ -781,10 +772,8 @@
             document.getElementById('admin-books-pagination').innerHTML = bookNavHTML;
 
 
-            // ================= LÓGICA DE SERVIÇOS =================
+            // ================= LÓGICA DE SERVIÇOS (ATUALIZADA) =================
             let filteredServices = DB.services.filter(s => s.name.toLowerCase().includes(adminState.services.filter.toLowerCase()));
-            
-            // Ordenar Serviços
             filteredServices = sortList(filteredServices, adminState.services.sortKey, adminState.services.sortOrder);
             updateIcons('services', adminState.services.sortKey, adminState.services.sortOrder);
 
@@ -797,31 +786,42 @@
                 if(pagedServices.length === 0) {
                     servicesBody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>`;
                 } else {
-                    servicesBody.innerHTML = pagedServices.map(s => `
-                        <tr class="border-b border-gray-100 hover:bg-blue-50/30 transition ${s.active ? '' : 'opacity-60 bg-gray-50'}">
+                    servicesBody.innerHTML = pagedServices.map(s => {
+                        // Aplica o tema na linha da tabela
+                        const theme = THEMES[s.theme || 'default'];
+                        
+                        return `
+                        <tr class="border-b ${theme.border} hover:bg-opacity-80 transition ${s.active ? theme.bg : 'opacity-60 bg-gray-50'}">
                             <td class="p-3">
-                                <div class="font-bold text-gray-800">${s.name}</div>
-                                <div class="text-xs text-gray-400 truncate max-w-[150px]">${s.description}</div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-white/60 flex items-center justify-center shadow-sm text-xl ${theme.text}">
+                                        <i class="ph-fill ${s.icon || 'ph-star-four'}"></i>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold text-gray-800">${s.name}</div>
+                                        <div class="text-xs ${theme.text} opacity-80 truncate max-w-[150px]">${s.description}</div>
+                                    </div>
+                                </div>
                             </td>
-                            <td class="p-3 font-mono text-blue-600">
-                                ${s.isPromotion && s.promoPrice ? `<span class="line-through text-xs text-gray-400">R$ ${s.price}</span> <span class="font-bold">R$ ${s.promoPrice}</span>` : `R$ ${s.price.toFixed(2)}`}
-                                <span class="text-[10px] text-gray-400 font-sans font-normal">${s.unit || ''}</span>
+                            <td class="p-3 font-mono ${theme.text}">
+                                ${s.isPromotion && s.promoPrice ? `<span class="line-through text-xs opacity-60">R$ ${s.price}</span> <span class="font-bold">R$ ${s.promoPrice}</span>` : `R$ ${s.price.toFixed(2)}`}
+                                <span class="text-[10px] opacity-60 font-sans font-normal">${s.unit || ''}</span>
                             </td>
                             <td class="p-3 text-center">
-                                ${s.isPromotion ? '<span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">SIM</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
+                                ${s.isPromotion ? '<span class="text-[10px] bg-white text-orange-600 border border-orange-200 px-2 py-0.5 rounded font-bold shadow-sm">SIM</span>' : '<span class="text-[10px] text-gray-300">-</span>'}
                             </td>
                             <td class="p-3 text-center">
-                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full ${s.active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
-                                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-500'}"></span>
+                                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-2 py-1 rounded-full bg-white/60 border ${theme.border} text-gray-600">
+                                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
                                     ${s.active ? 'Ativo' : 'Inativo'}
                                 </span>
                             </td>
                             <td class="p-3 text-right flex justify-end gap-2">
-                                <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
-                                <button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                                <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-500 hover:bg-blue-100 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                                <button onclick="window.app.deleteService('${s.id}')" class="text-red-400 hover:bg-red-100 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
                             </td>
                         </tr>
-                    `).join('');
+                    `}).join('');
                 }
             }
 
@@ -1079,9 +1079,48 @@
                 if (window.location.hash.includes('livro/')) initBookDetails(id);
             },
 
-            // --- HELPER: Dropdown Customizado ---
+            // --- HELPER: Dropdown Customizado Home ---
             toggleDropdown: (id) => { const el = document.getElementById(id); if(el) el.classList.toggle('hidden'); },
             selectHeroBook: (bookId, bookTitle) => { document.getElementById('config-hero-input').value = bookId; document.getElementById('config-hero-btn-text').innerText = bookTitle; document.getElementById('custom-dropdown-list').classList.add('hidden'); },
+
+            // --- HELPERS: UI de Serviços (Ícone e Cor) ---
+            
+            // Filtro da Grade de Ícones
+            filterIconGrid: (term) => {
+                const items = document.querySelectorAll('.icon-grid-item');
+                items.forEach(item => {
+                    const iconName = item.dataset.icon;
+                    if(iconName.includes(term.toLowerCase())) { item.classList.remove('hidden'); } else { item.classList.add('hidden'); }
+                });
+            },
+
+            // Selecionar Ícone
+            selectServiceIcon: (iconName) => {
+                document.getElementById('service-icon-input').value = iconName;
+                document.getElementById('icon-preview-display').className = `ph-fill ${iconName} text-2xl text-primary`;
+                document.getElementById('icon-picker-modal').classList.add('hidden'); // Fecha "modal" interno
+            },
+
+            // Selecionar Tema (Cor)
+            selectServiceTheme: (themeName) => {
+                document.getElementById('service-theme-input').value = themeName;
+                // Atualiza visualmente a seleção (bordas)
+                document.querySelectorAll('.theme-dot').forEach(el => {
+                    if(el.dataset.theme === themeName) {
+                        el.classList.add('ring-2', 'ring-offset-2', 'ring-gray-400', 'scale-110');
+                    } else {
+                        el.classList.remove('ring-2', 'ring-offset-2', 'ring-gray-400', 'scale-110');
+                    }
+                });
+            },
+
+            toggleIconPicker: () => {
+                const picker = document.getElementById('icon-picker-modal');
+                picker.classList.toggle('hidden');
+                if(!picker.classList.contains('hidden')) {
+                    document.getElementById('icon-search-input').focus();
+                }
+            },
 
             // --- CMS HOME ---
             openHomeConfigModal: () => {
@@ -1139,17 +1178,17 @@
                 initDashboard(); window.app.closeModal();
             },
 
-            // --- CRUD SERVIÇOS (PERSONALIZAÇÃO) ---
+            // --- CRUD SERVIÇOS (PERSONALIZAÇÃO COM MODAL DE ÍCONES E CORES) ---
             deleteService: (id) => { window.app.openConfirmModal('Remover Serviço?', 'Este serviço não estará mais visível para contratação. Deseja continuar?', 'danger', 'Remover', () => { DB.services = DB.services.filter(s => s.id !== id); if(DB.services.length % adminState.itemsPerPage === 0 && adminState.services.page > 1) { adminState.services.page--; } initDashboard(); window.app.toast('Serviço removido.', 'success'); }); },
             
             openServiceEditModal: (id = null) => {
-                // Se for novo ID, gera atributos aleatórios
+                // Lógica de Randomização para novos itens (Mantida para agilidade)
                 let randomTheme = 'default';
                 let randomIcon = 'ph-star-four';
                 
                 if (!id) {
-                    const themes = ['orange', 'blue', 'purple', 'green'];
-                    const icons = ['ph-magic-wand', 'ph-pencil-circle', 'ph-rocket', 'ph-lightbulb', 'ph-crown'];
+                    const themes = Object.keys(THEMES);
+                    const icons = ICON_LIBRARY;
                     randomTheme = themes[Math.floor(Math.random() * themes.length)];
                     randomIcon = icons[Math.floor(Math.random() * icons.length)];
                 }
@@ -1157,18 +1196,26 @@
                 const s = id ? DB.services.find(x => x.id === id) : { 
                     id: '', name: '', price: '', unit: '', description: '', 
                     active: true, isPromotion: false, promoPrice: '',
-                    icon: randomIcon, theme: randomTheme // Usa o aleatório se for novo
+                    icon: randomIcon, theme: randomTheme 
                 };
                 const isEdit = !!id;
                 
                 const promoToggle = `if(this.checked){document.getElementById('serv-promo-container').classList.remove('hidden');}else{document.getElementById('serv-promo-container').classList.add('hidden');document.getElementById('serv-promo-price').value='';}`;
-                const styleToggle = `if(this.checked){document.getElementById('serv-style-container').classList.remove('hidden');}else{document.getElementById('serv-style-container').classList.add('hidden');}`;
 
-                // Se estamos editando, o toggle de estilo começa aberto para facilitar
-                const showStyle = isEdit;
+                // GERA A GRADE DE ÍCONES
+                const iconGridHTML = ICON_LIBRARY.map(ic => 
+                    `<div onclick="window.app.selectServiceIcon('${ic}')" class="icon-grid-item p-3 rounded-lg hover:bg-gray-100 cursor-pointer flex items-center justify-center transition" data-icon="${ic}" title="${ic}">
+                        <i class="ph-fill ${ic} text-2xl text-gray-600 hover:text-primary"></i>
+                    </div>`
+                ).join('');
+
+                // GERA O SELETOR DE CORES
+                const colorDotsHTML = Object.entries(THEMES).map(([key, val]) => `
+                    <div onclick="window.app.selectServiceTheme('${key}')" data-theme="${key}" class="theme-dot w-8 h-8 rounded-full cursor-pointer transition-all hover:scale-110 ${val.dot} ${s.theme === key ? 'ring-2 ring-offset-2 ring-gray-400 scale-110' : ''}" title="${val.name}"></div>
+                `).join('');
 
                 const body = `
-                    <div class="space-y-4 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <div class="space-y-5 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                         <input type="hidden" id="service-id" value="${s.id || ''}">
                         
                         <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
@@ -1179,52 +1226,59 @@
                             </label>
                         </div>
 
-                        <div>
-                            <label class="text-xs font-bold text-gray-500 uppercase">Nome do Serviço</label>
-                            <input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="space-y-4">
                             <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label>
-                                <input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                                <label class="text-xs font-bold text-gray-500 uppercase">Nome do Serviço</label>
+                                <input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700">
                             </div>
-                            <div>
-                                <label class="text-xs font-bold text-gray-500 uppercase">Unidade</label>
-                                <input type="text" id="service-unit" value="${s.unit || ''}" placeholder="Ex: p/ hora" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
-                            </div>
-                        </div>
 
-                        <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                             <div class="flex items-center justify-between mb-2">
+                            <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <span class="font-bold text-purple-800 text-sm block">Personalizar Aparência</span>
-                                    <span class="text-xs text-purple-600">Ícone e cores para destaque.</span>
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label>
+                                    <input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
                                 </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="service-style-toggle" class="sr-only peer" onchange="${styleToggle}" ${showStyle ? 'checked' : ''}>
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
-                                </label>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500 uppercase">Unidade</label>
+                                    <input type="text" id="service-unit" value="${s.unit || ''}" placeholder="Ex: p/ hora" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                             <div class="mb-4 border-b border-gray-200 pb-2">
+                                <span class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                                    <i class="ph-fill ph-paint-brush text-accent"></i> Identidade Visual
+                                </span>
                             </div>
                             
-                            <div id="serv-style-container" class="${showStyle ? '' : 'hidden'} mt-4 grid grid-cols-2 gap-4 animate-fade-in border-t border-purple-200 pt-4">
+                            <div class="space-y-5">
                                 <div>
-                                    <label class="text-xs font-bold text-purple-800 uppercase mb-1 block">Ícone (Phosphor)</label>
-                                    <div class="relative">
-                                        <input type="text" id="service-icon" value="${s.icon}" placeholder="Ex: ph-pencil" class="w-full bg-white border border-purple-200 rounded-lg p-2 pl-9 form-input text-sm font-mono text-purple-900">
-                                        <i class="ph-bold ph-star absolute left-3 top-2.5 text-purple-300"></i>
+                                    <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Ícone Principal</label>
+                                    <input type="hidden" id="service-icon-input" value="${s.icon}">
+                                    <button onclick="window.app.toggleIconPicker()" class="w-full bg-white border border-gray-300 rounded-lg p-3 flex items-center justify-between hover:bg-gray-50 transition group">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+                                                <i id="icon-preview-display" class="ph-fill ${s.icon} text-xl text-primary"></i>
+                                            </div>
+                                            <span class="text-sm font-bold text-gray-600 group-hover:text-primary">Selecionar Ícone...</span>
+                                        </div>
+                                        <i class="ph-bold ph-caret-down text-gray-400"></i>
+                                    </button>
+
+                                    <div id="icon-picker-modal" class="hidden mt-2 bg-white border border-gray-200 rounded-xl shadow-lg p-4 animate-fade-in">
+                                        <input type="text" id="icon-search-input" oninput="window.app.filterIconGrid(this.value)" placeholder="Buscar..." class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 text-sm mb-3 focus:outline-none focus:border-accent">
+                                        <div class="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto custom-scrollbar">
+                                            ${iconGridHTML}
+                                        </div>
                                     </div>
-                                    <a href="https://phosphoricons.com/" target="_blank" class="text-[10px] text-purple-500 underline mt-1 block hover:text-purple-700">Lista de ícones</a>
                                 </div>
+
                                 <div>
-                                    <label class="text-xs font-bold text-purple-800 uppercase mb-1 block">Tema de Cor</label>
-                                    <select id="service-theme" class="w-full bg-white border border-purple-200 rounded-lg p-2 form-input text-sm font-bold text-gray-600">
-                                        <option value="default" ${s.theme === 'default' ? 'selected' : ''}>Midnight (Padrão)</option>
-                                        <option value="orange" ${s.theme === 'orange' ? 'selected' : ''}>Sunset (Laranja)</option>
-                                        <option value="blue" ${s.theme === 'blue' ? 'selected' : ''}>Ocean (Azul)</option>
-                                        <option value="purple" ${s.theme === 'purple' ? 'selected' : ''}>Royal (Roxo)</option>
-                                        <option value="green" ${s.theme === 'green' ? 'selected' : ''}>Forest (Verde)</option>
-                                    </select>
+                                    <label class="text-xs font-bold text-gray-500 uppercase mb-3 block">Tema do Card</label>
+                                    <input type="hidden" id="service-theme-input" value="${s.theme}">
+                                    <div class="flex gap-4 flex-wrap">
+                                        ${colorDotsHTML}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1261,9 +1315,10 @@
                 const active = document.getElementById('service-active').checked;
                 const isPromotion = document.getElementById('service-promo').checked;
                 
-                // Pega os valores de personalização
-                const icon = document.getElementById('service-icon').value || 'ph-star-four';
-                const theme = document.getElementById('service-theme').value || 'default';
+                // CAPTURA OBRIGATÓRIA DOS VALORES VISUAIS
+                // Se por acaso vier vazio, aplicamos um fallback seguro
+                const icon = document.getElementById('service-icon-input').value || 'ph-star-four';
+                const theme = document.getElementById('service-theme-input').value || 'default';
 
                 let promoPrice = null;
 
@@ -1278,7 +1333,7 @@
                     id: isEdit ? id : 'S' + Date.now(), 
                     name, price, unit, description, active, 
                     isPromotion, promoPrice,
-                    icon, theme // Salva os novos campos
+                    icon, theme // Salvo sempre
                 };
 
                 if(isEdit) {
