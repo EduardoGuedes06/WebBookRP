@@ -592,7 +592,6 @@ const TEMPLATES = {
             const names = ["Fernanda Costa", "Roberto Silva", "Ana Souza", "Carlos Lima", "Beatriz Melo"];
             const emails = ["fer.costa@email.com", "beto@email.com", "ana.souza@email.com", "carlos@l.com", "bia@m.com"];
             const services = ["Mentoria Literária", "Design de Capa", "Revisão Textual"];
-            // Preços base para simular "Informações Reais"
             const prices = { "Mentoria Literária": 500, "Design de Capa": 800, "Revisão Textual": 350 }; 
             const statuses = ['pending', 'analyzing', 'working', 'finished', 'cancelled'];
             
@@ -603,12 +602,16 @@ const TEMPLATES = {
                 const date = new Date();
                 date.setDate(date.getDate() - daysAgo);
                 
+                // Gera um telefone aleatório formato BR
+                const phone = `(11) 9${Math.floor(Math.random() * 9000 + 1000)}-${Math.floor(Math.random() * 9000 + 1000)}`;
+
                 DB.leads.push({
-                    id: 1765571805000 + i, // ID estilo pedido real
+                    id: 1765571805000 + i,
                     name: names[randIndex],
                     email: emails[randIndex],
+                    phone: phone, // NOVO CAMPO
                     service: sName,
-                    value: prices[sName], // Valor real inserido
+                    value: prices[sName],
                     desc: `Solicitação nº ${i}. Gostaria de um orçamento detalhado para meu livro de 300 páginas.`,
                     date: date.toLocaleDateString('pt-BR'),
                     timestamp: date.getTime(),
@@ -1720,25 +1723,22 @@ const TEMPLATES = {
             openLeadModal: (email) => {
                 const leads = DB.leads.filter(l => l.email === email);
                 if(leads.length === 0) return;
-                const mainLead = leads[0];
-
-                // Filtro Interno e Paginação
-                let displayedLeads = leads.filter(l => adminState.leadModal.filterStatus === 'all' || l.status === adminState.leadModal.filterStatus);
-                displayedLeads.sort((a, b) => b.timestamp - a.timestamp);
                 
-                const totalPages = Math.ceil(displayedLeads.length / adminState.leadModal.itemsPerPage);
-                const start = (adminState.leadModal.page - 1) * adminState.leadModal.itemsPerPage;
-                const paged = displayedLeads.slice(start, start + adminState.leadModal.itemsPerPage);
+                leads.sort((a, b) => {
+                    const priority = { 'working': 0, 'analyzing': 1, 'pending': 2, 'finished': 3, 'cancelled': 4 };
+                    return priority[a.status] - priority[b.status];
+                });
+
+                const mainLead = leads[0]; 
 
                 const getStatusColor = (s) => {
-                    if(s === 'pending') return 'bg-red-50 text-red-700 border-red-200';
-                    if(s === 'analyzing') return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                    if(s === 'pending') return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                    if(s === 'analyzing') return 'bg-orange-50 text-orange-700 border-orange-200';
                     if(s === 'working') return 'bg-blue-50 text-blue-700 border-blue-200';
                     if(s === 'finished') return 'bg-green-50 text-green-700 border-green-200';
                     return 'bg-gray-50 text-gray-500 border-gray-200';
                 };
                 
-                // Helper para o fundo do card
                 const getCardBg = (s) => {
                     if(s === 'working') return 'bg-blue-50/50 border-blue-200';
                     if(s === 'finished') return 'bg-green-50/50 border-green-200';
@@ -1748,23 +1748,30 @@ const TEMPLATES = {
 
                 const body = `
                     <div class="h-[75vh] flex flex-col bg-gray-50 -m-8">
-                        <div class="bg-white p-8 border-b border-gray-200 flex justify-between items-start">
+                        <div class="bg-white p-8 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start gap-4">
                             <div class="flex items-center gap-4">
-                                <div class="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-3xl font-serif">${mainLead.name.charAt(0)}</div>
-                                <div><h3 class="text-2xl font-bold text-gray-800">${mainLead.name}</h3><p class="text-gray-500 text-sm">${mainLead.email}</p></div>
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-slate-800 flex items-center justify-center text-white text-3xl font-serif">
+                                    ${mainLead.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-gray-800">${mainLead.name}</h3>
+                                    <div class="flex flex-col gap-1 mt-1">
+                                        <p class="text-gray-500 text-sm flex items-center gap-2"><i class="ph-bold ph-envelope"></i> ${mainLead.email}</p>
+                                        <p class="text-gray-500 text-sm flex items-center gap-2"><i class="ph-bold ph-whatsapp-logo"></i> ${mainLead.phone || 'Não informado'}</p>
+                                    </div>
+                                    <div class="flex gap-2 mt-2">
+                                        <span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded font-bold uppercase">${leads.length} Pedidos</span>
+                                    </div>
+                                </div>
                             </div>
                             <div class="flex gap-2">
-                                <select onchange="window.app.modalFilter(this.value, '${email}')" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-600 rounded-lg p-2 outline-none">
-                                    <option value="all" ${adminState.leadModal.filterStatus === 'all' ? 'selected' : ''}>Todos</option>
-                                    <option value="pending" ${adminState.leadModal.filterStatus === 'pending' ? 'selected' : ''}>Pendentes</option>
-                                    <option value="working" ${adminState.leadModal.filterStatus === 'working' ? 'selected' : ''}>Atuando</option>
-                                    <option value="finished" ${adminState.leadModal.filterStatus === 'finished' ? 'selected' : ''}>Finalizados</option>
-                                </select>
+                                <a href="https://wa.me/55${(mainLead.phone || '').replace(/\D/g,'')}" target="_blank" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition shadow-sm"><i class="ph-bold ph-whatsapp-logo"></i> WhatsApp</a>
+                                <a href="mailto:${mainLead.email}" class="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 transition shadow-sm"><i class="ph-bold ph-envelope-simple"></i> E-mail</a>
                             </div>
                         </div>
 
                         <div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
-                            ${paged.map(lead => `
+                            ${leads.map(lead => `
                                 <div id="card-lead-${lead.id}" class="border rounded-xl p-5 shadow-sm transition duration-300 relative overflow-hidden ${getCardBg(lead.status)}">
                                     <div class="flex flex-col md:flex-row justify-between items-start gap-4">
                                         <div class="flex-1">
@@ -1774,7 +1781,6 @@ const TEMPLATES = {
                                                 <span class="text-xs text-gray-500 border-l pl-2 border-gray-300">R$ ${lead.value || 'Sob Consulta'}</span>
                                             </div>
                                             <span class="text-xs text-gray-400 flex items-center gap-1 mb-3"><i class="ph-bold ph-calendar"></i> Registrado em: ${lead.date}</span>
-                                            
                                             <div class="bg-white/60 p-3 rounded-lg border border-gray-200/50 text-sm text-gray-600 italic mb-3">"${lead.desc}"</div>
                                         </div>
 
@@ -1782,7 +1788,6 @@ const TEMPLATES = {
                                             <div id="status-badge-${lead.id}" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${getStatusColor(lead.status)}">
                                                 ${lead.status}
                                             </div>
-                                            
                                             <button onclick="window.app.openAnalysisModal(${lead.id}, '${email}')" class="bg-primary hover:bg-slate-800 text-white px-5 py-2 rounded-lg text-xs font-bold shadow-md transition flex items-center gap-2">
                                                 <i class="ph-bold ph-magnifying-glass"></i> Análise
                                             </button>
@@ -1790,16 +1795,7 @@ const TEMPLATES = {
                                     </div>
                                 </div>
                             `).join('')}
-                            
-                            ${paged.length === 0 ? '<p class="text-center text-gray-400 py-4">Nenhum pedido encontrado.</p>' : ''}
                         </div>
-
-                        ${totalPages > 1 ? `
-                        <div class="bg-white p-4 border-t border-gray-200 flex justify-center items-center gap-3">
-                            <button onclick="window.app.modalPage(-1, '${email}')" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.leadModal.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
-                            <span class="text-xs font-bold text-gray-500">Pág ${adminState.leadModal.page}/${totalPages}</span>
-                            <button onclick="window.app.modalPage(1, '${email}')" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center" ${adminState.leadModal.page === totalPages ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
-                        </div>` : ''}
                     </div>
                 `;
                 window.app.openModalGeneric(" ", body, ""); 
@@ -1830,44 +1826,89 @@ const TEMPLATES = {
                 const lead = DB.leads.find(l => l.id === id);
                 if(!lead) return;
 
+                // Status Labels Traduzidos
+                const statusLabels = {
+                    'pending': 'Pendente', 'analyzing': 'Em Análise', 'working': 'Atuando',
+                    'finished': 'Finalizado', 'cancelled': 'Cancelado'
+                };
+
                 const body = `
-                    <div class="h-[75vh] flex flex-col bg-gray-50 -m-8">
-                        <div class="bg-white p-6 border-b border-gray-200 flex items-center justify-between">
-                            <button onclick="window.app.openLeadModal('${email}')" class="text-gray-500 hover:text-primary font-bold text-sm flex items-center gap-2"><i class="ph-bold ph-arrow-left"></i> Voltar para Lista</button>
+                    <div class="h-[80vh] flex flex-col bg-gray-50 -m-8">
+                        <div class="bg-white p-6 border-b border-gray-200 flex items-center justify-between shadow-sm z-10">
+                            <button onclick="window.app.openLeadModal('${email}')" class="text-gray-500 hover:text-primary font-bold text-sm flex items-center gap-2 transition">
+                                <i class="ph-bold ph-arrow-left"></i> Voltar para Lista
+                            </button>
                             <div class="text-right">
-                                <h3 class="text-lg font-bold text-gray-800">Análise do Pedido #${lead.id}</h3>
-                                <p class="text-xs text-gray-400">${lead.service} - R$ ${lead.value}</p>
+                                <div class="flex items-center justify-end gap-2">
+                                    <h3 class="text-lg font-bold text-gray-800">Pedido #${lead.id}</h3>
+                                    <span class="text-[10px] bg-gray-100 border border-gray-200 text-gray-500 px-2 py-0.5 rounded uppercase font-bold">${lead.date}</span>
+                                </div>
+                                <p class="text-sm font-bold text-primary mt-1">${lead.service} <span class="text-gray-300 mx-2">|</span> <span class="text-green-600">R$ ${lead.value ? lead.value.toFixed(2) : 'A Definir'}</span></p>
                             </div>
                         </div>
                         
-                        <div class="p-8 max-w-3xl mx-auto w-full space-y-6">
-                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                <label class="text-xs font-bold text-gray-500 uppercase block mb-3">Status do Pedido</label>
-                                <div class="grid grid-cols-5 gap-2">
-                                    ${['pending', 'analyzing', 'working', 'finished', 'cancelled'].map(s => `
-                                        <button onclick="window.app.updateLeadStatus(${lead.id}, '${s}', '${email}')" 
-                                            class="py-3 rounded-lg text-[10px] font-bold uppercase border-2 transition ${lead.status === s ? 'border-primary bg-primary text-white' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-300'}">
-                                            ${s}
-                                        </button>
-                                    `).join('')}
+                        <div class="flex-1 overflow-y-auto custom-scrollbar p-8">
+                            <div class="max-w-4xl mx-auto w-full space-y-6">
+                                
+                                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                            <i class="ph-duotone ph-user text-2xl"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-gray-800">${lead.name}</h4>
+                                            <p class="text-xs text-gray-400">Entre em contato direto:</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-3">
+                                        <a href="https://wa.me/55${(lead.phone || '').replace(/\D/g,'')}" target="_blank" class="flex items-center gap-2 bg-green-50 text-green-600 border border-green-100 px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-green-100 transition">
+                                            <i class="ph-bold ph-whatsapp-logo text-lg"></i> WhatsApp
+                                        </a>
+                                        <a href="mailto:${lead.email}" class="flex items-center gap-2 bg-blue-50 text-blue-600 border border-blue-100 px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-blue-100 transition">
+                                            <i class="ph-bold ph-envelope-simple text-lg"></i> E-mail
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Solicitação Original</label>
-                                <p class="text-gray-700 italic bg-gray-50 p-4 rounded-lg border border-gray-100 leading-relaxed">"${lead.desc}"</p>
-                            </div>
+                                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-4 flex items-center gap-2">
+                                        <i class="ph-fill ph-faders"></i> Alterar Status do Pedido
+                                    </label>
+                                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+                                        ${['pending', 'analyzing', 'working', 'finished', 'cancelled'].map(s => `
+                                            <button onclick="window.app.updateLeadStatus(${lead.id}, '${s}', '${email}')" 
+                                                class="flex flex-col items-center justify-center py-4 rounded-xl border-2 transition duration-200 ${lead.status === s ? 'border-primary bg-primary text-white shadow-lg transform scale-105' : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-white'}">
+                                                <i class="ph-bold ${s === 'finished' ? 'ph-check-circle' : (s === 'cancelled' ? 'ph-x-circle' : 'ph-hourglass')} text-xl mb-1"></i>
+                                                <span class="text-[10px] font-bold uppercase">${statusLabels[s]}</span>
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
 
-                            <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-                                <label class="text-xs font-bold text-gray-500 uppercase block mb-2">Anotações Internas & Progresso</label>
-                                <textarea rows="6" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700 focus:outline-none focus:border-accent resize-none" onchange="window.app.saveLeadNote(${lead.id}, this.value)">${lead.notes || ''}</textarea>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-full">
+                                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-3 flex items-center gap-2">
+                                            <i class="ph-fill ph-chat-text"></i> Mensagem do Cliente
+                                        </label>
+                                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-100 h-[calc(100%-2rem)]">
+                                            <p class="text-gray-700 italic leading-relaxed text-sm">"${lead.desc}"</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm h-full">
+                                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-3 flex items-center gap-2">
+                                            <i class="ph-fill ph-notebook"></i> Notas Internas
+                                        </label>
+                                        <textarea rows="6" placeholder="Escreva observações sobre o andamento..." class="w-full bg-yellow-50/50 border border-yellow-100 rounded-xl p-4 text-sm text-gray-700 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent resize-none h-[calc(100%-2rem)]" onchange="window.app.saveLeadNote(${lead.id}, this.value)">${lead.notes || ''}</textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 `;
                 window.app.openModalGeneric(" ", body, ""); 
             },
-            
+
             selectedPostId: null,
 
             selectAdminPost: (id) => {
@@ -2610,7 +2651,54 @@ const TEMPLATES = {
             connectGoogle: () => { user = { name: "Visitante", avatar: "https://placehold.co/40x40/d97706/FFF?text=Eu" }; localStorage.setItem('user', JSON.stringify(user)); initCommunity(); window.app.toast('Conectado como Visitante', 'success'); },
             postComment: () => { const text = document.getElementById('new-comment').value; if(text.trim()) { DB.comments.unshift({ id: Date.now(), user: user.name, avatar: user.avatar, text: text, date: "Agora mesmo" }); initCommunity(); window.app.toast('Comentário publicado!', 'success'); } },
             handleLogin: () => { const e = document.getElementById('email').value; const p = document.getElementById('password').value; if(e === 'admin@ronaldo.com' && p === 'admin') { isAdmin = true; localStorage.setItem('isAdmin', 'true'); window.location.hash = '#/painel'; router(); window.app.toast('Bem-vindo, Chefe!', 'success'); } else { window.app.toast('Credenciais inválidas', 'error'); } },
-            openServiceModal: (id) => { const s = DB.services.find(x => x.id === id); const body = `<div class="space-y-6 animate-fade-in"><div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden"><div class="absolute right-0 top-0 w-20 h-20 bg-accent/5 rounded-full -mr-5 -mt-5"></div><h4 class="text-lg font-bold text-gray-900 mb-2">${s.name}</h4><p class="text-gray-600 text-sm leading-relaxed mb-4">${s.description}</p><div class="flex items-end justify-between border-t border-gray-100 pt-4"><div><p class="text-xs text-gray-400 uppercase font-bold">Investimento</p><p class="text-2xl font-black text-primary">R$ ${s.price.toFixed(2)}</p></div><span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">${s.unit || 'Preço Fixo'}</span></div></div><div class="space-y-3"><p class="text-sm font-bold text-gray-700 uppercase tracking-wide">Seus Dados</p><input type="text" placeholder="Nome Completo" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><input type="email" placeholder="E-mail Profissional" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"><textarea placeholder="Conte um pouco sobre seu projeto..." rows="3" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input"></textarea></div></div>`; const footer = `<button onclick="window.app.closeModal()" class="px-5 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.closeModal(); window.app.toast('Solicitação enviada!', 'success')" class="bg-primary hover:bg-slate-800 text-white px-8 py-2 rounded-full font-bold shadow-lg transition">Enviar Proposta</button>`; window.app.openModalGeneric("Solicitar Orçamento", body, footer); }
+            
+            openServiceModal: (id) => { 
+                const s = DB.services.find(x => x.id === id); 
+                const body = `
+                    <div class="space-y-6 animate-fade-in">
+                        <div class="bg-gradient-to-r from-gray-50 to-white p-6 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
+                            <div class="absolute right-0 top-0 w-20 h-20 bg-accent/5 rounded-full -mr-5 -mt-5"></div>
+                            <h4 class="text-lg font-bold text-gray-900 mb-2">${s.name}</h4>
+                            <p class="text-gray-600 text-sm leading-relaxed mb-4">${s.description}</p>
+                            <div class="flex items-end justify-between border-t border-gray-100 pt-4">
+                                <div><p class="text-xs text-gray-400 uppercase font-bold">Investimento Estimado</p><p class="text-2xl font-black text-primary">R$ ${s.price.toFixed(2)}</p></div>
+                                <span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">${s.unit || 'Preço Fixo'}</span>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <p class="text-sm font-bold text-gray-700 uppercase tracking-wide">Seus Dados de Contato</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input type="text" id="req-name" placeholder="Nome Completo" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input text-sm">
+                                <input type="tel" id="req-phone" placeholder="WhatsApp (DDD+Num)" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input text-sm">
+                            </div>
+                            <input type="email" id="req-email" placeholder="E-mail Profissional" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input text-sm">
+                            <textarea id="req-desc" placeholder="Conte um pouco sobre seu projeto..." rows="3" class="w-full bg-white border border-gray-200 rounded-lg p-3 text-gray-700 form-input text-sm"></textarea>
+                        </div>
+                    </div>`; 
+                const footer = `<button onclick="window.app.closeModal()" class="px-5 py-2 text-gray-500 font-bold text-sm">Cancelar</button><button onclick="window.app.submitBudgetRequest('${s.name}')" class="bg-primary hover:bg-slate-800 text-white px-8 py-2 rounded-full font-bold shadow-lg transition">Enviar Proposta</button>`; 
+                window.app.openModalGeneric("Solicitar Orçamento", body, footer); 
+            },
+
+            submitBudgetRequest: (serviceName) => {
+                const name = document.getElementById('req-name').value;
+                const email = document.getElementById('req-email').value;
+                const phone = document.getElementById('req-phone').value;
+                const desc = document.getElementById('req-desc').value;
+
+                if(!name || !email || !phone) return window.app.toast('Preencha nome, e-mail e telefone!', 'error');
+
+                DB.leads.unshift({ 
+                    id: Date.now(), name, email, phone, desc, 
+                    service: serviceName, 
+                    value: 0, // A definir
+                    date: new Date().toLocaleDateString('pt-BR'), 
+                    status: 'pending',
+                    timestamp: Date.now()
+                });
+
+                window.app.toast('Solicitação enviada com sucesso!', 'success'); 
+                window.app.closeModal();
+            },
         };
 
         window.addEventListener('hashchange', router);
