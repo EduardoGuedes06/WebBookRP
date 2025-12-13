@@ -1323,100 +1323,152 @@ const TEMPLATES = {
             }
         }
 
-        function initCommunity() {
-            const feed = document.getElementById('public-blog-feed');
-            const sidebarComments = document.getElementById('sidebar-comments');
-            if(!feed) return;
+        const getCommentDisplayDate = (c) => {
+            // Se tiver timestamp real (comentário novo)
+            if (c.timestamp) {
+                const diff = Date.now() - c.timestamp;
+                const twoHours = 2 * 60 * 60 * 1000; // 2 horas em milissegundos
+                
+                if (diff < twoHours) return "Agora mesmo";
+                
+                // Passou de 2 horas? Mostra data e hora
+                const d = new Date(c.timestamp);
+                return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+            }
+            // Fallback para os mocks antigos que só tem string "10/12/2025"
+            return c.date;
+        };
 
-            const publishedPosts = DB.posts.filter(p => p.status === 'published');
+        const getCommentTimeValue = (c) => {
+            // 1. Prioridade absoluta para timestamp real
+            if (c.timestamp) return c.timestamp; 
             
-            feed.innerHTML = publishedPosts.map(post => {
-                const userLiked = user && post.likedBy.includes(user.name);
-                const isTextBlack = post.coverTextColor === 'black';
-                const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)]';
-                const metaColor = isTextBlack ? 'text-gray-700' : 'text-white';
-                const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black via-black/50 to-transparent';
-                const likeBtnBorder = isTextBlack ? 'border-gray-300 bg-white/50 hover:bg-white' : 'border-white/20 bg-white/10 hover:bg-white/20';
-                const likeIconColor = userLiked ? 'text-red-500' : (isTextBlack ? 'text-gray-900' : 'text-white');
-                const linkHTML = post.link ? `<a href="${post.link}" target="_blank" class="text-xs font-bold text-accent hover:underline mt-2 inline-flex items-center gap-1"><i class="ph-bold ph-link"></i> Acessar Link</a>` : '';
+            // 2. Se for "Agora mesmo" string (legado), joga pro topo
+            if (c.date === "Agora mesmo") return Date.now();
 
-                // --- LÓGICA DE EXIBIÇÃO DE COMENTÁRIOS PÚBLICOS ---
-                const limit = publicState.expandedComments[post.id] || 3; // Padrão: 3
-                const visibleComments = post.comments.slice(0, limit);
-                const hasMore = post.comments.length > limit;
-                const remaining = post.comments.length - limit;
-                // ----------------------------------------------------
+            // 3. Tratamento para datas antigas em string (DD/MM/AAAA)
+            if (typeof c.date === 'string' && c.date.includes('/')) {
+                const parts = c.date.split('/');
+                // Cria data no formato JS (Mes começa do 0)
+                return new Date(parts[2], parts[1]-1, parts[0]).getTime();
+            }
+            return 0; 
+        };
 
-                return `
-                <div class="group bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative mb-10">
-                    <div class="relative h-[350px] overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10 opacity-90"></div>
-                        <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
-                        <div class="absolute bottom-0 left-0 w-full p-8 z-20">
-                            <div class="flex justify-between items-end">
-                                <div>
-                                    <span class="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 inline-block shadow-lg shadow-black/20">${post.category}</span>
-                                    <h3 class="text-3xl font-serif font-bold ${titleColor} mb-2 leading-tight animate-pulse-slow">${post.title}</h3>
-                                    <div class="flex items-center gap-4 ${metaColor} text-sm font-medium drop-shadow-md">
-                                        <span><i class="ph-fill ph-calendar"></i> ${post.date}</span>
-                                    </div>
-                                </div>
-                                ${post.allowLikes ? `
-                                <button onclick="${user ? `window.app.togglePublicPostLike(${post.id})` : 'window.app.connectGoogle()'}" class="w-12 h-12 rounded-full flex items-center justify-center border ${likeBtnBorder} backdrop-blur-md transition transform hover:scale-110 shadow-lg">
-                                    <i class="ph-fill ph-heart text-2xl ${likeIconColor} drop-shadow-md"></i>
-                                </button>` : ''}
+        function initCommunity() {
+    const feed = document.getElementById('public-blog-feed');
+    const sidebarComments = document.getElementById('sidebar-comments');
+    if(!feed) return;
+
+    // Ordena Posts (Novos primeiro)
+    const publishedPosts = DB.posts
+        .filter(p => p.status === 'published')
+        .sort((a, b) => b.id - a.id);
+    
+    feed.innerHTML = publishedPosts.map(post => {
+        const userLiked = user && post.likedBy.includes(user.name);
+        const isTextBlack = post.coverTextColor === 'black';
+        const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)]';
+        const metaColor = isTextBlack ? 'text-gray-700' : 'text-white';
+        const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black via-black/50 to-transparent';
+        const likeBtnBorder = isTextBlack ? 'border-gray-300 bg-white/50 hover:bg-white' : 'border-white/20 bg-white/10 hover:bg-white/20';
+        
+        // --- ORDENAÇÃO CORRIGIDA ---
+        // Usa o helper getCommentTimeValue para garantir que o mais recente (maior timestamp) fique em cima
+        const sortedComments = [...post.comments].sort((a, b) => getCommentTimeValue(b) - getCommentTimeValue(a));
+
+        const limit = publicState.expandedComments[post.id] || 3; 
+        const visibleComments = sortedComments.slice(0, limit);
+        const hasMore = sortedComments.length > limit;
+        const remaining = sortedComments.length - limit;
+
+        return `
+        <div class="group bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100 relative mb-10">
+            <div class="relative h-[350px] overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-t ${gradientClass} z-10 opacity-90"></div>
+                <img src="${post.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                <div class="absolute bottom-0 left-0 w-full p-8 z-20">
+                    <div class="flex justify-between items-end">
+                        <div>
+                            <span class="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3 inline-block shadow-lg shadow-black/20">${post.category}</span>
+                            <h3 class="text-3xl font-serif font-bold ${titleColor} mb-2 leading-tight animate-pulse-slow">${post.title}</h3>
+                            <div class="flex items-center gap-4 ${metaColor} text-sm font-medium drop-shadow-md">
+                                <span><i class="ph-fill ph-calendar"></i> ${post.date}</span>
                             </div>
                         </div>
-                    </div>
-
-                    <div class="p-8 pt-6">
-                        <p class="text-gray-600 leading-relaxed text-lg mb-4">${post.content}</p>
-                        ${linkHTML}
-                        <div class="border-t border-gray-100 mt-6 pt-6">
-                            <div class="flex items-center gap-6 text-sm text-gray-400 mb-6">
-                                <span class="flex items-center gap-2 ${userLiked ? 'text-red-500 font-bold' : ''}"><i class="ph-fill ph-heart"></i> ${post.likes} curtidas</span>
-                                <span class="flex items-center gap-2"><i class="ph-fill ph-chat-circle"></i> ${post.comments.length} comentários</span>
-                            </div>
-                            
-                            <div class="space-y-4 mb-4">
-                                ${visibleComments.map(c => {
-                                    const cLiked = user && c.likedBy && c.likedBy.includes(user.name);
-                                    return `
-                                    <div class="flex gap-3 animate-fade-in">
-                                        <img src="${c.avatar}" class="w-8 h-8 rounded-full">
-                                        <div class="flex-1">
-                                            <div class="bg-gray-50 p-3 rounded-2xl rounded-tl-none relative">
-                                                ${c.authorLike ? '<i class="ph-fill ph-star absolute -top-1 -right-1 text-accent bg-white rounded-full p-1 shadow-sm text-xs"></i>' : ''}
-                                                <div class="flex justify-between items-baseline"><span class="font-bold text-xs text-gray-900">${c.user}</span><span class="text-[10px] text-gray-400">${c.date}</span></div>
-                                                <p class="text-sm text-gray-600">${c.text}</p>
-                                            </div>
-                                            <div class="flex gap-3 mt-1 ml-2">
-                                                <button onclick="${user ? `window.app.togglePublicCommentLike(${post.id}, ${c.id})` : 'window.app.connectGoogle()'}" class="text-[10px] font-bold text-gray-400 hover:text-red-500 flex items-center gap-1"><i class="ph-bold ph-heart"></i> ${c.likes || 0}</button>
-                                            </div>
-                                        </div>
-                                    </div>`;
-                                }).join('')}
-                            </div>
-                            
-                            ${hasMore ? `
-                                <div class="text-center mb-6">
-                                    <button onclick="window.app.loadMoreComments(${post.id})" class="text-xs font-bold text-accent hover:underline py-2">
-                                        Ver mais ${remaining > 5 ? 5 : remaining} comentários...
-                                    </button>
-                                </div>
-                            ` : ''}
-
-                            ${post.allowComments ? (user ? `<div class="flex gap-3 items-start"><img src="${user.avatar}" class="w-8 h-8 rounded-full"><div class="flex-1 relative"><textarea id="comment-input-${post.id}" rows="1" placeholder="Comente..." class="w-full bg-gray-50 border-0 rounded-xl p-3 pr-12 text-sm focus:ring-2 focus:ring-accent resize-none"></textarea><button onclick="window.app.publicPostComment(${post.id})" class="absolute right-2 top-2 text-primary hover:text-accent p-1"><i class="ph-bold ph-paper-plane-right text-xl"></i></button></div></div>` : `<button onclick="window.app.connectGoogle()" class="w-full py-3 border border-gray-200 border-dashed rounded-xl text-xs font-bold text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-2"><i class="ph-bold ph-sign-in"></i> Faça login</button>`) : '<p class="text-center text-xs text-gray-400 italic">Comentários desativados.</p>'}
-                        </div>
+                        ${post.allowLikes ? `
+                        <button onclick="${user ? `window.app.togglePublicPostLike(${post.id})` : 'window.app.connectGoogle()'}" class="w-12 h-12 rounded-full flex items-center justify-center border ${likeBtnBorder} backdrop-blur-md transition transform hover:scale-110 shadow-lg">
+                            <i class="ph-fill ph-heart text-2xl ${userLiked ? 'text-red-500' : (isTextBlack ? 'text-gray-900' : 'text-white')} drop-shadow-md"></i>
+                        </button>` : ''}
                     </div>
                 </div>
-            `;
-            }).join('');
-            
-            const allComments = [];
-            DB.posts.forEach(p => p.comments.forEach(c => allComments.push({...c, postTitle: p.title})));
-            sidebarComments.innerHTML = allComments.slice(0, 5).map(c => `<div class="flex gap-3 pb-4 border-b border-gray-50 last:border-0"><img src="${c.avatar}" class="w-8 h-8 rounded-full"><div><p class="text-xs text-gray-600"><span class="font-bold text-primary">${c.user}</span> comentou:</p><p class="text-xs italic text-gray-500 my-1 line-clamp-2">"${c.text}"</p><p class="text-[10px] text-accent font-bold truncate max-w-[200px]">${c.postTitle}</p></div></div>`).join('');
-        }
+            </div>
+
+            <div class="p-8 pt-6">
+                <p class="text-gray-600 leading-relaxed text-lg mb-4">${post.content}</p>
+                ${post.link ? `<a href="${post.link}" target="_blank" class="text-xs font-bold text-accent hover:underline mt-2 inline-flex items-center gap-1"><i class="ph-bold ph-link"></i> Acessar Link</a>` : ''}
+                <div class="border-t border-gray-100 mt-6 pt-6">
+                    <div class="flex items-center gap-6 text-sm text-gray-400 mb-6">
+                        <span class="flex items-center gap-2 ${userLiked ? 'text-red-500 font-bold' : ''}"><i class="ph-fill ph-heart"></i> ${post.likes} curtidas</span>
+                        <span class="flex items-center gap-2"><i class="ph-fill ph-chat-circle"></i> ${post.comments.length} comentários</span>
+                    </div>
+                    
+                    <div class="space-y-4 mb-4">
+                        ${visibleComments.map(c => {
+                            // --- VISUALIZAÇÃO DA DATA CORRIGIDA ---
+                            const displayDate = getCommentDisplayDate(c);
+                            
+                            return `
+                            <div class="flex gap-3 animate-fade-in">
+                                <img src="${c.avatar}" class="w-8 h-8 rounded-full">
+                                <div class="flex-1">
+                                    <div class="bg-gray-50 p-3 rounded-2xl rounded-tl-none relative">
+                                        ${c.authorLike ? '<i class="ph-fill ph-star absolute -top-1 -right-1 text-accent bg-white rounded-full p-1 shadow-sm text-xs"></i>' : ''}
+                                        <div class="flex justify-between items-baseline">
+                                            <span class="font-bold text-xs text-gray-900">${c.user}</span>
+                                            <span class="text-[10px] ${displayDate === 'Agora mesmo' ? 'text-green-600 font-bold' : 'text-gray-400'}">${displayDate}</span>
+                                        </div>
+                                        <p class="text-sm text-gray-600">${c.text}</p>
+                                    </div>
+                                    <div class="flex gap-3 mt-1 ml-2">
+                                        <button onclick="${user ? `window.app.togglePublicCommentLike(${post.id}, ${c.id})` : 'window.app.connectGoogle()'}" class="text-[10px] font-bold text-gray-400 hover:text-red-500 flex items-center gap-1"><i class="ph-bold ph-heart"></i> ${c.likes || 0}</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    
+                    ${hasMore ? `
+                        <div class="text-center mb-6">
+                            <button onclick="window.app.loadMoreComments(${post.id})" class="text-xs font-bold text-accent hover:underline py-2">
+                                Ver mais ${remaining > 5 ? 5 : remaining} comentários...
+                            </button>
+                        </div>
+                    ` : ''}
+
+                    ${post.allowComments ? (user ? `<div class="flex gap-3 items-start"><img src="${user.avatar}" class="w-8 h-8 rounded-full"><div class="flex-1 relative"><textarea id="comment-input-${post.id}" rows="1" placeholder="Comente..." class="w-full bg-gray-50 border-0 rounded-xl p-3 pr-12 text-sm focus:ring-2 focus:ring-accent resize-none"></textarea><button onclick="window.app.publicPostComment(${post.id})" class="absolute right-2 top-2 text-primary hover:text-accent p-1"><i class="ph-bold ph-paper-plane-right text-xl"></i></button></div></div>` : `<button onclick="window.app.connectGoogle()" class="w-full py-3 border border-gray-200 border-dashed rounded-xl text-xs font-bold text-gray-400 hover:bg-gray-50 flex items-center justify-center gap-2"><i class="ph-bold ph-sign-in"></i> Faça login</button>`) : '<p class="text-center text-xs text-gray-400 italic">Comentários desativados.</p>'}
+                </div>
+            </div>
+        </div>
+    `;
+    }).join('');
+    
+    // Sidebar também corrigida
+    const allComments = [];
+    DB.posts.forEach(p => p.comments.forEach(c => allComments.push({...c, postTitle: p.title})));
+    allComments.sort((a,b) => getCommentTimeValue(b) - getCommentTimeValue(a));
+    
+    sidebarComments.innerHTML = allComments.slice(0, 5).map(c => `
+        <div class="flex gap-3 pb-4 border-b border-gray-50 last:border-0">
+            <img src="${c.avatar}" class="w-8 h-8 rounded-full">
+            <div>
+                <p class="text-xs text-gray-600"><span class="font-bold text-primary">${c.user}</span> comentou:</p>
+                <p class="text-xs italic text-gray-500 my-1 line-clamp-2">"${c.text}"</p>
+                <p class="text-[10px] text-accent font-bold truncate max-w-[200px]">${c.postTitle}</p>
+                <p class="text-[10px] text-gray-300">${getCommentDisplayDate(c)}</p>
+            </div>
+        </div>`).join('');
+}
 
         function initLivros() {
                     const grid = document.getElementById('books-grid');
@@ -2035,22 +2087,27 @@ const TEMPLATES = {
                     initCommunity();
                 },
 
-            publicPostComment: (postId) => {
+                publicPostComment: (postId) => {
                     const text = document.getElementById(`comment-input-${postId}`).value;
                     if(!text.trim()) return;
 
                     const post = DB.posts.find(p => p.id === postId);
+                    
+                    // CRIAÇÃO DO COMENTÁRIO COM TIMESTAMP REAL
                     post.comments.push({
-                        id: Date.now(),
+                        id: Date.now(), // ID único baseada em tempo
+                        timestamp: Date.now(), // <--- AQUI ESTÁ O SEGREDO
                         user: user.name,
                         avatar: user.avatar,
                         text: text,
-                        date: "Agora mesmo",
+                        date: "Carregando...", 
                         likes: 0,
                         likedBy: [],
                         authorLike: false
                     });
+                    
                     initCommunity();
+                    window.app.toast('Comentário publicado!', 'success');
                 },
 
             adminDeleteComment: (postId, commentId) => {
@@ -2074,33 +2131,32 @@ const TEMPLATES = {
                 const container = document.getElementById('admin-post-detail');
                 if(!container || !post) return;
 
-                // --- LÓGICA DE FILTRO E PAGINAÇÃO DE COMENTÁRIOS ---
+                // Filtra comentários
                 let filteredComments = post.comments.filter(c => {
                     const matchesText = c.text.toLowerCase().includes(adminState.postComments.filterText.toLowerCase()) || 
-                                      c.user.toLowerCase().includes(adminState.postComments.filterText.toLowerCase());
+                                    c.user.toLowerCase().includes(adminState.postComments.filterText.toLowerCase());
                     
                     let matchesDate = true;
                     if (adminState.postComments.filterDate !== 'all') {
-                        // Converte DD/MM/AAAA para Date
-                        const parts = c.date.split('/');
-                        const cDate = new Date(parts[2], parts[1]-1, parts[0]);
+                        const timeVal = getCommentTimeValue(c); // <--- USA O HELPER NOVO
                         const cutoff = new Date();
                         cutoff.setDate(cutoff.getDate() - parseInt(adminState.postComments.filterDate));
-                        matchesDate = cDate >= cutoff;
+                        matchesDate = timeVal >= cutoff.getTime();
                     }
                     return matchesText && matchesDate;
                 });
 
+                // --- ORDENAÇÃO CORRIGIDA (ADMIN) ---
+                // Usa o helper global para garantir que Admin e Público ordenem igual
+                filteredComments.sort((a, b) => getCommentTimeValue(b) - getCommentTimeValue(a));
+
                 const totalComments = filteredComments.length;
                 const totalPages = Math.ceil(totalComments / adminState.postComments.itemsPerPage);
-                // Garante que a página atual é válida
                 if (adminState.postComments.page > totalPages && totalPages > 0) adminState.postComments.page = totalPages;
                 
                 const start = (adminState.postComments.page - 1) * adminState.postComments.itemsPerPage;
                 const pagedComments = filteredComments.slice(start, start + adminState.postComments.itemsPerPage);
-                // ----------------------------------------------------
 
-                // Lógica de Cor do Preview (igual ao anterior)
                 const isTextBlack = post.coverTextColor === 'black';
                 const titleColor = isTextBlack ? 'text-gray-900' : 'text-white drop-shadow-md';
                 const gradientClass = isTextBlack ? 'from-white via-white/50 to-transparent' : 'from-black/90 via-black/40 to-transparent';
@@ -2160,7 +2216,8 @@ const TEMPLATES = {
                                             <div class="flex-1">
                                                 <div class="flex justify-between">
                                                     <span class="font-bold text-sm text-gray-800">${c.user}</span>
-                                                    <span class="text-xs text-gray-400">${c.date}</span>
+                                                    
+                                                    <span class="text-xs ${getCommentDisplayDate(c) === 'Agora mesmo' ? 'text-green-600 font-bold' : 'text-gray-400'}">${getCommentDisplayDate(c)}</span>
                                                 </div>
                                                 <p class="text-sm text-gray-600 mt-1">${c.text}</p>
                                                 <div class="flex gap-3 mt-2 opacity-50 group-hover:opacity-100 transition-opacity">
@@ -2185,7 +2242,7 @@ const TEMPLATES = {
                     </div>
                 `;
             },
-
+                                    
             openPostModal: (id = null) => {
                 const post = id ? DB.posts.find(p => p.id === id) : { 
                     id: '', title: '', category: 'Geral', content: '', 
