@@ -80,7 +80,8 @@ class MockDatabase {
             ...INITIAL_DATA,
             books: [],
             services: [],
-            leads: []
+            leads: [],
+            securityLogs: []
         };
         
         this._generateBooks();
@@ -166,6 +167,17 @@ class MockDatabase {
             });
         }
         this.data.leads.sort((a, b) => b.timestamp - a.timestamp);
+    }
+
+    logAttempt(email, success, ip, userAgent) {
+        this.data.securityLogs.push({
+            timestamp: new Date().toISOString(),
+            email,
+            success,
+            ip,
+            userAgent
+        });
+        console.log("🔒 Log de Segurança:", this.data.securityLogs[this.data.securityLogs.length - 1]);
     }
 }
 

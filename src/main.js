@@ -9,8 +9,9 @@ import { LoginView } from './views/LoginView.js';
 import { DashboardView } from './views/DashboardView.js';
 import { Header } from './components/Header.js';
 import { Footer } from './components/Footer.js';
+import { Toast } from './components/assets/js/Toast.js';
 
-console.log("✅ Sistema Iniciado");
+window.Toast = Toast;
 
 router.add('/', HomeView);
 router.add('/livros', LivrosView);
@@ -20,6 +21,8 @@ router.add('/comunidade', CommunityView);
 router.add('/livro/:id', BookDetailsView);
 router.add('/login', LoginView);
 router.add('/painel', DashboardView);
+
+
 
 const headerContainer = document.getElementById('header-container');
 if (headerContainer) {

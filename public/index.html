@@ -5,21 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ronaldo Pereira - Plataforma do Autor</title>
 
+    <link rel="stylesheet" href="../src/components/assets/css/Toast.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,700;0,800;1,600&family=Caveat:wght@600&display=swap" rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        primary: '#0f172a', secondary: '#334155', accent: '#d97706',
-                        'accent-hover': '#b45309', 'bg-body': '#f8fafc', 'text-main': '#1e293b',
-                        'amazon': '#FF9900', 'shopee': '#EE4D2D', 'ml': '#FFE600'
+                        primary: '#0f172a', 
+                        secondary: '#334155', 
+                        accent: '#d97706',
+                        'accent-hover': '#b45309', 
+                        'bg-body': '#f8fafc', 
+                        'text-main': '#1e293b',
+                        'amazon': '#FF9900', 
+                        'shopee': '#EE4D2D', 
+                        'ml': '#FFE600'
                     },
                     fontFamily: {
                         sans: ['Montserrat', 'sans-serif'],
@@ -29,6 +35,7 @@
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
                         'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
                         fadeIn: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
@@ -40,24 +47,40 @@
     </script>
 
     <style>
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
         ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
         body { -webkit-font-smoothing: antialiased; }
+
+        /* Vidro e Interações */
         .glass-header { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
         .card-interaction:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.15); }
+        
+        /* Efeitos Visuais */
         .polaroid { background: white; padding: 1rem; padding-bottom: 3rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transform: rotate(-3deg); transition: transform 0.3s; }
         .polaroid:hover { transform: rotate(0deg) scale(1.02); z-index: 10; }
         .tape { background-color: rgba(255, 255, 255, 0.4); box-shadow: 0 1px 3px rgba(0,0,0,0.1); position: absolute; height: 30px; width: 100px; transform: rotate(-45deg); opacity: 0.7; }
+        
+        /* Inputs */
         .form-input:focus { outline: none; border-color: #d97706; box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.1); }
-        /* Admin Dashboard */
+        
+        /* Dashboard */
         .dashboard-card { background: white; border-radius: 1rem; padding: 1.5rem; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        /* Pagination */
+        
+        /* Paginação */
         .pagination-btn { width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; border-radius: 12px; font-weight: 600; color: #64748b; background: white; border: 1px solid #e2e8f0; transition: all 0.3s; cursor: pointer; }
         .pagination-btn.active { background-color: #0f172a; color: white; border-color: #0f172a; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
         .pagination-btn:hover:not(.active) { background-color: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
         .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Scroll Interno */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="bg-bg-body text-text-main font-sans antialiased overflow-x-hidden selection:bg-accent selection:text-white">
@@ -67,21 +90,19 @@
             <img id="cropper-image" src="" class="max-w-full block">
         </div>
         <div class="flex gap-4 mt-6">
-            <button id="btn-cancel-crop" class="bg-white text-gray-800 px-6 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition">
+            <button id="btn-cancel-crop" onclick="window.app.cancelCrop()" class="bg-white text-gray-800 px-6 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition">
                 Cancelar
             </button>
-            <button id="btn-confirm-crop" class="bg-accent text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-accent-hover transition flex items-center gap-2">
+            <button id="btn-confirm-crop" onclick="window.app.confirmCrop()" class="bg-accent text-white px-8 py-3 rounded-full font-bold shadow-lg hover:bg-accent-hover transition flex items-center gap-2">
                 <i class="ph-bold ph-crop"></i> Recortar & Confirmar
             </button>
         </div>
     </div>
 
-    <div id="toast-container" class="fixed top-24 right-5 z-[100] flex flex-col gap-3 pointer-events-none"></div>
-
     <div id="header-container" class="fixed top-0 w-full z-50 transition-all duration-300"></div>
 
     <main id="app" class="min-h-screen pt-28 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
-        </main>
+    </main>
 
     <div id="footer-container"></div>
 
@@ -89,14 +110,14 @@
         <div id="modal-content" class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden transform transition-all scale-95 opacity-0 relative flex flex-col max-h-[90vh]">
             <div class="bg-white p-6 flex justify-between items-center border-b border-gray-100 z-10 shrink-0">
                 <h3 id="modal-title" class="text-2xl font-serif font-bold text-primary">Título</h3>
-                <button id="btn-close-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"><i class="ph ph-x text-xl"></i></button>
+                <button id="btn-close-modal" onclick="window.app.closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition"><i class="ph ph-x text-xl"></i></button>
             </div>
             <div id="modal-body" class="p-8 overflow-y-auto flex-grow bg-gray-50/50"></div>
             <div id="modal-footer" class="p-6 border-t border-gray-100 bg-white flex justify-end gap-3 z-10 shrink-0"></div>
         </div>
     </div>
 
-    <script type="module" src="/src/main.js"></script>
+    <script type="module" src="../src/main.js"></script>
 
 </body>
 </html>
