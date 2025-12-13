@@ -93,6 +93,14 @@ class MockDatabase {
     _generateBooks() {
         const covers = ['1e293b', 'd97706', '475569', '0f766e', 'be123c', '4338ca'];
         const genres = ['Ficção', 'Fantasia', 'Thriller'];
+        
+        // Textos padrão para preencher
+        const defaultShortSynopsis = "Uma narrativa envolvente que desafia a percepção da realidade. Prepare-se para não conseguir largar.";
+        const defaultFullSynopsis = `
+            <p>Em um mundo onde as fronteiras entre o real e o imaginário se dissolvem, este livro convida o leitor a uma jornada sem volta. Com personagens profundos e reviravoltas chocantes, a trama explora os limites da mente humana.</p>
+            <p class="mt-4">Prepare-se para questionar tudo o que você sabe. A cada página, um novo mistério é revelado, culminando em um final que deixará você sem fôlego. Ideal para fãs de mistério e suspense psicológico.</p>
+        `;
+
         for(let i=1; i<=6; i++) {
            this.data.books.push({
                id: i.toString(), 
@@ -103,8 +111,20 @@ class MockDatabase {
                isPromotion: i%2===0, 
                promoPrice: 20.00, 
                cover: `https://placehold.co/300x450/${covers[i%6]}/FFF`, 
-               synopsis: "Sinopse gerada automaticamente pelo MockDB...", 
-               linkAmazon:'#', linkML:'#', linkShopee:'#'
+               
+               // NOVOS DADOS PARA A VIEW DETALHADA
+               synopsis: defaultShortSynopsis,
+               fullSynopsis: defaultFullSynopsis,
+               pages: 250 + (i * 20),
+               rating: (4.5 + (Math.random() * 0.5)).toFixed(1), // Entre 4.5 e 5.0
+               reviews: 50 + (i * 15),
+
+               // Link estruturado como a View espera
+               buyLinks: {
+                   amazon: '#amazon', 
+                   ml: '#mercadolivre', 
+                   shopee: '#shopee'
+               }
            });
         }
     }
