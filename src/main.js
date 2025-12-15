@@ -7,6 +7,7 @@ import { AboutView } from './views/AboutView.js';
 import { CommunityView } from './views/CommunityView.js';
 import { LoginView } from './views/LoginView.js';
 import { DashboardView } from './views/DashboardView.js';
+import { NotFoundView } from './views/NotFoundView.js';
 import { Header } from './components/Header.js';
 import { Footer } from './components/Footer.js';
 import { Toast } from './components/assets/js/Toast.js';
@@ -21,8 +22,7 @@ router.add('/comunidade', CommunityView);
 router.add('/livro/:id', BookDetailsView);
 router.add('/login', LoginView);
 router.add('/painel', DashboardView);
-
-
+router.add('/404', NotFoundView);
 
 const headerContainer = document.getElementById('header-container');
 if (headerContainer) {
@@ -34,3 +34,14 @@ const footerContainer = document.getElementById('footer-container');
 if (footerContainer) {
     footerContainer.innerHTML = Footer.render();
 }
+
+document.addEventListener('click', e => {
+    const { target } = e;
+    if (target.matches('a') && target.href.startsWith(window.location.origin)) {
+        e.preventDefault();
+        router.navigate(target.getAttribute('href'));
+    }
+});
+
+window.onpopstate = () => router.handleLocation();
+router.handleLocation();

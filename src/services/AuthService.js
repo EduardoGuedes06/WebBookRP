@@ -3,24 +3,22 @@ import { db } from '../infra/MockDatabase.js';
 class AuthService {
     constructor() {
         this.LOCKOUT_TIMES = {
-            4: 60 * 1000,        // 4ª tentativa: 1 min
-            5: 5 * 60 * 1000,    // 5ª tentativa: 5 min
-            6: 10 * 60 * 1000,   // 6ª tentativa: 10 min
-            7: 30 * 60 * 1000,   // 7ª tentativa: 30 min
-            8: 24 * 60 * 60 * 1000 // 8ª tentativa: 24 horas
+            4: 60 * 1000,
+            5: 5 * 60 * 1000,
+            6: 10 * 60 * 1000,
+            7: 30 * 60 * 1000,
+            8: 24 * 60 * 60 * 1000
         };
-        this.SESSION_DURATION = 4 * 60 * 60 * 1000; // 4 Horas
+        this.SESSION_DURATION = 4 * 60 * 60 * 1000;
     }
 
     async login(email, password) {
         const status = this._checkLockout();
         if (status.locked) return { success: false, error: status.message };
 
-        // 1. Obtém IP Real e Info do Browser
         const clientInfo = await this._getClientInfo();
         
-        // 2. Verifica Credenciais
-        if (email === 'admin@admin' && password === 'admin') {
+        if (email === 'admin@gmail.com' && password === 'admin') {
             this._createSession();
             this._resetAttempts();
             db.logAttempt(email, true, clientInfo.ip, clientInfo.browser);
@@ -43,8 +41,13 @@ class AuthService {
     logout() {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_expiration');
-        window.location.hash = '#/login';
-        window.location.reload();
+        
+        // CORREÇÃO AQUI: Usa o router global para navegar limpo
+        if (window.router) {
+            window.router.navigate('/login');
+        } else {
+            window.location.href = '/login'; // Fallback se o router falhar
+        }
     }
 
     isAuthenticated() {
@@ -100,16 +103,14 @@ class AuthService {
         let ip = 'Oculto/Localhost';
         let browser = 'Desconhecido';
 
-        // Tenta pegar IP Real
         try {
             const response = await fetch('https://api.ipify.org?format=json');
             const data = await response.json();
             ip = data.ip;
         } catch (e) {
-            console.warn('Não foi possível obter IP público (provavelmente offline ou adblock).');
+            console.warn('Não foi possível obter IP público.');
         }
 
-        // Identifica Browser simplificado
         const ua = navigator.userAgent;
         if (ua.includes("Edg")) browser = "Edge (Microsoft)";
         else if (ua.includes("Chrome")) browser = "Chrome (Google)";
@@ -117,7 +118,6 @@ class AuthService {
         else if (ua.includes("Safari")) browser = "Safari (Apple)";
         else if (ua.includes("OPR")) browser = "Opera";
         
-        // Adiciona SO
         if (ua.includes("Win")) browser += " no Windows";
         else if (ua.includes("Mac")) browser += " no Mac";
         else if (ua.includes("Linux")) browser += " no Linux";

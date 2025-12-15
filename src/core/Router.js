@@ -1,39 +1,38 @@
 export class Router {
     constructor() {
         this.routes = [];
-        window.addEventListener('hashchange', () => this.handleRoute());
-        window.addEventListener('load', () => this.handleRoute());
     }
 
-    add(path, viewConfig) {
-        const regexPath = new RegExp('^' + path.replace(/:[^\s/]+/g, '([^/]+)') + '$');
-        this.routes.push({ path, regex: regexPath, view: viewConfig });
+    add(path, view) {
+        const regexPath = "^" + path.replace(/:\w+/g, "(.+)") + "$";
+        this.routes.push({ 
+            path, 
+            view, 
+            regex: new RegExp(regexPath) 
+        });
     }
 
-    handleRoute() {
-        const hash = window.location.hash.slice(1) || '/';
-        
-        let match = this.routes.find(r => hash.match(r.regex));
-        let params = null;
+    navigate(url) {
+        window.history.pushState(null, null, url);
+        this.handleLocation();
+    }
 
-        if (match) {
-            const values = hash.match(match.regex).slice(1);
-            if(values.length > 0) params = values[0];
-        } else {
-            match = this.routes.find(r => r.path === '/');
+    async handleLocation() {
+        const path = window.location.pathname;
+        let match = this.routes.find(route => path.match(route.regex));
+
+        if (!match) {
+            match = this.routes.find(route => route.path === '/404');
         }
 
         const app = document.getElementById('app');
-        if (app && match && match.view) {
-            const view = match.view;
-            if (typeof view === 'object') {
-                app.innerHTML = view.render(params); 
-                if (view.afterRender) view.afterRender(params);
-            } else if (typeof view === 'function') {
-                app.innerHTML = view(params);
-            }
+        if (app && match) {
+            const params = path.match(match.regex);
+            app.innerHTML = await match.view.render(params ? params[1] : null);
             
-            window.scrollTo(0, 0);
+            if (match.view.afterRender) {
+                await match.view.afterRender();
+            }
         }
     }
 }

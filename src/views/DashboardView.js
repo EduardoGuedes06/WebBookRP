@@ -1,9 +1,11 @@
 import { bookRepository } from '../repositories/BookRepository.js';
 import { serviceRepository } from '../repositories/ServiceRepository.js';
 import { db } from '../infra/MockDatabase.js';
+import { authService } from '../services/AuthService.js'; // <--- OBRIGATÓRIO
 
 let currentTab = 'main';
 
+// --- (MANTIVE SEUS HELPERS DE TABELA IGUAIS) ---
 function renderBooksTable() {
     const books = bookRepository.getAll();
     if(books.length === 0) return '<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro.</td></tr>';
@@ -51,7 +53,7 @@ function renderServicesTable() {
 function renderMainTab() {
     const totalBooks = bookRepository.getAll().length;
     const totalServices = serviceRepository.getAll().length;
-    const pendingLeads = db.data.leads.filter(l => l.status === 'pending').length;
+    const pendingLeads = db.data && db.data.leads ? db.data.leads.filter(l => l.status === 'pending').length : 0;
 
     return `
         <div class="animate-fade-in">
@@ -107,10 +109,12 @@ function renderMainTab() {
 
 export const DashboardView = {
     render: () => {
-        const isAdmin = localStorage.getItem('isAdmin') === 'true';
-        if (!isAdmin) {
-            window.location.hash = '#/login';
-            return '';
+        // --- AQUI ESTÁ A VALIDAÇÃO DE SEGURANÇA ---
+        // Se NÃO estiver autenticado, manda pro Login e não renderiza nada
+        if (!authService.isAuthenticated()) {
+            window.location.hash = '/login';
+            window.Toast.show('Acesso restrito. Faça login.', 'warning');
+            return ''; // Retorna string vazia para não piscar conteúdo proibido
         }
 
         return `
@@ -140,12 +144,13 @@ export const DashboardView = {
     },
 
     afterRender: () => {
-        const isAdmin = localStorage.getItem('isAdmin') === 'true';
-        if (!isAdmin) return;
+        // Validação extra no afterRender para garantir
+        if (!authService.isAuthenticated()) return;
 
+        // Lógica de Sair (Logout)
         document.getElementById('btn-logout').onclick = () => {
-            localStorage.removeItem('isAdmin');
-            window.location.hash = '#/login';
+            authService.logout(); // Limpa sessão e redireciona
+            window.Toast.show('Você saiu do sistema.', 'success');
         };
 
         const contentDiv = document.getElementById('dashboard-content');

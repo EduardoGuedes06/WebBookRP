@@ -1,7 +1,6 @@
-// src/views/HomeView.js
-
-export function HomeView() {
-    return `
+export const HomeView = {
+    render: async () => {
+        return `
         <section class="flex flex-col-reverse md:flex-row items-center gap-16 py-12 md:py-24 mb-20 animate-fade-in">
             <div class="flex-1 space-y-8 text-center md:text-left z-10">
                 <div class="inline-flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-full shadow-sm mb-2">
@@ -15,7 +14,7 @@ export function HomeView() {
                     Ficção especulativa de alto nível. Junte-se a milhares de leitores e explore o impossível.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-6">
-                    <a href="#/livros" class="bg-primary text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-slate-800 hover:shadow-2xl hover:scale-105 transition transform text-sm uppercase tracking-wide">
+                    <a href="/livros" class="bg-primary text-white px-10 py-4 rounded-full font-bold shadow-xl hover:bg-slate-800 hover:shadow-2xl hover:scale-105 transition transform text-sm uppercase tracking-wide">
                         Ler Agora
                     </a>
                 </div>
@@ -33,7 +32,7 @@ export function HomeView() {
                         <h2 class="text-4xl font-bold text-primary font-serif mb-2">Em Destaque</h2>
                         <p class="text-gray-500">O que os leitores estão devorando agora.</p>
                 </div>
-                <a href="#/livros" class="text-sm font-bold text-accent hover:underline uppercase tracking-widest mb-2">Ver Catálogo -></a>
+                <a href="/livros" class="text-sm font-bold text-accent hover:underline uppercase tracking-widest mb-2">Ver Catálogo -></a>
             </div>
             
             <div id="home-highlights" class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -51,5 +50,9 @@ export function HomeView() {
                 <p class="text-slate-400 font-medium tracking-widest uppercase text-sm">— Ronaldo Pereira</p>
             </div>
         </section>
-    `;
-}
+        `;
+    },
+    afterRender: async () => {
+
+    }
+};

@@ -1,12 +1,10 @@
 import { authService } from '../services/AuthService.js';
-// Não precisa importar o Toast aqui se ele já está no window.Toast na main.js
-// Mas se preferir garantir: import { Toast } from '../components/assets/js/Toast.js';
+import { router } from '../core/Router.js';
 
 export const LoginView = {
     render: () => {
         return `
             <style>
-                /* Apenas a animação de erro no input continua útil */
                 @keyframes shake {
                     0%, 100% { transform: translateX(0); }
                     10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
@@ -28,10 +26,10 @@ export const LoginView = {
                     <form id="login-form">
                         <div class="space-y-4">
                             <div>
-                                <input type="email" id="email" placeholder="E-mail" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input outline-none focus:border-primary transition" value="admin@ronaldo.com">
+                                <input type="email" id="email" placeholder="E-mail" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input outline-none focus:border-primary transition" value="admin@gmail.com">
                             </div>
                             <div>
-                                <input type="password" id="password" placeholder="Senha" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input outline-none focus:border-primary transition">
+                                <input type="password" id="password" placeholder="Senha" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input outline-none focus:border-primary transition" value="admin">
                             </div>
                             
                             <button type="submit" id="btn-login" class="w-full bg-primary text-white font-bold py-3 rounded-lg hover:bg-accent transition shadow-lg flex justify-center items-center gap-2">
@@ -62,33 +60,26 @@ export const LoginView = {
                 emailInput.classList.remove('shake-anim');
 
                 try {
-                    console.log("Tentando logar...");
                     const result = await authService.login(emailInput.value, passInput.value);
                     
                     if (result.success) {
-                        // USANDO O TOAST GLOBAL GENÉRICO
                         window.Toast.show('Login realizado com sucesso!', 'success');
-                        
-                        setTimeout(() => {
-                            window.location.hash = '/painel'; 
-                        }, 1000);
+                        router.navigate('/painel'); 
                     } else {
                         passInput.value = '';
                         passInput.focus();
                         passInput.classList.add('shake-anim');
                         emailInput.classList.add('shake-anim');
-                        
-                        // USANDO O TOAST GLOBAL GENÉRICO COM ERRO
                         window.Toast.show(result.error, 'error');
+                        
+                        btn.disabled = false;
+                        btn.innerHTML = originalBtnText;
                     }
                 } catch (error) {
                     console.error("Erro no login:", error);
                     window.Toast.show("Erro interno no servidor", 'error');
-                } finally {
-                    if(btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = originalBtnText;
-                    }
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnText;
                 }
             });
         }
