@@ -1,0 +1,19 @@
+#budget-form > * {
+    margin-bottom: 1.5rem !important;
+}
+#budget-form > *:last-child {
+    margin-bottom: 0 !important;
+}
+
+#btn-submit-budget {
+    padding-left: 5rem !important; 
+    padding-right: 5rem !important; 
+    padding-top: 0.75rem !important; 
+    padding-bottom: 0.75rem !important;
+    width: auto !important; 
+    white-space: nowrap !important;
+}
+
+#modal-body {
+    padding: 2.5rem !important;
+}
