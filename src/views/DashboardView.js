@@ -1,315 +1,9 @@
-import { bookService } from '../services/BookService.js';
-import { serviceService } from '../services/ServiceService.js';
 import { db } from '../infra/MockDatabase.js';
 import { authService } from '../services/AuthService.js';
 import { Modal } from '../components/Modal.js';
-
-// --- ESTADO LOCAL (UI) ---
-const state = {
-    books: { page: 1, filter: '', sortKey: 'title', sortOrder: 'asc' },
-    services: { page: 1, filter: '', sortKey: 'name', sortOrder: 'asc' },
-    itemsPerPage: 5
-};
-
-// --- CONFIGURAÇÃO DE TEMAS ---
-const THEMES = {
-    'default': { text: 'text-slate-700', bg: 'bg-slate-50', border: 'border-slate-200' },
-    'orange': { text: 'text-orange-800', bg: 'bg-orange-50', border: 'border-orange-200' },
-    'blue': { text: 'text-blue-800', bg: 'bg-blue-50', border: 'border-blue-200' },
-    'purple': { text: 'text-purple-800', bg: 'bg-purple-50', border: 'border-purple-200' },
-    'green': { text: 'text-emerald-800', bg: 'bg-emerald-50', border: 'border-emerald-200' }
-};
-
-// --- RENDERIZADORES AUXILIARES ---
-
-function renderBooksPanel() {
-    // Busca dados
-    let list = bookService.getAll().filter(b => b.title.toLowerCase().includes(state.books.filter.toLowerCase()));
-    
-    // Ordenação
-    list.sort((a, b) => {
-        let vA = a[state.books.sortKey], vB = b[state.books.sortKey];
-        if (typeof vA === 'string') vA = vA.toLowerCase(); 
-        if (typeof vB === 'string') vB = vB.toLowerCase();
-        if (vA < vB) return state.books.sortOrder === 'asc' ? -1 : 1;
-        if (vA > vB) return state.books.sortOrder === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    // Paginação
-    const totalPages = Math.ceil(list.length / state.itemsPerPage);
-    if(state.books.page > totalPages && totalPages > 0) state.books.page = totalPages;
-    if(state.books.page < 1) state.books.page = 1;
-    
-    const start = (state.books.page - 1) * state.itemsPerPage;
-    const paged = list.slice(start, start + state.itemsPerPage);
-
-    // Geração das Linhas
-    const rows = paged.map(b => `
-        <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? '' : 'opacity-60 bg-gray-50'}">
-            <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm"></td>
-            <td class="p-3 font-bold text-primary">${b.title}</td>
-            <td class="p-3 text-gray-500 text-xs">
-                ${b.isPromotion ? `<div class="flex flex-col"><span class="line-through text-xs text-gray-400">R$ ${Number(b.price).toFixed(2)}</span><span class="text-green-600 font-bold">R$ ${Number(b.promoPrice).toFixed(2)}</span></div>` : `R$ ${Number(b.price).toFixed(2)}`}
-            </td>
-            <td class="p-3 text-center">
-                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full ${b.active ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}">
-                    <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
-                    ${b.active ? 'Ativo' : 'Inativo'}
-                </span>
-            </td>
-            <td class="p-3 text-right">
-                <button class="btn-edit-book text-blue-500 hover:bg-blue-50 p-2 rounded-full transition" data-id="${b.id}"><i class="ph-bold ph-pencil-simple"></i></button>
-                <button class="btn-delete-book text-red-400 hover:bg-red-50 p-2 rounded-full transition" data-id="${b.id}"><i class="ph-bold ph-trash"></i></button>
-            </td>
-        </tr>
-    `).join('');
-
-    return `
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-book text-accent"></i> Catálogo de Livros</h3></div>
-                <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
-                    <input type="text" id="filter-books" placeholder="Buscar livro..." value="${state.books.filter}" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-accent">
-                    <button id="btn-new-book" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
-                </div>
-            </div>
-            <div class="overflow-x-auto min-h-[300px]">
-                <table class="w-full text-left text-sm text-gray-600">
-                    <thead class="bg-gray-50 text-gray-400 uppercase text-[10px] border-b border-gray-200">
-                        <tr>
-                            <th class="p-3">Capa</th>
-                            <th class="p-3 cursor-pointer hover:text-primary transition" data-sort="books:title">Título <i class="ph-bold ph-arrows-down-up ml-1"></i></th>
-                            <th class="p-3 cursor-pointer hover:text-primary transition" data-sort="books:price">Preço <i class="ph-bold ph-arrows-down-up ml-1"></i></th>
-                            <th class="p-3 text-center">Status</th>
-                            <th class="p-3 text-right">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows || '<tr><td colspan="5" class="p-4 text-center">Nada encontrado.</td></tr>'}</tbody>
-                </table>
-            </div>
-            <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
-                <span class="text-xs text-gray-400">Mostrando ${paged.length} de ${list.length}</span>
-                <div class="flex gap-2">
-                    <button class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center btn-page-book" data-dir="-1" ${state.books.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
-                    <span class="text-xs font-bold px-2 self-center">Pág ${state.books.page}</span>
-                    <button class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center btn-page-book" data-dir="1" ${state.books.page >= totalPages ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function renderServicesPanel() {
-    let list = serviceService.getAllForAdmin().filter(s => s.name.toLowerCase().includes(state.services.filter.toLowerCase()));
-    
-    list.sort((a, b) => {
-        let vA = a[state.services.sortKey], vB = b[state.services.sortKey];
-        if (typeof vA === 'string') vA = vA.toLowerCase();
-        if (typeof vB === 'string') vB = vB.toLowerCase();
-        if (vA < vB) return state.services.sortOrder === 'asc' ? -1 : 1;
-        if (vA > vB) return state.services.sortOrder === 'asc' ? 1 : -1;
-        return 0;
-    });
-
-    const totalPages = Math.ceil(list.length / state.itemsPerPage);
-    if(state.services.page > totalPages && totalPages > 0) state.services.page = totalPages;
-    if(state.services.page < 1) state.services.page = 1;
-
-    const start = (state.services.page - 1) * state.itemsPerPage;
-    const paged = list.slice(start, start + state.itemsPerPage);
-
-    const rows = paged.map(s => {
-        const theme = THEMES[s.theme || 'default'];
-        return `
-        <tr class="border-b ${theme.border} ${s.active ? theme.bg : 'bg-gray-50 opacity-60'} hover:brightness-95 transition">
-            <td class="p-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center shadow-sm text-lg ${theme.text}">
-                        <i class="ph-fill ${s.icon || 'ph-star-four'}"></i>
-                    </div>
-                    <div>
-                        <div class="font-bold text-gray-800 text-sm">${s.name}</div>
-                    </div>
-                </div>
-            </td>
-            <td class="p-3 font-mono text-xs ${theme.text}">
-                ${s.isPromotion && s.promoPrice ? `<span class="line-through opacity-50">R$ ${Number(s.price).toFixed(2)}</span> <span class="font-bold">R$ ${Number(s.promoPrice).toFixed(2)}</span>` : `<span class="font-bold">R$ ${Number(s.price).toFixed(2)}</span>`}
-            </td>
-            <td class="p-3 text-center">
-                <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-3 py-1 rounded-full bg-white/50 border ${theme.border} ${theme.text}">
-                    <span class="w-1.5 h-1.5 rounded-full ${s.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
-                    ${s.active ? 'Ativo' : 'Inativo'}
-                </span>
-            </td>
-            <td class="p-3 text-right">
-                <button class="btn-edit-service text-blue-600 hover:bg-white p-2 rounded-full transition shadow-sm" data-id="${s.id}"><i class="ph-bold ph-pencil-simple"></i></button>
-                <button class="btn-delete-service text-red-500 hover:bg-white p-2 rounded-full transition shadow-sm" data-id="${s.id}"><i class="ph-bold ph-trash"></i></button>
-            </td>
-        </tr>
-    `}).join('');
-
-    return `
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-t-4 border-t-blue-500">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Meus Serviços</h3></div>
-                <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
-                    <input type="text" id="filter-services" placeholder="Buscar serviço..." value="${state.services.filter}" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-blue-500">
-                    <button id="btn-new-service" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2 whitespace-nowrap"><i class="ph-bold ph-plus"></i> Novo</button>
-                </div>
-            </div>
-            <div class="overflow-x-auto min-h-[300px]">
-                <table class="w-full text-left text-sm text-gray-600">
-                    <thead class="bg-blue-50 text-blue-400 uppercase text-[10px] border-b border-blue-100">
-                        <tr>
-                            <th class="p-3 cursor-pointer" data-sort="services:name">Serviço <i class="ph-bold ph-arrows-down-up ml-1"></i></th>
-                            <th class="p-3 cursor-pointer" data-sort="services:price">Preço Base <i class="ph-bold ph-arrows-down-up ml-1"></i></th>
-                            <th class="p-3 text-center">Status</th>
-                            <th class="p-3 text-right">Ação</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows || '<tr><td colspan="4" class="p-4 text-center">Nada encontrado.</td></tr>'}</tbody>
-                </table>
-            </div>
-            <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
-                <span class="text-xs text-gray-400">Mostrando ${paged.length} de ${list.length}</span>
-                <div class="flex gap-2">
-                    <button class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center btn-page-service" data-dir="-1" ${state.services.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
-                    <span class="text-xs font-bold px-2 self-center">Pág ${state.services.page}</span>
-                    <button class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center btn-page-service" data-dir="1" ${state.services.page >= totalPages ? 'disabled' : ''}><i class="ph-bold ph-caret-right"></i></button>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-// --- MODAIS ---
-
-function openBookModal(bookId = null) {
-    const isEdit = !!bookId;
-    const book = bookId ? bookService.getById(bookId) : { title: '', genre: 'Ficção', price: '', promoPrice: '', cover: 'https://placehold.co/300x450/333/FFF?text=Capa', synopsis: '', coverSynopsis: '', active: true, isPromotion: false };
-
-    const bodyHTML = `
-        <div class="space-y-4 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-            <input type="hidden" id="book-id" value="${book.id || ''}">
-            <div class="flex gap-4 items-start bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <div class="w-24 h-36 bg-gray-200 rounded shadow-sm overflow-hidden flex-shrink-0">
-                    <img id="preview-book-cover" src="${book.cover}" class="w-full h-full object-cover">
-                </div>
-                <div class="flex-1">
-                    <label class="text-xs font-bold text-primary uppercase block mb-2">Capa do Livro</label>
-                    <input type="text" id="book-cover" value="${book.cover}" class="text-xs w-full bg-white border border-gray-200 rounded-lg p-2" onchange="document.getElementById('preview-book-cover').src = this.value">
-                </div>
-            </div>
-            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <div><label class="text-xs font-bold text-gray-500 uppercase block">Visibilidade</label><span class="text-sm font-bold text-primary">O livro está visível no site?</span></div>
-                <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="book-active" class="sr-only peer" ${book.active ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div></label>
-            </div>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="col-span-2"><label class="text-xs font-bold text-gray-500 uppercase">Título</label><input type="text" id="book-title" value="${book.title}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700"></div>
-                <div><label class="text-xs font-bold text-gray-500 uppercase">Gênero</label><select id="book-genre" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"><option value="Ficção" ${book.genre === 'Ficção' ? 'selected' : ''}>Ficção</option><option value="Fantasia" ${book.genre === 'Fantasia' ? 'selected' : ''}>Fantasia</option><option value="Terror" ${book.genre === 'Terror' ? 'selected' : ''}>Terror</option></select></div>
-                <div><label class="text-xs font-bold text-gray-500 uppercase">Preço (R$)</label><input type="number" step="0.01" id="book-price" value="${book.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
-            </div>
-            <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <label class="text-xs font-bold text-primary uppercase flex justify-between">Resumo da Capa<span class="text-gray-400 font-normal text-[10px]">Máx 65 car.</span></label>
-                <input type="text" id="book-cover-synopsis" value="${book.coverSynopsis || ''}" maxlength="65" class="w-full bg-white border border-gray-300 rounded-lg p-2 mt-1 form-input text-sm">
-            </div>
-            <div class="bg-orange-50 p-4 rounded-xl border border-orange-100 transition-all">
-                <div class="flex items-center justify-between mb-2">
-                    <div><h4 class="font-bold text-orange-800 text-sm">Modo Promoção</h4></div>
-                    <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="book-promo" class="sr-only peer" ${book.isPromotion ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-accent after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div></label>
-                </div>
-                <div id="promo-input-container" class="${book.isPromotion ? '' : 'hidden'} mt-3 border-t border-orange-200 pt-3">
-                    <label class="text-xs font-bold text-orange-700 uppercase">Preço Promocional (R$)</label>
-                    <input type="number" step="0.01" id="book-promo-price" value="${book.promoPrice || ''}" class="w-full bg-white border border-orange-200 rounded-lg p-2 form-input text-orange-900 font-bold">
-                </div>
-            </div>
-            <div><label class="text-xs font-bold text-gray-500 uppercase">Sinopse Completa</label><textarea id="book-synopsis" rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${book.synopsis || ''}</textarea></div>
-        </div>
-    `;
-
-    const footerHTML = `<button onclick="Modal.close()" class="px-4 py-2 text-gray-500 font-bold text-sm hover:bg-gray-100 rounded-lg">Cancelar</button><button id="btn-save-book" class="bg-primary text-white px-6 py-2 rounded-lg font-bold shadow-lg">Salvar Livro</button>`;
-    
-    Modal.open(isEdit ? 'Editar Livro' : 'Novo Livro', bodyHTML, footerHTML);
-
-    // Lógica do Modal
-    const promoCheck = document.getElementById('book-promo');
-    if(promoCheck) {
-        promoCheck.onchange = (e) => {
-            document.getElementById('promo-input-container').classList.toggle('hidden', !e.target.checked);
-        };
-    }
-
-    document.getElementById('btn-save-book').onclick = () => {
-        const data = {
-            id: document.getElementById('book-id').value,
-            title: document.getElementById('book-title').value,
-            genre: document.getElementById('book-genre').value,
-            price: document.getElementById('book-price').value,
-            cover: document.getElementById('book-cover').value,
-            synopsis: document.getElementById('book-synopsis').value,
-            coverSynopsis: document.getElementById('book-cover-synopsis').value,
-            active: document.getElementById('book-active').checked,
-            isPromotion: document.getElementById('book-promo').checked,
-            promoPrice: document.getElementById('book-promo-price').value
-        };
-        bookService.save(data);
-        Modal.close();
-        window.location.reload(); // Simples refresh para ver mudanças
-    };
-}
-
-function openServiceEditModal(serviceId = null) {
-    const isEdit = !!serviceId;
-    const s = serviceId ? serviceService.getById(serviceId) : { id: '', name: '', price: '', unit: '', description: '', active: true, isPromotion: false, promoPrice: '', icon: 'ph-star-four', theme: 'default' };
-
-    const bodyHTML = `
-        <div class="space-y-5 h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-            <input type="hidden" id="service-id" value="${s.id || ''}">
-            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <span class="text-xs font-bold text-gray-500 uppercase">Status do Serviço</span>
-                <label class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="service-active" class="sr-only peer" ${s.active ? 'checked' : ''}><div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div></label>
-            </div>
-            <div class="space-y-4">
-                <div><label class="text-xs font-bold text-gray-500 uppercase">Nome do Serviço</label><input type="text" id="service-name" value="${s.name}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input font-bold text-gray-700"></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div><label class="text-xs font-bold text-gray-500 uppercase">Preço Base (R$)</label><input type="number" step="0.01" id="service-price" value="${s.price}" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
-                    <div><label class="text-xs font-bold text-gray-500 uppercase">Unidade</label><input type="text" id="service-unit" value="${s.unit || ''}" placeholder="Ex: p/ hora" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2 form-input"></div>
-                </div>
-            </div>
-            <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
-                <div class="mb-4 border-b border-gray-200 pb-2"><span class="font-bold text-gray-800 text-sm flex items-center gap-2"><i class="ph-fill ph-paint-brush text-accent"></i> Visual</span></div>
-                <div><label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Ícone (Phosphor)</label><input type="text" id="service-icon" value="${s.icon}" class="w-full bg-white border border-gray-300 rounded-lg p-2"></div>
-                <div class="mt-4"><label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Tema</label><select id="service-theme" class="w-full bg-white border border-gray-300 rounded-lg p-2"><option value="default">Midnight</option><option value="orange">Sunset</option><option value="blue">Ocean</option><option value="purple">Royal</option><option value="green">Forest</option></select></div>
-            </div>
-            <div><label class="text-xs font-bold text-gray-500 uppercase">Descrição</label><textarea id="service-desc" rows="3" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 form-input text-sm">${s.description}</textarea></div>
-        </div>`;
-
-    const footerHTML = `<button onclick="Modal.close()" class="px-4 py-2 text-gray-500">Cancelar</button><button id="btn-save-service" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">Salvar</button>`;
-    
-    Modal.open(isEdit ? 'Editar Serviço' : 'Novo Serviço', bodyHTML, footerHTML);
-    
-    const themeSelect = document.getElementById('service-theme');
-    if(themeSelect) themeSelect.value = s.theme || 'default';
-
-    document.getElementById('btn-save-service').onclick = () => {
-        const data = {
-            id: document.getElementById('service-id').value,
-            name: document.getElementById('service-name').value,
-            price: document.getElementById('service-price').value,
-            unit: document.getElementById('service-unit').value,
-            description: document.getElementById('service-desc').value,
-            active: document.getElementById('service-active').checked,
-            icon: document.getElementById('service-icon').value,
-            theme: document.getElementById('service-theme').value
-        };
-        serviceService.save(data);
-        Modal.close();
-        window.location.reload();
-    };
-}
-
-// --- VIEW PRINCIPAL ---
+import { Toast } from '../components/assets/js/Toast.js';
+import { BookManager } from './components/BookManager.js';
+import { ServiceManager } from './components/ServiceManager.js';
 
 export const DashboardView = {
     render: async () => {
@@ -318,34 +12,308 @@ export const DashboardView = {
             return '';
         }
 
-        // Dados seguros (evita erro se db.data ainda for null)
-        const books = db.data?.books || [];
-        const services = db.data?.services || [];
-        const leads = db.data?.leads || [];
-
-        const totalBooks = books.length;
-        const totalServices = services.filter(s => s.active).length;
-        const totalLeads = leads.length;
-        const pendingLeads = leads.filter(l => l.status === 'pending').length;
-
-        // Montagem do HTML completo
         return `
-            <div class="animate-fade-in">
+            <div class="animate-fade-in w-full max-w-7xl mx-auto p-4 md:p-8">
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-3xl font-bold text-primary font-serif">Painel do Escritor</h2>
                         <p class="text-gray-500">Gestão completa de Produtos e Serviços.</p>
                     </div>
-                    <button id="btn-logout" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm">
-                        <i class="ph ph-sign-out"></i> Sair
-                    </button>
+                    <div class="flex gap-3 w-full md:w-auto">
+                        <button id="btn-logout" class="flex items-center gap-2 bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm">
+                            <i class="ph ph-sign-out"></i> Sair
+                        </button>
+                    </div>
                 </div>
 
                 <div class="flex gap-6 border-b border-gray-200 mb-8 overflow-x-auto">
-                    <button class="pb-3 text-sm font-bold border-b-2 border-accent text-primary transition whitespace-nowrap">Visão Geral & Cruds</button>
+                    <button onclick="window.app.setAdminTab('main')" id="tab-main" class="pb-3 text-sm font-bold border-b-2 border-accent text-accent transition whitespace-nowrap">Visão Geral & Cruds</button>
+                    <button class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-300 cursor-not-allowed" title="Em breve">Relatórios</button>
+                    <button class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-300 cursor-not-allowed" title="Em breve">Solicitações</button>
+                    <button class="pb-3 text-sm font-bold border-b-2 border-transparent text-gray-300 cursor-not-allowed" title="Em breve">Comunidade</button>
                 </div>
 
-                <div id="dashboard-content-area" class="space-y-8">
+                <div id="dashboard-content"></div>
+                <div class="h-20"></div>
+            </div>
+        `;
+    },
+
+    afterRender: async () => {
+        // --- ESTADO LOCAL DA VIEW ---
+        const state = {
+            currentTab: 'main',
+            cropper: null,
+            cropCallback: null,
+            pendingDeletion: null
+        };
+
+        // Certifica que o estado de ordenação existe nos Managers se ainda não existir
+        if (!BookManager.state.sortKey) { BookManager.state.sortKey = 'title'; BookManager.state.sortOrder = 'asc'; }
+        if (!ServiceManager.state.sortKey) { ServiceManager.state.sortKey = 'name'; ServiceManager.state.sortOrder = 'asc'; }
+
+        // --- WINDOW.APP ---
+        window.app = {
+            // 1. Navegação
+            setAdminTab: (tab) => { 
+                state.currentTab = tab; 
+                renderContent(); 
+            },
+            
+            // 2. Controle dos Managers (Paginação, Filtro e Ordenação)
+            changeAdminPage: (ctx, dir) => {
+                if(ctx === 'books') BookManager.state.page += dir;
+                if(ctx === 'services') ServiceManager.state.page += dir;
+                renderContent();
+            },
+            setAdminFilter: (ctx, key, val) => {
+                if(ctx === 'books') { BookManager.state[key] = val; BookManager.state.page = 1; }
+                if(ctx === 'services') { ServiceManager.state[key] = val; ServiceManager.state.page = 1; }
+                renderContent();
+            },
+            sortData: (ctx, key) => {
+                const targetState = ctx === 'books' ? BookManager.state : ServiceManager.state;
+                if(targetState.sortKey === key) {
+                    targetState.sortOrder = targetState.sortOrder === 'asc' ? 'desc' : 'asc';
+                } else {
+                    targetState.sortKey = key;
+                    targetState.sortOrder = 'asc';
+                }
+                renderContent();
+            },
+
+            // 3. Controle de Modais
+            closeModal: () => Modal.close(),
+            openBookModal: (id) => BookManager.openModal(id),
+            openServiceEditModal: (id) => ServiceManager.openModal(id),
+
+            // 4. Sistema de Exclusão
+            askDelete: (type, id) => {
+                state.pendingDeletion = { type, id };
+                const bodyHTML = `
+                    <div class="text-center p-4">
+                        <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse-slow">
+                            <i class="ph-bold ph-trash text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">Tem certeza?</h3>
+                        <p class="text-gray-500 text-sm max-w-xs mx-auto">Essa ação removerá o item permanentemente.</p>
+                    </div>
+                `;
+                const footerHTML = `
+                    <button onclick="window.app.closeModal()" class="px-6 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition">Cancelar</button>
+                    <button onclick="window.app.confirmDelete()" class="px-6 py-2.5 rounded-xl bg-red-500 text-white font-bold text-sm shadow-lg hover:bg-red-600 transition flex items-center gap-2"><i class="ph-bold ph-trash"></i> Sim, Excluir</button>
+                `;
+                Modal.open('Confirmar Exclusão', bodyHTML, footerHTML);
+            },
+
+            confirmDelete: () => {
+                if (!state.pendingDeletion) return;
+                const { type, id } = state.pendingDeletion;
+
+                if (type === 'book') {
+                    db.data.books = db.data.books.filter(b => b.id != id);
+                    Toast.show("Livro excluído.", "success");
+                } else if (type === 'service') {
+                    db.data.services = db.data.services.filter(s => s.id != id);
+                    Toast.show("Serviço excluído.", "success");
+                }
+
+                state.pendingDeletion = null;
+                Modal.close();
+                renderContent();
+            },
+
+            // 5. Sistema de Cropper (Mantido igual)
+            handleImageUpload: (input, imgId, hiddenId, aspectRatio = 1) => {
+                if (input.files && input.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const modal = document.getElementById('cropper-modal');
+                        const image = document.getElementById('cropper-image');
+                        image.src = e.target.result;
+                        modal.classList.remove('hidden');
+                        modal.classList.add('flex');
+                        if (state.cropper) state.cropper.destroy();
+                        state.cropper = new Cropper(image, {
+                            aspectRatio: aspectRatio, viewMode: 1, dragMode: 'move', autoCropArea: 1, background: false
+                        });
+                        state.cropCallback = (base64) => {
+                            const imgPreview = document.getElementById(imgId);
+                            if(imgPreview) imgPreview.src = base64;
+                            const inputHidden = document.getElementById(hiddenId);
+                            if(inputHidden) inputHidden.value = base64;
+                            input.value = ''; 
+                        };
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            },
+            confirmCrop: () => {
+                if (!state.cropper) return;
+                const canvas = state.cropper.getCroppedCanvas({ maxWidth: 1200, maxHeight: 1200, fillColor: '#fff' });
+                const base64 = canvas.toDataURL('image/jpeg', 0.85);
+                if (state.cropCallback) state.cropCallback(base64);
+                window.app.cancelCrop();
+            },
+            cancelCrop: () => {
+                const modal = document.getElementById('cropper-modal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                if (state.cropper) { state.cropper.destroy(); state.cropper = null; }
+                state.cropCallback = null;
+            }
+        };
+
+        // --- LISTENERS ---
+        const btnLogout = document.getElementById('btn-logout');
+        if(btnLogout) btnLogout.addEventListener('click', () => { authService.logout(); window.location.hash = '/login'; });
+
+        const btnConfirmCrop = document.getElementById('btn-confirm-crop');
+        if(btnConfirmCrop) btnConfirmCrop.onclick = window.app.confirmCrop;
+        
+        const btnCancelCrop = document.getElementById('btn-cancel-crop');
+        if(btnCancelCrop) btnCancelCrop.onclick = window.app.cancelCrop;
+
+        document.addEventListener('dashboard:refresh', renderContent);
+
+        // --- RENDERIZAÇÃO DE CONTEÚDO ---
+        function renderContent() {
+            const container = document.getElementById('dashboard-content');
+            if (!container) return;
+
+            // Stats Básicos
+            const totalBooks = db.data.books.length;
+            const totalServices = db.data.services.filter(s => s.active).length;
+            const totalLeads = db.data.leads ? db.data.leads.length : 0;
+            const pendingLeads = db.data.leads ? db.data.leads.filter(l => l.status === 'pending').length : 0;
+
+            // --- DEFINIÇÃO DE TEMAS PARA SERVIÇOS ---
+            const THEMES = {
+                'default': { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-600', active: 'bg-white border-slate-200' },
+                'orange':  { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-700', active: 'bg-orange-50 border-orange-200' },
+                'blue':    { bg: 'bg-blue-50',   border: 'border-blue-200',   text: 'text-blue-700', active: 'bg-blue-50 border-blue-200' },
+                'purple':  { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', active: 'bg-purple-50 border-purple-200' },
+                'green':   { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', active: 'bg-emerald-50 border-emerald-200' }
+            };
+
+            // --- LÓGICA DE ORDENAÇÃO GENÉRICA ---
+            const sortList = (list, key, order) => {
+                return list.sort((a, b) => {
+                    let valA = a[key];
+                    let valB = b[key];
+                    if (typeof valA === 'string') valA = valA.toLowerCase();
+                    if (typeof valB === 'string') valB = valB.toLowerCase();
+                    
+                    if (valA < valB) return order === 'asc' ? -1 : 1;
+                    if (valA > valB) return order === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            };
+
+            // 1. RENDERIZAR LINHAS DE SERVIÇOS (COM CORES VISUAIS)
+            const renderServiceRows = () => {
+                let services = db.data.services.filter(s => s.name.toLowerCase().includes(ServiceManager.state.filter.toLowerCase()));
+                
+                // Ordenação
+                services = sortList(services, ServiceManager.state.sortKey, ServiceManager.state.sortOrder);
+
+                // Paginação
+                const start = (ServiceManager.state.page - 1) * ServiceManager.state.itemsPerPage;
+                const paged = services.slice(start, start + ServiceManager.state.itemsPerPage);
+
+                return paged.map(s => {
+                    const theme = THEMES[s.theme || 'default'];
+                    // Lógica visual: Se ativo, usa cor. Se inativo, fica cinza/opaco.
+                    const rowClass = s.active 
+                        ? `${theme.active} border-l-4` 
+                        : 'bg-gray-50 opacity-60 border-l-4 border-gray-200';
+                    
+                    // Ícone de ordenação (visual helper)
+                    const statusClass = s.active ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200';
+
+                    return `
+                    <tr class="border-b transition hover:brightness-95 ${rowClass}">
+                        <td class="p-4 font-bold text-gray-700 flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center bg-white shadow-sm text-gray-600 border border-gray-100">
+                                <i class="ph-fill ${s.icon} text-xl"></i>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="${theme.text}">${s.name}</span>
+                                <span class="text-[10px] text-gray-400 font-normal uppercase">${s.theme || 'Padrão'}</span>
+                            </div>
+                        </td>
+                        <td class="p-4 text-sm font-medium">R$ ${s.price.toFixed(2)}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-2 py-1 rounded-full text-[10px] font-bold border ${statusClass}">
+                                ${s.active ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </td>
+                        <td class="p-4 text-right">
+                            <button onclick="window.app.openServiceEditModal('${s.id}')" class="text-blue-600 p-2 hover:bg-white rounded-full transition shadow-sm"><i class="ph-bold ph-pencil-simple"></i></button>
+                            <button onclick="window.app.askDelete('service', '${s.id}')" class="text-red-500 p-2 hover:bg-white rounded-full transition shadow-sm"><i class="ph-bold ph-trash"></i></button>
+                        </td>
+                    </tr>`;
+                }).join('') || '<tr><td colspan="4" class="p-8 text-center text-gray-400">Nenhum serviço encontrado.</td></tr>';
+            };
+
+            // 2. RENDERIZAR LINHAS DE LIVROS (COM COLUNA DE PROMOÇÃO)
+            const renderBookRows = () => {
+                let books = db.data.books.filter(b => b.title.toLowerCase().includes(BookManager.state.filter.toLowerCase()));
+                
+                // Ordenação
+                books = sortList(books, BookManager.state.sortKey, BookManager.state.sortOrder);
+
+                // Paginação
+                const start = (BookManager.state.page - 1) * BookManager.state.itemsPerPage;
+                const paged = books.slice(start, start + BookManager.state.itemsPerPage);
+
+                return paged.map(b => {
+                    const statusClass = b.active ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200';
+                    const promoBadge = b.isPromotion 
+                        ? `<div class="flex flex-col items-center">
+                             <span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded border border-orange-200 uppercase mb-1">Promo</span>
+                             <span class="text-[10px] text-gray-400 line-through">R$ ${b.price.toFixed(2)}</span>
+                             <span class="text-sm font-bold text-green-600">R$ ${b.promoPrice.toFixed(2)}</span>
+                           </div>`
+                        : `<span class="text-gray-400 text-xs">-</span>`;
+
+                    return `
+                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition group ${b.active ? 'bg-white' : 'bg-gray-50 opacity-70'}">
+                        <td class="p-3"><img src="${b.cover}" class="w-10 h-14 object-cover rounded shadow-sm border border-gray-200"></td>
+                        <td class="p-3 font-bold text-gray-700">${b.title}</td>
+                        <td class="p-3 text-gray-600 text-sm font-medium">
+                            ${!b.isPromotion ? `R$ ${b.price.toFixed(2)}` : '<span class="text-gray-400 text-xs italic">Ver ao lado</span>'}
+                        </td>
+                        <td class="p-3 text-center align-middle">
+                            ${promoBadge}
+                        </td>
+                        <td class="p-3 text-center align-middle">
+                            <span class="inline-flex items-center gap-1.5 text-[10px] font-bold px-2 py-1 rounded-full border ${statusClass}">
+                                <span class="w-1.5 h-1.5 rounded-full ${b.active ? 'bg-green-500' : 'bg-gray-400'}"></span>
+                                ${b.active ? 'Ativo' : 'Inativo'}
+                            </span>
+                        </td>
+                        <td class="p-3 text-right">
+                            <button onclick="window.app.openBookModal('${b.id}')" class="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"><i class="ph-bold ph-pencil-simple"></i></button>
+                            <button onclick="window.app.askDelete('book', '${b.id}')" class="text-red-400 hover:bg-red-50 p-2 rounded-full transition"><i class="ph-bold ph-trash"></i></button>
+                        </td>
+                    </tr>
+                    `;
+                }).join('') || '<tr><td colspan="6" class="p-8 text-center text-gray-400">Nenhum livro encontrado.</td></tr>';
+            };
+
+            // Ícones de ordenação para os headers
+            const getSortIcon = (ctx, key) => {
+                const state = ctx === 'books' ? BookManager.state : ServiceManager.state;
+                if (state.sortKey !== key) return '<i class="ph-bold ph-arrows-down-up text-gray-300"></i>';
+                return state.sortOrder === 'asc' 
+                    ? '<i class="ph-bold ph-arrow-up text-accent"></i>' 
+                    : '<i class="ph-bold ph-arrow-down text-accent"></i>';
+            };
+
+            container.innerHTML = `
+                <div class="animate-fade-in space-y-8">
+                    
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div class="dashboard-card bg-white p-6 rounded-2xl shadow-sm border-l-4 border-accent">
                             <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Livros Publicados</p>
@@ -357,116 +325,83 @@ export const DashboardView = {
                         </div>
                         <div class="dashboard-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                             <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Total de Pedidos</p>
-                            <h3 class="text-3xl font-black text-gray-700">${totalLeads}</h3>
+                            <h3 class="text-3xl font-black text-primary">${totalLeads}</h3>
                         </div>
                         <div class="dashboard-card bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                             <p class="text-gray-400 text-xs font-bold uppercase tracking-wide mb-1">Pendências</p>
-                            <h3 class="text-3xl font-black text-red-500">${pendingLeads}</h3>
+                            <h3 class="text-3xl font-black text-accent">${pendingLeads}</h3>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div id="container-books">${renderBooksPanel()}</div>
-                        <div id="container-services">${renderServicesPanel()}</div>
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-book text-accent"></i> Catálogo de Livros</h3></div>
+                            <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                                <input type="text" placeholder="Buscar livro..." oninput="window.app.setAdminFilter('books', 'filter', this.value)" value="${BookManager.state.filter}" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-accent">
+                                <button onclick="window.app.openBookModal()" class="text-white bg-primary px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-accent transition shadow-lg flex items-center gap-2"><i class="ph-bold ph-plus"></i> Novo</button>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto min-h-[300px]">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-gray-50 text-gray-400 uppercase text-[10px] border-b border-gray-200 select-none">
+                                    <tr>
+                                        <th class="p-3">Capa</th>
+                                        <th class="p-3 cursor-pointer hover:text-primary transition" onclick="window.app.sortData('books', 'title')">Título ${getSortIcon('books', 'title')}</th>
+                                        <th class="p-3 cursor-pointer hover:text-primary transition" onclick="window.app.sortData('books', 'price')">Preço Base ${getSortIcon('books', 'price')}</th>
+                                        <th class="p-3 text-center cursor-pointer hover:text-primary transition" onclick="window.app.sortData('books', 'isPromotion')">Promoção ${getSortIcon('books', 'isPromotion')}</th>
+                                        <th class="p-3 text-center cursor-pointer hover:text-primary transition" onclick="window.app.sortData('books', 'active')">Status ${getSortIcon('books', 'active')}</th>
+                                        <th class="p-3 text-right">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${renderBookRows()}</tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
+                            <span class="text-xs text-gray-400">Página ${BookManager.state.page}</span>
+                            <div class="flex gap-2">
+                                <button onclick="window.app.changeAdminPage('books', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${BookManager.state.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
+                                <button onclick="window.app.changeAdminPage('books', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center"><i class="ph-bold ph-caret-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 border-t-4 border-t-blue-500">
+                        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                            <div><h3 class="font-bold text-lg text-primary flex items-center gap-2"><i class="ph-fill ph-briefcase text-blue-500"></i> Meus Serviços</h3></div>
+                            <div class="flex gap-2 flex-1 justify-end w-full md:w-auto">
+                                <input type="text" placeholder="Buscar serviço..." oninput="window.app.setAdminFilter('services', 'filter', this.value)" value="${ServiceManager.state.filter}" class="bg-gray-50 border border-gray-200 rounded-lg text-xs p-2 w-full md:w-64 focus:outline-none focus:border-blue-500">
+                                <button onclick="window.app.openServiceEditModal()" class="text-white bg-blue-600 px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-blue-700 transition shadow-lg flex items-center gap-2"><i class="ph-bold ph-plus"></i> Novo</button>
+                            </div>
+                        </div>
+                        
+                        <div class="overflow-x-auto min-h-[200px]">
+                            <table class="w-full text-left text-sm text-gray-600">
+                                <thead class="bg-blue-50 text-blue-500 uppercase text-[10px] border-b border-blue-100 select-none">
+                                    <tr>
+                                        <th class="p-3 cursor-pointer hover:text-blue-700 transition" onclick="window.app.sortData('services', 'name')">Serviço ${getSortIcon('services', 'name')}</th>
+                                        <th class="p-3 cursor-pointer hover:text-blue-700 transition" onclick="window.app.sortData('services', 'price')">Preço ${getSortIcon('services', 'price')}</th>
+                                        <th class="p-3 text-center cursor-pointer hover:text-blue-700 transition" onclick="window.app.sortData('services', 'active')">Status ${getSortIcon('services', 'active')}</th>
+                                        <th class="p-3 text-right">Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${renderServiceRows()}</tbody> 
+                            </table>
+                        </div>
+                        
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-4">
+                            <span class="text-xs text-gray-400">Página ${ServiceManager.state.page}</span>
+                            <div class="flex gap-2">
+                                <button onclick="window.app.changeAdminPage('services', -1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center disabled:opacity-50" ${ServiceManager.state.page === 1 ? 'disabled' : ''}><i class="ph-bold ph-caret-left"></i></button>
+                                <button onclick="window.app.changeAdminPage('services', 1)" class="w-8 h-8 rounded border hover:bg-gray-100 flex items-center justify-center"><i class="ph-bold ph-caret-right"></i></button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="h-20"></div>
-            </div>
-        `;
-    },
-
-    afterRender: async () => {
-        if (!authService.isAuthenticated()) return;
-
-        const btnLogout = document.getElementById('btn-logout');
-        if(btnLogout) {
-            btnLogout.onclick = () => {
-                authService.logout();
-                window.location.hash = '/login'; // Ajuste conforme seu router
-                // window.Toast.show('Você saiu do sistema.', 'success'); // Se tiver Toast global
-            };
+            `;
         }
 
-        // --- EVENTOS LIVROS ---
-        const setupBookEvents = () => {
-            const btnNew = document.getElementById('btn-new-book');
-            if(btnNew) btnNew.onclick = () => openBookModal();
-            
-            const filterInput = document.getElementById('filter-books');
-            if(filterInput) {
-                filterInput.oninput = (e) => {
-                    state.books.filter = e.target.value;
-                    state.books.page = 1;
-                    document.getElementById('container-books').innerHTML = renderBooksPanel();
-                    setupBookEvents();
-                };
-                // Mantém foco
-                const len = filterInput.value.length;
-                filterInput.focus();
-                filterInput.setSelectionRange(len, len);
-            }
-            
-            document.querySelectorAll('.btn-page-book').forEach(btn => btn.onclick = () => {
-                state.books.page += parseInt(btn.dataset.dir);
-                document.getElementById('container-books').innerHTML = renderBooksPanel();
-                setupBookEvents();
-            });
-            
-            document.querySelectorAll('[data-sort^="books:"]').forEach(th => th.onclick = () => {
-                const key = th.dataset.sort.split(':')[1];
-                state.books.sortKey = key;
-                state.books.sortOrder = state.books.sortOrder === 'asc' ? 'desc' : 'asc';
-                document.getElementById('container-books').innerHTML = renderBooksPanel();
-                setupBookEvents();
-            });
-            
-            document.querySelectorAll('.btn-edit-book').forEach(btn => btn.onclick = () => openBookModal(btn.dataset.id));
-            
-            document.querySelectorAll('.btn-delete-book').forEach(btn => btn.onclick = () => {
-                if(confirm('Excluir livro?')) { bookService.delete(btn.dataset.id); window.location.reload(); }
-            });
-        };
-        setupBookEvents();
-
-        // --- EVENTOS SERVIÇOS ---
-        const setupServiceEvents = () => {
-            const btnNew = document.getElementById('btn-new-service');
-            if(btnNew) btnNew.onclick = () => openServiceEditModal();
-            
-            const filterInput = document.getElementById('filter-services');
-            if(filterInput) {
-                filterInput.oninput = (e) => {
-                    state.services.filter = e.target.value;
-                    state.services.page = 1;
-                    document.getElementById('container-services').innerHTML = renderServicesPanel();
-                    setupServiceEvents();
-                };
-                 // Mantém foco
-                const len = filterInput.value.length;
-                filterInput.focus();
-                filterInput.setSelectionRange(len, len);
-            }
-            
-            document.querySelectorAll('.btn-page-service').forEach(btn => btn.onclick = () => {
-                state.services.page += parseInt(btn.dataset.dir);
-                document.getElementById('container-services').innerHTML = renderServicesPanel();
-                setupServiceEvents();
-            });
-            
-            document.querySelectorAll('[data-sort^="services:"]').forEach(th => th.onclick = () => {
-                const key = th.dataset.sort.split(':')[1];
-                state.services.sortKey = key;
-                state.services.sortOrder = state.services.sortOrder === 'asc' ? 'desc' : 'asc';
-                document.getElementById('container-services').innerHTML = renderServicesPanel();
-                setupServiceEvents();
-            });
-            
-            document.querySelectorAll('.btn-edit-service').forEach(btn => btn.onclick = () => openServiceEditModal(btn.dataset.id));
-            
-            document.querySelectorAll('.btn-delete-service').forEach(btn => btn.onclick = () => {
-                if(confirm('Excluir serviço?')) { serviceService.delete(btn.dataset.id); window.location.reload(); }
-            });
-        };
-        setupServiceEvents();
+        renderContent();
     }
 };

@@ -20,24 +20,33 @@ export const Modal = {
         els.body.innerHTML = bodyHTML;
         els.footer.innerHTML = footerHTML;
 
-        // --- CORREÇÃO DE ALINHAMENTO AQUI ---
+        // Ajusta Footer
         if (!footerHTML) {
             els.footer.style.display = 'none';
         } else {
             els.footer.style.display = 'flex';
-            els.footer.style.justifyContent = 'flex-end'; // Manda para a DIREITA
-            els.footer.style.gap = '12px'; // Separa os botões
+            els.footer.style.justifyContent = 'flex-end';
+            els.footer.style.gap = '12px';
         }
 
-        // Força bruta para mostrar
+        // Mostra o Modal
         els.overlay.style.display = 'flex'; 
+        els.overlay.style.opacity = '0'; // Começa invisível para transição
         els.overlay.style.zIndex = '9999';
-        
+
+        // --- TRAVA O SCROLL DA PÁGINA DE TRÁS ---
+        document.body.style.overflow = 'hidden'; 
+        // ----------------------------------------
+
+        // Animação de entrada
         requestAnimationFrame(() => {
             els.overlay.style.opacity = '1';
             els.content.style.transform = 'scale(1)';
             els.content.style.opacity = '1';
         });
+
+        // Evento para fechar no botão X (caso exista)
+        if(els.closeBtn) els.closeBtn.onclick = Modal.close;
     },
 
     close: () => {
@@ -47,16 +56,12 @@ export const Modal = {
         els.overlay.style.opacity = '0';
         els.content.style.transform = 'scale(0.95)';
         
+        // --- DESTRAVA O SCROLL DA PÁGINA ---
+        document.body.style.overflow = ''; 
+        // -----------------------------------
+
         setTimeout(() => {
             els.overlay.style.display = 'none';
-        }, 200);
+        }, 300);
     }
 };
-
-document.addEventListener('click', (e) => {
-    if(e.target.closest('#btn-close-modal') || e.target.id === 'modal-overlay') {
-        Modal.close();
-    }
-});
-
-window.Modal = Modal;
